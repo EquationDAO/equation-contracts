@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FundingRateUtil gas tests #calculateFundingRateGrowthX96 fundingRateDeltaX96 is negative 1`] = `5303`;
+
+exports[`FundingRateUtil gas tests #calculateFundingRateGrowthX96 fundingRateDeltaX96 is positive 1`] = `5224`;
+
+exports[`FundingRateUtil gas tests #calculateFundingRateGrowthX96 receivedSize is zero and globalLiquidity is positive 1`] = `11235`;
+
+exports[`FundingRateUtil gas tests #calculateFundingRateGrowthX96 receivedSize is zero and globalLiquidity is zero 1`] = `11235`;
+
+exports[`FundingRateUtil gas tests #samplePremiumRate time delta is 3 seconds 1`] = `5638`;
+
+exports[`FundingRateUtil gas tests #samplePremiumRate time delta is 24 seconds 1`] = `16912`;
+
+exports[`FundingRateUtil gas tests #samplePremiumRate time delta is 1900 seconds 1`] = `16912`;
+
+exports[`FundingRateUtil gas tests #samplePremiumRate time delta is 3700 seconds 1`] = `17574`;
+
+exports[`FundingRateUtil gas tests #samplePremiumRate time delta is 7200 seconds 1`] = `17574`;
+
+exports[`FundingRateUtil gas tests #samplePremiumRate time delta is 9000 seconds 1`] = `17574`;

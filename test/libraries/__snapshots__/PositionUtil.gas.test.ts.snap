@@ -1,0 +1,27 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PositionUtil gas tests #calculateLiquidationPriceX96 side is long 1`] = `5375`;
+
+exports[`PositionUtil gas tests #calculateLiquidationPriceX96 side is long 2`] = `5442`;
+
+exports[`PositionUtil gas tests #calculateLiquidationPriceX96 side is long 3`] = `8005`;
+
+exports[`PositionUtil gas tests #calculateLiquidationPriceX96 side is long 4`] = `9557`;
+
+exports[`PositionUtil gas tests #calculateLiquidationPriceX96 side is short 1`] = `5538`;
+
+exports[`PositionUtil gas tests #calculateLiquidationPriceX96 side is short 2`] = `5605`;
+
+exports[`PositionUtil gas tests #calculateLiquidationPriceX96 side is short 3`] = `8131`;
+
+exports[`PositionUtil gas tests #calculateLiquidationPriceX96 side is short 4`] = `9791`;
+
+exports[`PositionUtil gas tests #calculateMaintenanceMargin 1`] = `351`;
+
+exports[`PositionUtil gas tests #calculateUnrealizedPnL side is long entry price greater than current price 1`] = `362`;
+
+exports[`PositionUtil gas tests #calculateUnrealizedPnL side is long entry price less than current price 1`] = `256`;
+
+exports[`PositionUtil gas tests #calculateUnrealizedPnL side is short entry price greater than current price 1`] = `260`;
+
+exports[`PositionUtil gas tests #calculateUnrealizedPnL side is short entry price less than current price 1`] = `366`;

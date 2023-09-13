@@ -1,0 +1,20 @@
+.idea
+.vscode
+.DS_Store
+
+node_modules
+.env
+coverage
+coverage.json
+typechain
+typechain-types
+
+# Hardhat files
+cache
+artifacts
+
+out
+foundry-out
+forge-cache
+
+deployments

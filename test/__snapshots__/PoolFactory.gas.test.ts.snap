@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PoolFactory gas tests #createPool 1`] = `7082694`;
