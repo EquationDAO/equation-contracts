@@ -4,7 +4,7 @@ import {ethers} from "hardhat";
 import {SIDE_LONG, SIDE_SHORT} from "./shared/Constants";
 import {expectSnapshotGasCost} from "./shared/snapshotGasCost";
 
-describe("PositionRouter", function () {
+describe("PositionRouter gas tests", function () {
     const defaultMinExecutionFee = 3000;
 
     async function deployFixture() {

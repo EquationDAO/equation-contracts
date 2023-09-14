@@ -1,5 +1,5 @@
 import {ethers} from "hardhat";
-import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {loadFixture, time} from "@nomicfoundation/hardhat-network-helpers";
 import {
     DECIMALS_18,
     DECIMALS_6,
@@ -1358,6 +1358,8 @@ describe("LiquidityPositionUtil", () => {
             const {liquidityPositionUtil} = await loadFixture(deployFixture);
 
             const [owner, other] = await ethers.getSigners();
+            let nextBlockTimestamp = (await time.latest()) + 60;
+            await time.setNextBlockTimestamp(nextBlockTimestamp);
             await liquidityPositionUtil.increaseRiskBufferFundPosition(owner.address, Q96);
             {
                 expect(await liquidityPositionUtil.positionLiquidityAfter()).to.eq(Q96);
@@ -1366,10 +1368,14 @@ describe("LiquidityPositionUtil", () => {
                 expect(globalRiskBufferFund.liquidity).to.eq(Q96);
                 expect(globalRiskBufferFund.riskBufferFund).to.eq(Q96);
 
-                const ownerPositionLiquidity = await liquidityPositionUtil.riskBufferFundPositions(owner.address);
-                expect(ownerPositionLiquidity).to.eq(Q96);
+                const {liquidity, unlockTime} = await liquidityPositionUtil.riskBufferFundPositions(owner.address);
+                expect(liquidity).to.eq(Q96);
+                expect(unlockTime).to.eq(nextBlockTimestamp + 90 * 24 * 60 * 60);
             }
 
+            // should reset unlockTime
+            nextBlockTimestamp = (await time.latest()) + 120;
+            await time.setNextBlockTimestamp(nextBlockTimestamp);
             await liquidityPositionUtil.increaseRiskBufferFundPosition(owner.address, 1n);
             {
                 expect(await liquidityPositionUtil.positionLiquidityAfter()).to.eq(Q96 + 1n);
@@ -1378,10 +1384,13 @@ describe("LiquidityPositionUtil", () => {
                 expect(globalRiskBufferFund.liquidity).to.eq(Q96 + 1n);
                 expect(globalRiskBufferFund.riskBufferFund).to.eq(Q96 + 1n);
 
-                const ownerPositionLiquidity = await liquidityPositionUtil.riskBufferFundPositions(owner.address);
-                expect(ownerPositionLiquidity).to.eq(Q96 + 1n);
+                const {liquidity, unlockTime} = await liquidityPositionUtil.riskBufferFundPositions(owner.address);
+                expect(liquidity).to.eq(Q96 + 1n);
+                expect(unlockTime).to.eq(nextBlockTimestamp + 90 * 24 * 60 * 60);
             }
 
+            nextBlockTimestamp = (await time.latest()) + 180;
+            await time.setNextBlockTimestamp(nextBlockTimestamp);
             await liquidityPositionUtil.increaseRiskBufferFundPosition(other.address, 1n);
             {
                 expect(await liquidityPositionUtil.positionLiquidityAfter()).to.eq(1n);
@@ -1390,20 +1399,48 @@ describe("LiquidityPositionUtil", () => {
                 expect(globalRiskBufferFund.liquidity).to.eq(Q96 + 2n);
                 expect(globalRiskBufferFund.riskBufferFund).to.eq(Q96 + 2n);
 
-                const ownerPositionLiquidity = await liquidityPositionUtil.riskBufferFundPositions(owner.address);
-                expect(ownerPositionLiquidity).to.eq(Q96 + 1n);
-                const otherPositionLiquidity = await liquidityPositionUtil.riskBufferFundPositions(other.address);
-                expect(otherPositionLiquidity).to.eq(1n);
+                const {liquidity} = await liquidityPositionUtil.riskBufferFundPositions(owner.address);
+                expect(liquidity).to.eq(Q96 + 1n);
+                const {liquidity: otherLiquidity, unlockTime} = await liquidityPositionUtil.riskBufferFundPositions(
+                    other.address
+                );
+                expect(otherLiquidity).to.eq(1n);
+                expect(unlockTime).to.eq(nextBlockTimestamp + 90 * 24 * 60 * 60);
             }
         });
     });
 
     describe("#decreaseRiskBufferFundPosition", () => {
+        it("should revert if unlock time is not reached", async () => {
+            const {liquidityPositionUtil, _liquidityPositionUtil} = await loadFixture(deployFixture);
+            const [owner] = await ethers.getSigners();
+            let nextBlockTimestamp = (await time.latest()) + 60;
+            await time.setNextBlockTimestamp(nextBlockTimestamp);
+            await liquidityPositionUtil.increaseRiskBufferFundPosition(owner.address, Q96);
+            await expect(liquidityPositionUtil.decreaseRiskBufferFundPosition(0n, owner.address, 1n))
+                .to.revertedWithCustomError(_liquidityPositionUtil, "UnlockTimeNotReached")
+                .withArgs(nextBlockTimestamp + 90 * 24 * 60 * 60);
+        });
+        it("should revert if unlock time is equal to the current block timestamp", async () => {
+            const {liquidityPositionUtil, _liquidityPositionUtil} = await loadFixture(deployFixture);
+            const [owner] = await ethers.getSigners();
+            let nextBlockTimestamp = (await time.latest()) + 60;
+            await time.setNextBlockTimestamp(nextBlockTimestamp);
+            await liquidityPositionUtil.increaseRiskBufferFundPosition(owner.address, Q96);
+
+            await time.setNextBlockTimestamp(nextBlockTimestamp + 90 * 24 * 60 * 60);
+            await expect(liquidityPositionUtil.decreaseRiskBufferFundPosition(0n, owner.address, 1n))
+                .to.revertedWithCustomError(_liquidityPositionUtil, "UnlockTimeNotReached")
+                .withArgs(nextBlockTimestamp + 90 * 24 * 60 * 60);
+        });
         it("should revert if position liquidity is less than liquidityDelta", async () => {
             const {liquidityPositionUtil, _liquidityPositionUtil} = await loadFixture(deployFixture);
 
             const [owner, other] = await ethers.getSigners();
+            let nextBlockTimestamp = (await time.latest()) + 60;
+            await time.setNextBlockTimestamp(nextBlockTimestamp);
             await liquidityPositionUtil.increaseRiskBufferFundPosition(other.address, 1000n);
+            await time.setNextBlockTimestamp(nextBlockTimestamp + 90 * 24 * 60 * 60 + 1);
             await expect(liquidityPositionUtil.decreaseRiskBufferFundPosition(0n, owner.address, 1n))
                 .to.revertedWithCustomError(_liquidityPositionUtil, "InsufficientLiquidity")
                 .withArgs(0n, 1n);
@@ -1422,6 +1459,7 @@ describe("LiquidityPositionUtil", () => {
             await liquidityPositionUtil.setGlobalRiskBufferFund(0n, 1000n);
             const [owner] = await ethers.getSigners();
             await liquidityPositionUtil.increaseRiskBufferFundPosition(owner.address, 1000n);
+            await time.setNextBlockTimestamp((await time.latest()) + 90 * 24 * 60 * 60 + 1);
             await expect(
                 liquidityPositionUtil.decreaseRiskBufferFundPosition(
                     toPriceX96("1909.234", DECIMALS_18, DECIMALS_6),
@@ -1431,13 +1469,36 @@ describe("LiquidityPositionUtil", () => {
             ).to.revertedWithCustomError(_liquidityPositionUtil, "RiskBufferFundLoss");
         });
 
-        it("should pass", async () => {
+        it("should decrease liquidity", async () => {
+            const {liquidityPositionUtil} = await loadFixture(deployFixture);
+            const [owner] = await ethers.getSigners();
+            await liquidityPositionUtil.increaseRiskBufferFundPosition(owner.address, 1000n);
+            await time.setNextBlockTimestamp((await time.latest()) + 90 * 24 * 60 * 60 + 1);
+            await liquidityPositionUtil.decreaseRiskBufferFundPosition(0n, owner.address, 500n);
+            const {liquidity, unlockTime} = await liquidityPositionUtil.riskBufferFundPositions(owner.address);
+            expect(liquidity).to.eq(500n);
+            expect(unlockTime).to.gt(0);
+        });
+
+        it("should delete position if liquidity is zero", async () => {
             const {liquidityPositionUtil, _liquidityPositionUtil} = await loadFixture(deployFixture);
+            const [owner] = await ethers.getSigners();
+            await liquidityPositionUtil.increaseRiskBufferFundPosition(owner.address, 1000n);
+            await time.setNextBlockTimestamp((await time.latest()) + 90 * 24 * 60 * 60 + 1);
+            await liquidityPositionUtil.decreaseRiskBufferFundPosition(0n, owner.address, 1000n);
+            const {liquidity, unlockTime} = await liquidityPositionUtil.riskBufferFundPositions(owner.address);
+            expect(liquidity).to.eq(0n);
+            expect(unlockTime).to.eq(0);
+        });
+
+        it("should pass", async () => {
+            const {liquidityPositionUtil} = await loadFixture(deployFixture);
 
             await liquidityPositionUtil.setGlobalRiskBufferFund(0n, 0n);
             const [owner, other] = await ethers.getSigners();
             await liquidityPositionUtil.increaseRiskBufferFundPosition(owner.address, 1000n);
             await liquidityPositionUtil.increaseRiskBufferFundPosition(other.address, 100n);
+            await time.setNextBlockTimestamp((await time.latest()) + 90 * 24 * 60 * 60 + 1);
             await liquidityPositionUtil.decreaseRiskBufferFundPosition(
                 toPriceX96("1808.123", DECIMALS_18, DECIMALS_6),
                 owner.address,
@@ -1450,9 +1511,13 @@ describe("LiquidityPositionUtil", () => {
                 expect(globalRiskBufferFund.liquidity).to.eq(1099n);
                 expect(globalRiskBufferFund.riskBufferFund).to.eq(1099n);
 
-                const ownerPositionLiquidity = await liquidityPositionUtil.riskBufferFundPositions(owner.address);
+                const {liquidity: ownerPositionLiquidity} = await liquidityPositionUtil.riskBufferFundPositions(
+                    owner.address
+                );
                 expect(ownerPositionLiquidity).to.eq(999n);
-                const otherPositionLiquidity = await liquidityPositionUtil.riskBufferFundPositions(other.address);
+                const {liquidity: otherPositionLiquidity} = await liquidityPositionUtil.riskBufferFundPositions(
+                    other.address
+                );
                 expect(otherPositionLiquidity).to.eq(100n);
             }
         });
