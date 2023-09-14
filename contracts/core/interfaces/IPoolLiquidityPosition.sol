@@ -109,14 +109,15 @@ interface IPoolLiquidityPosition {
 
     /// @notice Emitted when the liquidity of the risk buffer fund is increased
     /// @param account The owner of the position
-    /// @param liquidityAfter The adjusted liquidity
-    event RiskBufferFundPositionIncreased(address indexed account, uint256 liquidityAfter);
+    /// @param liquidityAfter The total liquidity of the position after the increase
+    /// @param unlockTimeAfter The unlock time of the position after the increase
+    event RiskBufferFundPositionIncreased(address indexed account, uint128 liquidityAfter, uint64 unlockTimeAfter);
 
     /// @notice Emitted when the liquidity of the risk buffer fund is decreased
     /// @param account The owner of the position
-    /// @param liquidityAfter The adjusted liquidity
+    /// @param liquidityAfter The total liquidity of the position after the decrease
     /// @param receiver The address that receives the liquidity when it is decreased
-    event RiskBufferFundPositionDecreased(address indexed account, uint256 liquidityAfter, address receiver);
+    event RiskBufferFundPositionDecreased(address indexed account, uint128 liquidityAfter, address receiver);
 
     struct GlobalLiquidityPosition {
         uint128 netSize;
@@ -145,6 +146,11 @@ interface IPoolLiquidityPosition {
         uint256 entryRealizedProfitGrowthX64;
         uint64 entryTime;
         address account;
+    }
+
+    struct RiskBufferFundPosition {
+        uint128 liquidity;
+        uint64 unlockTime;
     }
 
     /// @notice Get the global liquidity position
@@ -255,18 +261,19 @@ interface IPoolLiquidityPosition {
     /// @notice Get the liquidity of the risk buffer fund
     /// @param account The owner of the position
     /// @return liquidity The liquidity of the risk buffer fund
-    function riskBufferFundPositions(address account) external view returns (uint256 liquidity);
+    /// @return unlockTime The time when the liquidity can be withdrawn
+    function riskBufferFundPositions(address account) external view returns (uint128 liquidity, uint64 unlockTime);
 
     /// @notice Increase the liquidity of a risk buffer fund position
     /// @dev The call will fail if the caller is not the `IRouter`
     /// @param account The owner of the position
     /// @param liquidityDelta The increase in liquidity
-    function increaseRiskBufferFundPosition(address account, uint256 liquidityDelta) external;
+    function increaseRiskBufferFundPosition(address account, uint128 liquidityDelta) external;
 
     /// @notice Decrease the liquidity of a risk buffer fund position
     /// @dev The call will fail if the caller is not the `IRouter`
     /// @param account The owner of the position
     /// @param liquidityDelta The decrease in liquidity
     /// @param receiver The address to receive the liquidity when it is decreased
-    function decreaseRiskBufferFundPosition(address account, uint256 liquidityDelta, address receiver) external;
+    function decreaseRiskBufferFundPosition(address account, uint128 liquidityDelta, address receiver) external;
 }

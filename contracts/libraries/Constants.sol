@@ -15,6 +15,8 @@ library Constants {
     uint8 internal constant VERTEX_NUM = 7;
     uint8 internal constant LATEST_VERTEX = VERTEX_NUM - 1;
 
+    uint64 internal constant RISK_BUFFER_FUND_LOCK_PERIOD = 90 days;
+
     uint256 internal constant Q64 = 1 << 64;
     uint256 internal constant Q96 = 1 << 96;
 

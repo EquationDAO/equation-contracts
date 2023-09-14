@@ -83,7 +83,7 @@ contract Router is PluginManager {
     /// @param _pool The pool in which to increase liquidity
     /// @param _account The owner of the position
     /// @param _liquidityDelta The increase in liquidity
-    function pluginIncreaseRiskBufferFundPosition(IPool _pool, address _account, uint256 _liquidityDelta) external {
+    function pluginIncreaseRiskBufferFundPosition(IPool _pool, address _account, uint128 _liquidityDelta) external {
         _onlyPluginApproved(_account);
         _pool.increaseRiskBufferFundPosition(_account, _liquidityDelta);
     }
@@ -96,7 +96,7 @@ contract Router is PluginManager {
     function pluginDecreaseRiskBufferFundPosition(
         IPool _pool,
         address _account,
-        uint256 _liquidityDelta,
+        uint128 _liquidityDelta,
         address _receiver
     ) external {
         _onlyPluginApproved(_account);

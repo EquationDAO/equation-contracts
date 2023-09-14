@@ -8,9 +8,10 @@ contract LiquidityPositionUtilTest {
     IPoolLiquidityPosition.GlobalUnrealizedLossMetrics public metrics;
     IPoolLiquidityPosition.GlobalLiquidityPosition public globalLiquidityPosition;
     IPoolLiquidityPosition.GlobalRiskBufferFund public globalRiskBufferFund;
-    mapping(address => uint256) public riskBufferFundPositions;
+    mapping(address => IPoolLiquidityPosition.RiskBufferFundPosition) public riskBufferFundPositions;
 
-    uint256 public positionLiquidityAfter;
+    uint128 public positionLiquidityAfter;
+    uint64 public unlockTimeAfter;
     int256 public riskBufferFundAfter;
 
     function setGlobalLiquidityPosition(
@@ -32,8 +33,11 @@ contract LiquidityPositionUtilTest {
         globalRiskBufferFund.liquidity = _liquidity;
     }
 
-    function setRiskBufferFundPosition(address _owner, uint256 _riskBufferFund) external {
-        riskBufferFundPositions[_owner] = _riskBufferFund;
+    function setRiskBufferFundPosition(address _owner, uint128 _liquidity, uint64 _unlockTime) external {
+        riskBufferFundPositions[_owner] = IPoolLiquidityPosition.RiskBufferFundPosition({
+            liquidity: _liquidity,
+            unlockTime: _unlockTime
+        });
     }
 
     function calculateUnrealizedLoss(
@@ -160,18 +164,14 @@ contract LiquidityPositionUtilTest {
         );
     }
 
-    function increaseRiskBufferFundPosition(address _account, uint256 _liquidityDelta) external {
-        (positionLiquidityAfter, riskBufferFundAfter) = LiquidityPositionUtil.increaseRiskBufferFundPosition(
-            globalRiskBufferFund,
-            riskBufferFundPositions,
-            _account,
-            _liquidityDelta
-        );
+    function increaseRiskBufferFundPosition(address _account, uint128 _liquidityDelta) external {
+        (positionLiquidityAfter, unlockTimeAfter, riskBufferFundAfter) = LiquidityPositionUtil
+            .increaseRiskBufferFundPosition(globalRiskBufferFund, riskBufferFundPositions, _account, _liquidityDelta);
     }
 
     function getGasCostIncreaseRiskBufferFundPosition(
         address _account,
-        uint256 _liquidityDelta
+        uint128 _liquidityDelta
     ) external returns (uint256 gasCost) {
         uint256 gasBefore = gasleft();
         LiquidityPositionUtil.increaseRiskBufferFundPosition(
@@ -187,7 +187,7 @@ contract LiquidityPositionUtilTest {
     function decreaseRiskBufferFundPosition(
         uint160 _indexPriceX96,
         address _account,
-        uint256 _liquidityDelta
+        uint128 _liquidityDelta
     ) external {
         (positionLiquidityAfter, riskBufferFundAfter) = LiquidityPositionUtil.decreaseRiskBufferFundPosition(
             globalLiquidityPosition,
@@ -202,7 +202,7 @@ contract LiquidityPositionUtilTest {
     function getGasCostDecreaseRiskBufferFundPosition(
         uint160 _indexPriceX96,
         address _account,
-        uint256 _liquidityDelta
+        uint128 _liquidityDelta
     ) external returns (uint256 gasCost) {
         uint256 gasBefore = gasleft();
         LiquidityPositionUtil.decreaseRiskBufferFundPosition(
