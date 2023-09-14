@@ -50,20 +50,20 @@ exports[`LiquidityPositionUtil gas tests #calculateRealizedPnLAndNextEntryPriceX
 
 exports[`LiquidityPositionUtil gas tests #calculateRealizedPnLAndNextEntryPriceX96 the sum of netSize and liquidationBufferNetSize is zero 8`] = `482`;
 
-exports[`LiquidityPositionUtil gas tests #decreaseRiskBufferFundPosition 1`] = `46104`;
+exports[`LiquidityPositionUtil gas tests #decreaseRiskBufferFundPosition 1`] = `46561`;
 
-exports[`LiquidityPositionUtil gas tests #increaseRiskBufferFundPosition 1`] = `91921`;
+exports[`LiquidityPositionUtil gas tests #increaseRiskBufferFundPosition 1`] = `92752`;
 
-exports[`LiquidityPositionUtil gas tests #increaseRiskBufferFundPosition 2`] = `40621`;
+exports[`LiquidityPositionUtil gas tests #increaseRiskBufferFundPosition 2`] = `41452`;
 
-exports[`LiquidityPositionUtil gas tests #increaseRiskBufferFundPosition 3`] = `57721`;
+exports[`LiquidityPositionUtil gas tests #increaseRiskBufferFundPosition 3`] = `58552`;
 
-exports[`LiquidityPositionUtil gas tests #updateUnrealizedLossMetrics current unrealized loss is not zero liquidity delta is negative 1`] = `26468`;
+exports[`LiquidityPositionUtil gas tests #updateUnrealizedLossMetrics current unrealized loss is not zero liquidity delta is negative 1`] = `26445`;
 
-exports[`LiquidityPositionUtil gas tests #updateUnrealizedLossMetrics current unrealized loss is not zero liquidity delta is positive 1`] = `67229`;
+exports[`LiquidityPositionUtil gas tests #updateUnrealizedLossMetrics current unrealized loss is not zero liquidity delta is positive 1`] = `67201`;
 
-exports[`LiquidityPositionUtil gas tests #updateUnrealizedLossMetrics current unrealized loss is not zero liquidity delta is zero 1`] = `24542`;
+exports[`LiquidityPositionUtil gas tests #updateUnrealizedLossMetrics current unrealized loss is not zero liquidity delta is zero 1`] = `24514`;
 
-exports[`LiquidityPositionUtil gas tests #updateUnrealizedLossMetrics current unrealized loss is zero metrics before is not zero 1`] = `27569`;
+exports[`LiquidityPositionUtil gas tests #updateUnrealizedLossMetrics current unrealized loss is zero metrics before is not zero 1`] = `27541`;
 
-exports[`LiquidityPositionUtil gas tests #updateUnrealizedLossMetrics current unrealized loss is zero metrics before is zero 1`] = `46669`;
+exports[`LiquidityPositionUtil gas tests #updateUnrealizedLossMetrics current unrealized loss is zero metrics before is zero 1`] = `46641`;

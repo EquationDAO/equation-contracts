@@ -1397,20 +1397,21 @@ describe("Pool", () => {
         it("should emit RiskBufferFundPositionIncreased event", async () => {
             const {pool, USDC, owner, other} = await loadFixture(deployFixture);
             await USDC.transfer(pool.address, 100n * 10n ** 6n);
+            const lastTimestamp = await time.latest();
             await expect(pool.increaseRiskBufferFundPosition(owner.address, 100n * 10n ** 6n))
                 .to.emit(pool, "RiskBufferFundPositionIncreased")
-                .withArgs(owner.address, 100n * 10n ** 6n);
+                .withArgs(owner.address, 100n * 10n ** 6n, (t: number) => t > lastTimestamp);
 
             await USDC.transfer(pool.address, 100n * 10n ** 6n);
             await expect(pool.increaseRiskBufferFundPosition(owner.address, 100n * 10n ** 6n))
                 .to.emit(pool, "RiskBufferFundPositionIncreased")
-                .withArgs(owner.address, 200n * 10n ** 6n);
+                .withArgs(owner.address, 200n * 10n ** 6n, (t: number) => t > lastTimestamp);
 
             await USDC.mint(other.address, 100n * 10n ** 6n);
             await USDC.connect(other).transfer(pool.address, 100n * 10n ** 6n);
             await expect(pool.increaseRiskBufferFundPosition(other.address, 100n * 10n ** 6n))
                 .to.emit(pool, "RiskBufferFundPositionIncreased")
-                .withArgs(other.address, 100n * 10n ** 6n);
+                .withArgs(other.address, 100n * 10n ** 6n, (t: number) => t > lastTimestamp);
         });
 
         it("should emit GlobalRiskBufferFundChanged event", async () => {
@@ -1492,7 +1493,7 @@ describe("Pool", () => {
 
             await USDC.transfer(pool.address, 100n * 10n ** 6n);
             await pool.increaseRiskBufferFundPosition(owner.address, 100n * 10n ** 6n);
-            await time.setNextBlockTimestamp(nextHourBegin + 3600);
+            await time.setNextBlockTimestamp(nextHourBegin + 3600 + 90 * 24 * 60 * 60);
             const assertion = expect(
                 pool.decreaseRiskBufferFundPosition(owner.address, 100n * 10n ** 6n, owner.address)
             );
@@ -1504,6 +1505,7 @@ describe("Pool", () => {
             const {pool, USDC, owner} = await loadFixture(deployFixture);
             await USDC.transfer(pool.address, 100n * 10n ** 6n);
             await pool.increaseRiskBufferFundPosition(owner.address, 100n * 10n ** 6n);
+            await time.setNextBlockTimestamp((await time.latest()) + 90 * 24 * 60 * 60 + 1);
             await expect(pool.decreaseRiskBufferFundPosition(owner.address, 100n * 10n ** 6n, owner.address))
                 .to.emit(pool, "GlobalUnrealizedLossMetricsChanged")
                 .withArgs(() => true, 0, 0);
@@ -1519,6 +1521,7 @@ describe("Pool", () => {
             const {pool, USDC, owner, other} = await loadFixture(deployFixture);
             await USDC.transfer(pool.address, 100n * 10n ** 6n);
             await pool.increaseRiskBufferFundPosition(owner.address, 100n * 10n ** 6n);
+            await time.setNextBlockTimestamp((await time.latest()) + 90 * 24 * 60 * 60 + 1);
             await expect(pool.decreaseRiskBufferFundPosition(owner.address, 30n * 10n ** 6n, other.address))
                 .to.emit(pool, "RiskBufferFundPositionDecreased")
                 .withArgs(owner.address, 70n * 10n ** 6n, other.address);
@@ -1536,6 +1539,7 @@ describe("Pool", () => {
             await USDC.connect(other).transfer(pool.address, 100n * 10n ** 6n);
             await pool.increaseRiskBufferFundPosition(other.address, 100n * 10n ** 6n);
 
+            await time.setNextBlockTimestamp((await time.latest()) + 90 * 24 * 60 * 60 + 1);
             await expect(pool.decreaseRiskBufferFundPosition(owner.address, 200n * 10n ** 6n, other.address))
                 .to.emit(pool, "GlobalRiskBufferFundChanged")
                 .withArgs(100n * 10n ** 6n);
@@ -1556,6 +1560,7 @@ describe("Pool", () => {
             await USDC.connect(other).transfer(pool.address, 100n * 10n ** 6n);
             await pool.increaseRiskBufferFundPosition(other.address, 100n * 10n ** 6n);
 
+            await time.setNextBlockTimestamp((await time.latest()) + 90 * 24 * 60 * 60 + 1);
             await pool.decreaseRiskBufferFundPosition(owner.address, 50n * 10n ** 6n, other.address);
             expect(await mockRewardFarmCallback.account()).to.eq(owner.address);
             expect(await mockRewardFarmCallback.liquidityAfter()).to.eq(150n * 10n ** 6n);

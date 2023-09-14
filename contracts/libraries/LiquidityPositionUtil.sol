@@ -9,6 +9,8 @@ library LiquidityPositionUtil {
 
     /// @notice Insufficient risk buffer fund
     error InsufficientRiskBufferFund(int256 unrealizedLoss, uint128 requiredRiskBufferFund);
+    /// @notice The position has not reached the unlock time
+    error UnlockTimeNotReached(uint64 requiredUnlockTime);
     /// @notice Insufficient liquidity
     error InsufficientLiquidity(uint256 liquidity, uint256 requiredLiquidity);
     /// @notice The risk buffer fund is experiencing losses
@@ -201,19 +203,22 @@ library LiquidityPositionUtil {
 
     /// @notice Increase the liquidity of a risk buffer fund position
     /// @return positionLiquidityAfter The total liquidity of the position after the increase
+    /// @return unlockTimeAfter The unlock time of the position after the increase
     /// @return riskBufferFundAfter The total risk buffer fund after the increase
     function increaseRiskBufferFundPosition(
         IPoolLiquidityPosition.GlobalRiskBufferFund storage _riskBufferFund,
-        mapping(address => uint256) storage _positions,
+        mapping(address => IPoolLiquidityPosition.RiskBufferFundPosition) storage _positions,
         address _account,
-        uint256 _liquidityDelta
-    ) public returns (uint256 positionLiquidityAfter, int256 riskBufferFundAfter) {
+        uint128 _liquidityDelta
+    ) public returns (uint128 positionLiquidityAfter, uint64 unlockTimeAfter, int256 riskBufferFundAfter) {
         _riskBufferFund.liquidity += _liquidityDelta;
 
-        // Since `globalLiquidityAfter` does not overflow, `positionLiquidityAfter` will not overflow either
-        // prettier-ignore
-        unchecked { positionLiquidityAfter = _positions[_account] + _liquidityDelta; }
-        _positions[_account] = positionLiquidityAfter;
+        IPoolLiquidityPosition.RiskBufferFundPosition storage position = _positions[_account];
+        positionLiquidityAfter = position.liquidity + _liquidityDelta;
+        unlockTimeAfter = block.timestamp.toUint64() + Constants.RISK_BUFFER_FUND_LOCK_PERIOD;
+
+        position.liquidity = positionLiquidityAfter;
+        position.unlockTime = unlockTimeAfter;
 
         riskBufferFundAfter = _riskBufferFund.riskBufferFund + _liquidityDelta.toInt256();
         _riskBufferFund.riskBufferFund = riskBufferFundAfter;
@@ -225,14 +230,17 @@ library LiquidityPositionUtil {
     function decreaseRiskBufferFundPosition(
         IPoolLiquidityPosition.GlobalLiquidityPosition storage _globalPosition,
         IPoolLiquidityPosition.GlobalRiskBufferFund storage _riskBufferFund,
-        mapping(address => uint256) storage _positions,
+        mapping(address => IPoolLiquidityPosition.RiskBufferFundPosition) storage _positions,
         uint160 _indexPriceX96,
         address _account,
-        uint256 _liquidityDelta
-    ) public returns (uint256 positionLiquidityAfter, int256 riskBufferFundAfter) {
-        positionLiquidityAfter = _positions[_account];
-        if (positionLiquidityAfter < _liquidityDelta)
-            revert InsufficientLiquidity(positionLiquidityAfter, _liquidityDelta);
+        uint128 _liquidityDelta
+    ) public returns (uint128 positionLiquidityAfter, int256 riskBufferFundAfter) {
+        IPoolLiquidityPosition.RiskBufferFundPosition memory positionCache = _positions[_account];
+
+        if (positionCache.unlockTime >= block.timestamp) revert UnlockTimeNotReached(positionCache.unlockTime);
+
+        if (positionCache.liquidity < _liquidityDelta)
+            revert InsufficientLiquidity(positionCache.liquidity, _liquidityDelta);
 
         int256 unrealizedPnL = PositionUtil.calculateUnrealizedPnL(
             _globalPosition.side,
@@ -244,8 +252,10 @@ library LiquidityPositionUtil {
             revert RiskBufferFundLoss();
 
         unchecked {
-            positionLiquidityAfter = positionLiquidityAfter - _liquidityDelta;
-            _positions[_account] = positionLiquidityAfter;
+            positionLiquidityAfter = positionCache.liquidity - _liquidityDelta;
+
+            if (positionLiquidityAfter == 0) delete _positions[_account];
+            else _positions[_account].liquidity = positionLiquidityAfter;
 
             _riskBufferFund.liquidity -= _liquidityDelta;
         }

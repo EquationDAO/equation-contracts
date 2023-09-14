@@ -73,13 +73,13 @@ contract MockRouter is Governable {
     function pluginIncreaseRiskBufferFundPosition(
         IPool /*_pool*/,
         address /*_account*/,
-        uint256 /*_liquidityDelta*/
+        uint128 /*_liquidityDelta*/
     ) external {}
 
     function pluginDecreaseRiskBufferFundPosition(
         IPool /*_pool*/,
         address /*_account*/,
-        uint256 /* _liquidityDelta*/,
+        uint128 /* _liquidityDelta*/,
         address /* _receiver*/
     ) external {}
 }
@@ -150,7 +150,7 @@ contract GasDrainingMockRouter {
     function pluginIncreaseRiskBufferFundPosition(
         IPool /*_pool*/,
         address /*_account*/,
-        uint256 /*_liquidityDelta*/
+        uint128 /*_liquidityDelta*/
     ) external pure {
         drainGas();
     }
@@ -158,7 +158,7 @@ contract GasDrainingMockRouter {
     function pluginDecreaseRiskBufferFundPosition(
         IPool /*_pool*/,
         address /*_account*/,
-        uint256 /* _liquidityDelta*/,
+        uint128 /* _liquidityDelta*/,
         address /* _receiver*/
     ) external pure {
         drainGas();

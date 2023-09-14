@@ -53,7 +53,7 @@ describe("OrderBook", function () {
         };
     }
 
-    describe("updateMinExecutionFee", async () => {
+    describe("#updateMinExecutionFee", async () => {
         it("should revert with 'Forbidden' if caller is not gov", async () => {
             const {orderBook, otherAccount1} = await loadFixture(deployFixture);
             await expect(orderBook.connect(otherAccount1).updateMinExecutionFee(3000n)).to.be.revertedWithCustomError(
@@ -71,7 +71,7 @@ describe("OrderBook", function () {
         });
     });
 
-    describe("updateOrderExecutor", async () => {
+    describe("#updateOrderExecutor", async () => {
         it("should revert with 'Forbidden' if caller is not gov", async () => {
             const {otherAccount1, orderBook} = await loadFixture(deployFixture);
             await expect(
@@ -94,7 +94,7 @@ describe("OrderBook", function () {
         });
     });
 
-    describe("updateExecutionGasLimit", async () => {
+    describe("#updateExecutionGasLimit", async () => {
         it("should revert with 'Forbidden' if caller is not gov", async () => {
             const {otherAccount1, orderBook} = await loadFixture(deployFixture);
             await expect(
@@ -109,7 +109,7 @@ describe("OrderBook", function () {
         });
     });
 
-    describe("createIncreaseOrder", async () => {
+    describe("#createIncreaseOrder", async () => {
         it("should revert if insufficient execution fee", async () => {
             const {orderBook, pool, otherAccount1} = await loadFixture(deployFixture);
             // executionFee is insufficient
@@ -158,7 +158,7 @@ describe("OrderBook", function () {
         });
     });
 
-    describe("updateIncreaseOrder", async () => {
+    describe("#updateIncreaseOrder", async () => {
         it("should revert with 'Forbidden' if caller is not request owner", async () => {
             const {orderBook, pool, otherAccount1} = await loadFixture(deployFixture);
 
@@ -194,7 +194,7 @@ describe("OrderBook", function () {
         });
     });
 
-    describe("cancelIncreaseOrder", async () => {
+    describe("#cancelIncreaseOrder", async () => {
         it("should revert with 'Forbidden' if caller is not request owner", async () => {
             const {orderBook, pool, owner, otherAccount1} = await loadFixture(deployFixture);
             expect(
@@ -222,7 +222,7 @@ describe("OrderBook", function () {
         });
     });
 
-    describe("executeIncreaseOrder", async () => {
+    describe("#executeIncreaseOrder", async () => {
         it("should revert with 'Forbidden' if caller is not order executor", async () => {
             const {owner, orderBook, pool, otherAccount1} = await loadFixture(deployFixture);
             expect(
@@ -355,7 +355,7 @@ describe("OrderBook", function () {
         });
     });
 
-    describe("createDecreaseOrder", async () => {
+    describe("#createDecreaseOrder", async () => {
         it("should revert if insufficient or incorrect execution fee", async () => {
             const {orderBook, pool, otherAccount1} = await loadFixture(deployFixture);
             // executionFee is insufficient
@@ -434,7 +434,7 @@ describe("OrderBook", function () {
         });
     });
 
-    describe("updateDecreaseOrder", async () => {
+    describe("#updateDecreaseOrder", async () => {
         it("should revert with 'Forbidden' if sender is not request owner", async () => {
             const {orderBook, pool, otherAccount1} = await loadFixture(deployFixture);
             expect(
@@ -488,7 +488,7 @@ describe("OrderBook", function () {
         });
     });
 
-    describe("cancelDecreaseOrder", async () => {
+    describe("#cancelDecreaseOrder", async () => {
         it("should revert with 'Forbidden' if caller is not request owner nor order executor", async () => {
             const {orderBook, pool, otherAccount1, otherAccount2} = await loadFixture(deployFixture);
             expect(
@@ -575,7 +575,7 @@ describe("OrderBook", function () {
         });
     });
 
-    describe("executeDecreaseOrder", async () => {
+    describe("#executeDecreaseOrder", async () => {
         it("should revert if trigger price is not met", async () => {
             const {orderBook, pool, owner, otherAccount1} = await loadFixture(deployFixture);
             expect(await orderBook.updateOrderExecutor(owner.address, true));
@@ -804,7 +804,7 @@ describe("OrderBook", function () {
         });
     });
 
-    describe("createTakeProfitAndStopLossOrders", async () => {
+    describe("#createTakeProfitAndStopLossOrders", async () => {
         it("should revert if execution fee is invalid", async () => {
             const {orderBook, pool, owner} = await loadFixture(deployFixture);
             // fee0 is insufficient

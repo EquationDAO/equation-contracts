@@ -1,5 +1,5 @@
 import {ethers} from "hardhat";
-import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {loadFixture, time} from "@nomicfoundation/hardhat-network-helpers";
 import {expectSnapshotGasCost} from "../shared/snapshotGasCost";
 import {DECIMALS_18, DECIMALS_6, Q96, SIDE_LONG, SIDE_SHORT, toPriceX96} from "../shared/Constants";
 import {IPoolLiquidityPosition} from "../../typechain-types/contracts/test/LiquidityPositionUtilTest";
@@ -429,6 +429,7 @@ describe("LiquidityPositionUtil gas tests", () => {
         const [owner, other] = await ethers.getSigners();
         await liquidityPositionUtil.increaseRiskBufferFundPosition(owner.address, 1000n);
         await liquidityPositionUtil.increaseRiskBufferFundPosition(other.address, 100n);
+        await time.setNextBlockTimestamp((await time.latest()) + 90 * 24 * 60 * 60 + 1);
         await expectSnapshotGasCost(
             liquidityPositionUtil.getGasCostDecreaseRiskBufferFundPosition(
                 toPriceX96("1808.123", DECIMALS_18, DECIMALS_6),

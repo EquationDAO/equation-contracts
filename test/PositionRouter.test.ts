@@ -60,7 +60,7 @@ describe("PositionRouter", function () {
         };
     }
 
-    describe("updatePositionExecutor", async () => {
+    describe("#updatePositionExecutor", async () => {
         it("should revert with 'Forbidden' if caller is not gov", async () => {
             const {otherAccount1, positionRouter} = await loadFixture(deployFixture);
             await expect(
@@ -83,7 +83,7 @@ describe("PositionRouter", function () {
         });
     });
 
-    describe("updateDelayValues", async () => {
+    describe("#updateDelayValues", async () => {
         it("should revert with 'Forbidden' if caller is not gov", async () => {
             const {otherAccount1, positionRouter} = await loadFixture(deployFixture);
             await expect(
@@ -102,7 +102,7 @@ describe("PositionRouter", function () {
         });
     });
 
-    describe("updateMinExecutionFee", async () => {
+    describe("#updateMinExecutionFee", async () => {
         it("should revert with 'Forbidden' if caller is not gov", async () => {
             const {otherAccount1, positionRouter} = await loadFixture(deployFixture);
             await expect(
@@ -119,7 +119,7 @@ describe("PositionRouter", function () {
         });
     });
 
-    describe("updateExecutionGasLimit", async () => {
+    describe("#updateExecutionGasLimit", async () => {
         it("should revert with 'Forbidden' if caller is not gov", async () => {
             const {otherAccount1, positionRouter} = await loadFixture(deployFixture);
             await expect(
@@ -136,7 +136,7 @@ describe("PositionRouter", function () {
     });
 
     describe("OpenLiquidityPosition", async () => {
-        describe("createOpenLiquidityPosition", async () => {
+        describe("#createOpenLiquidityPosition", async () => {
             it("should transfer correct execution fee to position router", async () => {
                 const {positionRouter, otherAccount1} = await loadFixture(deployFixture);
                 // insufficient execution fee
@@ -180,7 +180,7 @@ describe("PositionRouter", function () {
             });
         });
 
-        describe("cancelOpenLiquidityPosition", async () => {
+        describe("#cancelOpenLiquidityPosition", async () => {
             describe("shouldCancel/shouldExecuteOrCancel", async () => {
                 it("should revert if caller is not request owner nor executor", async () => {
                     const {positionRouter, pool, otherAccount1, owner} = await loadFixture(deployFixture);
@@ -306,7 +306,7 @@ describe("PositionRouter", function () {
             });
         });
 
-        describe("executeOpenLiquidityPosition", async () => {
+        describe("#executeOpenLiquidityPosition", async () => {
             it("should pass if request is not exist", async () => {
                 const {owner, positionRouter} = await loadFixture(deployFixture);
                 await positionRouter.executeOpenLiquidityPosition(1000n, owner.address);
@@ -364,7 +364,7 @@ describe("PositionRouter", function () {
     });
 
     describe("CloseLiquidityPosition", async () => {
-        describe("createCloseLiquidityPosition", async () => {
+        describe("#createCloseLiquidityPosition", async () => {
             it("should transfer correct execution fee to position router", async () => {
                 const {positionRouter, otherAccount1, pool} = await loadFixture(deployFixture);
                 await pool.setPositionIDAddress(2n, otherAccount1.address);
@@ -426,7 +426,7 @@ describe("PositionRouter", function () {
             });
         });
 
-        describe("cancelCloseLiquidityPosition", async () => {
+        describe("#cancelCloseLiquidityPosition", async () => {
             it("should pass if request not exist", async () => {
                 const {owner, positionRouter} = await loadFixture(deployFixture);
                 await positionRouter.cancelCloseLiquidityPosition(1000n, owner.address);
@@ -473,7 +473,7 @@ describe("PositionRouter", function () {
             });
         });
 
-        describe("executeCloseLiquidityPosition", async () => {
+        describe("#executeCloseLiquidityPosition", async () => {
             it("should pass if request not exist", async () => {
                 const {owner, positionRouter} = await loadFixture(deployFixture);
                 await positionRouter.executeCloseLiquidityPosition(1000n, owner.address);
@@ -521,7 +521,7 @@ describe("PositionRouter", function () {
     });
 
     describe("AdjustLiquidityPositionMargin", async () => {
-        describe("createAdjustLiquidityPositionMargin", async () => {
+        describe("#createAdjustLiquidityPositionMargin", async () => {
             it("should transfer correct execution fee to position router", async () => {
                 const {positionRouter, otherAccount1, pool} = await loadFixture(deployFixture);
                 await pool.setPositionIDAddress(2n, otherAccount1.address);
@@ -586,7 +586,7 @@ describe("PositionRouter", function () {
             });
         });
 
-        describe("cancelAdjustLiquidityPositionMargin", async () => {
+        describe("#cancelAdjustLiquidityPositionMargin", async () => {
             it("should pass if request not exist", async () => {
                 const {owner, positionRouter} = await loadFixture(deployFixture);
                 await positionRouter.cancelAdjustLiquidityPositionMargin(1000n, owner.address);
@@ -632,7 +632,7 @@ describe("PositionRouter", function () {
             });
         });
 
-        describe("executeAdjustLiquidityPositionMargin", async () => {
+        describe("#executeAdjustLiquidityPositionMargin", async () => {
             it("should pass if request not exist", async () => {
                 const {owner, positionRouter} = await loadFixture(deployFixture);
                 await positionRouter.executeAdjustLiquidityPositionMargin(1000n, owner.address);
@@ -683,7 +683,7 @@ describe("PositionRouter", function () {
     });
 
     describe("IncreasePosition", async () => {
-        describe("createIncreasePosition", async () => {
+        describe("#createIncreasePosition", async () => {
             it("should transfer correct execution fee to position router", async () => {
                 const {positionRouter, pool, otherAccount1} = await loadFixture(deployFixture);
                 // insufficient execution fee
@@ -730,7 +730,7 @@ describe("PositionRouter", function () {
             });
         });
 
-        describe("cancelIncreasePosition", async () => {
+        describe("#cancelIncreasePosition", async () => {
             it("should pass if request not exist", async () => {
                 const {owner, positionRouter} = await loadFixture(deployFixture);
                 await positionRouter.cancelIncreasePosition(1000n, owner.address);
@@ -749,7 +749,7 @@ describe("PositionRouter", function () {
             });
         });
 
-        describe("executeIncreasePosition", async () => {
+        describe("#executeIncreasePosition", async () => {
             it("should return true if request not exist", async () => {
                 const {owner, positionRouter} = await loadFixture(deployFixture);
                 await positionRouter.executeIncreasePosition(1000n, owner.address);
@@ -825,7 +825,7 @@ describe("PositionRouter", function () {
     });
 
     describe("DecreasePosition", async () => {
-        describe("createDecreasePosition", async () => {
+        describe("#createDecreasePosition", async () => {
             it("should transfer correct execution fee to position router", async () => {
                 const {positionRouter, pool, otherAccount1} = await loadFixture(deployFixture);
 
@@ -883,7 +883,7 @@ describe("PositionRouter", function () {
             });
         });
 
-        describe("cancelDecreasePosition", async () => {
+        describe("#cancelDecreasePosition", async () => {
             it("should pass if request not exist", async () => {
                 const {owner, positionRouter} = await loadFixture(deployFixture);
                 await positionRouter.cancelDecreasePosition(1000n, owner.address);
@@ -902,7 +902,7 @@ describe("PositionRouter", function () {
             });
         });
 
-        describe("executeDecreasePosition", async () => {
+        describe("#executeDecreasePosition", async () => {
             it("should return true if request not exist", async () => {
                 const {owner, positionRouter} = await loadFixture(deployFixture);
                 await positionRouter.executeDecreasePosition(1000n, owner.address);
@@ -974,7 +974,7 @@ describe("PositionRouter", function () {
     });
 
     describe("IncreaseRiskBufferFundPosition", async () => {
-        describe("createIncreaseRiskBufferFundPosition", async () => {
+        describe("#createIncreaseRiskBufferFundPosition", async () => {
             it("should transfer correct execution fee to position router", async () => {
                 const {positionRouter, pool, otherAccount1} = await loadFixture(deployFixture);
                 // insufficient execution fee
@@ -1017,7 +1017,7 @@ describe("PositionRouter", function () {
             });
         });
 
-        describe("cancelIncreaseRiskBufferFundPosition", async () => {
+        describe("#cancelIncreaseRiskBufferFundPosition", async () => {
             it("should pass if request not exist", async () => {
                 const {owner, positionRouter} = await loadFixture(deployFixture);
                 await positionRouter.cancelIncreaseRiskBufferFundPosition(1000n, owner.address);
@@ -1042,7 +1042,7 @@ describe("PositionRouter", function () {
             });
         });
 
-        describe("executeIncreaseRiskBufferFundPosition", async () => {
+        describe("#executeIncreaseRiskBufferFundPosition", async () => {
             it("should return true if request not exist", async () => {
                 const {owner, positionRouter} = await loadFixture(deployFixture);
                 await positionRouter.executeIncreaseRiskBufferFundPosition(1000n, owner.address);
@@ -1088,7 +1088,7 @@ describe("PositionRouter", function () {
     });
 
     describe("DecreaseRiskBufferFundPosition", async () => {
-        describe("createDecreaseRiskBufferFundPosition", async () => {
+        describe("#createDecreaseRiskBufferFundPosition", async () => {
             it("should transfer correct execution fee to position router", async () => {
                 const {positionRouter, pool, otherAccount1} = await loadFixture(deployFixture);
                 // insufficient execution fee
@@ -1133,7 +1133,7 @@ describe("PositionRouter", function () {
             });
         });
 
-        describe("cancelDecreaseRiskBufferFundPosition", async () => {
+        describe("#cancelDecreaseRiskBufferFundPosition", async () => {
             it("should pass if request not exist", async () => {
                 const {owner, positionRouter} = await loadFixture(deployFixture);
                 await positionRouter.cancelDecreaseRiskBufferFundPosition(1000n, owner.address);
@@ -1160,7 +1160,7 @@ describe("PositionRouter", function () {
             });
         });
 
-        describe("executeDecreaseRiskBufferFundPosition", async () => {
+        describe("#executeDecreaseRiskBufferFundPosition", async () => {
             it("should return true if request not exist", async () => {
                 const {owner, positionRouter} = await loadFixture(deployFixture);
                 await positionRouter.executeDecreaseRiskBufferFundPosition(1000n, owner.address);
@@ -1209,7 +1209,7 @@ describe("PositionRouter", function () {
         });
     });
 
-    describe("ExecuteOpenLiquidityPositions", async () => {
+    describe("#executeOpenLiquidityPositions", async () => {
         it("should revert with 'Forbidden' if caller is not executor", async () => {
             const {owner, positionRouter} = await loadFixture(deployFixture);
             await expect(
@@ -1389,7 +1389,7 @@ describe("PositionRouter", function () {
         });
     });
 
-    describe("ExecuteCloseLiquidityPositions", async () => {
+    describe("#executeCloseLiquidityPositions", async () => {
         it("should revert with 'Forbidden' if caller is not executor", async () => {
             const {owner, positionRouter} = await loadFixture(deployFixture);
             await expect(
@@ -1519,7 +1519,7 @@ describe("PositionRouter", function () {
         });
     });
 
-    describe("ExecuteAdjustLiquidityPositionMargins", async () => {
+    describe("#executeAdjustLiquidityPositionMargins", async () => {
         it("should revert with 'Forbidden' if caller is not executor", async () => {
             const {owner, positionRouter} = await loadFixture(deployFixture);
             await expect(
@@ -1655,7 +1655,7 @@ describe("PositionRouter", function () {
         });
     });
 
-    describe("ExecuteIncreasePositions", async () => {
+    describe("#executeIncreasePositions", async () => {
         it("should revert with 'Forbidden' if caller is not executor", async () => {
             const {owner, positionRouter} = await loadFixture(deployFixture);
             await expect(positionRouter.executeIncreasePositions(100n, owner.address)).to.be.revertedWithCustomError(
@@ -1795,7 +1795,7 @@ describe("PositionRouter", function () {
         });
     });
 
-    describe("ExecuteDecreasePositions", async () => {
+    describe("#executeDecreasePositions", async () => {
         it("should revert with 'Forbidden' if caller is not executor", async () => {
             const {owner, positionRouter} = await loadFixture(deployFixture);
             await expect(positionRouter.executeDecreasePositions(100n, owner.address)).to.be.revertedWithCustomError(
@@ -1919,7 +1919,7 @@ describe("PositionRouter", function () {
         });
     });
 
-    describe("ExecuteIncreaseRiskBufferFundPositions", async () => {
+    describe("#executeIncreaseRiskBufferFundPositions", async () => {
         it("should revert with 'Forbidden' if caller is not executor", async () => {
             const {owner, positionRouter} = await loadFixture(deployFixture);
             await expect(
@@ -2044,7 +2044,7 @@ describe("PositionRouter", function () {
         });
     });
 
-    describe("ExecuteDecreaseRiskBufferFundPositions", async () => {
+    describe("#executeDecreaseRiskBufferFundPositions", async () => {
         it("should revert with 'Forbidden' if caller is not executor", async () => {
             const {owner, positionRouter} = await loadFixture(deployFixture);
             await expect(

@@ -400,12 +400,12 @@ describe("Pool gas tests", () => {
                 await USDC.connect(other).transfer(pool.address, 100n * 10n ** 6n);
                 await pool.increaseRiskBufferFundPosition(other.address, 100n * 10n ** 6n);
 
-                await time.setNextBlockTimestamp(nextHourBegin + 30);
+                await time.setNextBlockTimestamp(nextHourBegin + 30 + 90 * 24 * 60 * 60);
                 await expectSnapshotGasCost(
                     pool.estimateGas.decreaseRiskBufferFundPosition(owner.address, 50n * 10n ** 6n, other.address)
                 );
 
-                await time.setNextBlockTimestamp(nextHourBegin + 40);
+                await time.setNextBlockTimestamp(nextHourBegin + 40 + 90 * 24 * 60 * 60);
                 await expectSnapshotGasCost(
                     pool.estimateGas.decreaseRiskBufferFundPosition(other.address, 50n * 10n ** 6n, other.address)
                 );
@@ -425,12 +425,12 @@ describe("Pool gas tests", () => {
                 await USDC.connect(other).transfer(pool.address, 100n * 10n ** 6n);
                 await pool.increaseRiskBufferFundPosition(other.address, 100n * 10n ** 6n);
 
-                await time.setNextBlockTimestamp(nextHourBegin + 3600);
+                await time.setNextBlockTimestamp(nextHourBegin + 3600 + 90 * 24 * 60 * 60);
                 await expectSnapshotGasCost(
                     pool.estimateGas.decreaseRiskBufferFundPosition(owner.address, 50n * 10n ** 6n, other.address)
                 );
 
-                await time.setNextBlockTimestamp(nextHourBegin + 7200);
+                await time.setNextBlockTimestamp(nextHourBegin + 7200 + 90 * 24 * 60 * 60);
                 await expectSnapshotGasCost(
                     pool.estimateGas.decreaseRiskBufferFundPosition(other.address, 50n * 10n ** 6n, other.address)
                 );

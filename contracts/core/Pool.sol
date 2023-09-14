@@ -56,7 +56,7 @@ contract Pool is IPool, ReentrancyGuard {
     /// @inheritdoc IPoolLiquidityPosition
     GlobalRiskBufferFund public override globalRiskBufferFund;
     /// @inheritdoc IPoolLiquidityPosition
-    mapping(address => uint256) public override riskBufferFundPositions;
+    mapping(address => RiskBufferFundPosition) public override riskBufferFundPositions;
 
     // ==================== Position Stats ==============================
 
@@ -373,7 +373,7 @@ contract Pool is IPool, ReentrancyGuard {
     }
 
     /// @inheritdoc IPoolLiquidityPosition
-    function increaseRiskBufferFundPosition(address _account, uint256 _liquidityDelta) external override nonReentrant {
+    function increaseRiskBufferFundPosition(address _account, uint128 _liquidityDelta) external override nonReentrant {
         _onlyRouter();
 
         _sampleAndAdjustFundingRate();
@@ -382,10 +382,10 @@ contract Pool is IPool, ReentrancyGuard {
 
         _updateUnrealizedLossMetrics(globalLiquidityPosition, 0);
 
-        (uint256 positionLiquidityAfter, int256 riskBufferFundAfter) = LiquidityPositionUtil
+        (uint128 positionLiquidityAfter, uint64 unlockTimeAfter, int256 riskBufferFundAfter) = LiquidityPositionUtil
             .increaseRiskBufferFundPosition(globalRiskBufferFund, riskBufferFundPositions, _account, _liquidityDelta);
 
-        emit RiskBufferFundPositionIncreased(_account, positionLiquidityAfter);
+        emit RiskBufferFundPositionIncreased(_account, positionLiquidityAfter, unlockTimeAfter);
         emit GlobalRiskBufferFundChanged(riskBufferFundAfter);
 
         // callback for reward farm
@@ -395,7 +395,7 @@ contract Pool is IPool, ReentrancyGuard {
     /// @inheritdoc IPoolLiquidityPosition
     function decreaseRiskBufferFundPosition(
         address _account,
-        uint256 _liquidityDelta,
+        uint128 _liquidityDelta,
         address _receiver
     ) external override nonReentrant {
         _onlyRouter();
@@ -404,7 +404,7 @@ contract Pool is IPool, ReentrancyGuard {
 
         _updateUnrealizedLossMetrics(globalLiquidityPosition, 0);
 
-        (uint256 positionLiquidityAfter, int256 riskBufferFundAfter) = LiquidityPositionUtil
+        (uint128 positionLiquidityAfter, int256 riskBufferFundAfter) = LiquidityPositionUtil
             .decreaseRiskBufferFundPosition(
                 globalLiquidityPosition,
                 globalRiskBufferFund,
