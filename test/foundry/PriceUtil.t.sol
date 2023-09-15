@@ -80,10 +80,10 @@ contract PriceUtilTest is Test {
         priceState.liquidationVertexIndex = 4;
         priceState.priceVertices = [
             IPool.PriceVertex(0, 0),
-            IPool.PriceVertex(39238929010000000, Math.mulDiv(5, Constants.Q96, 10000).toUint128()), // 0.0005%
-            IPool.PriceVertex(58858393515000000, Math.mulDiv(10, Constants.Q96, 10000).toUint128()), // 0.001%
-            IPool.PriceVertex(78477858020000000, Math.mulDiv(15, Constants.Q96, 10000).toUint128()), // 0.0015%
-            IPool.PriceVertex(98097322525000000, Math.mulDiv(20, Constants.Q96, 10000).toUint128()), // 0.002%
+            IPool.PriceVertex(39238929010000000, Math.mulDiv(5, Constants.Q96, 10000).toUint128()), // 0.05%
+            IPool.PriceVertex(58858393515000000, Math.mulDiv(10, Constants.Q96, 10000).toUint128()), // 0.1%
+            IPool.PriceVertex(78477858020000000, Math.mulDiv(15, Constants.Q96, 10000).toUint128()), // 0.15%
+            IPool.PriceVertex(98097322525000000, Math.mulDiv(20, Constants.Q96, 10000).toUint128()), // 0.2%
             IPool.PriceVertex(196194645050000000, Math.mulDiv(100, Constants.Q96, 10000).toUint128()), // 1%
             IPool.PriceVertex(1961946450500000000, Math.mulDiv(2000, Constants.Q96, 10000).toUint128()) // 20%
         ];
