@@ -137,7 +137,7 @@ contract EFC is IEFC, ERC721WeightedVotes, Governable, ReentrancyGuard {
         rewardFarmCallback.onChangeReferralToken(
             referee,
             tokenIdBefore,
-            _getConnectorId(tokenIdBefore),
+            tokenIdBefore == 0 ? 0 : _getConnectorId(tokenIdBefore),
             tokenIdAfter,
             _getConnectorId(tokenIdAfter)
         );
