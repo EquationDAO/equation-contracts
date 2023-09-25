@@ -360,6 +360,23 @@ describe("PositionRouter", function () {
                 let [account] = await positionRouter.openLiquidityPositionRequests(0n);
                 expect(account).eq(ethers.constants.AddressZero.toString());
             });
+
+            it("should revert with 'TooEarly' if someone who are not the executor executes his own request and pass if sufficient time elapsed", async () => {
+                const {positionRouter, pool, USDC, otherAccount1} = await loadFixture(deployFixture);
+                await positionRouter.connect(otherAccount1).createOpenLiquidityPosition(pool.address, 1000n, 30000n, {
+                    value: 3000,
+                });
+                const current = await time.latest();
+                await expect(
+                    positionRouter.connect(otherAccount1).executeOpenLiquidityPosition(0n, otherAccount1.address)
+                )
+                    .to.revertedWithCustomError(positionRouter, "TooEarly")
+                    .withArgs(current + 180);
+                await time.setNextBlockTimestamp(current + 180);
+                await expect(
+                    positionRouter.connect(otherAccount1).executeOpenLiquidityPosition(0n, otherAccount1.address)
+                ).not.to.be.reverted;
+            });
         });
     });
 
@@ -516,6 +533,26 @@ describe("PositionRouter", function () {
                 // delete request
                 let [account] = await positionRouter.closeLiquidityPositionRequests(0n);
                 expect(account).eq(ethers.constants.AddressZero.toString());
+            });
+
+            it("should revert with 'TooEarly' if someone who are not the executor executes his own request and pass if sufficient time elapsed", async () => {
+                const {positionRouter, pool, otherAccount1, otherAccount2} = await loadFixture(deployFixture);
+                await pool.setPositionIDAddress(2n, otherAccount1.address);
+                await positionRouter
+                    .connect(otherAccount1)
+                    .createCloseLiquidityPosition(pool.address, 2n, otherAccount1.address, {
+                        value: 30000,
+                    });
+                const current = await time.latest();
+                await expect(
+                    positionRouter.connect(otherAccount1).executeCloseLiquidityPosition(0n, otherAccount1.address)
+                )
+                    .to.be.revertedWithCustomError(positionRouter, "TooEarly")
+                    .withArgs(current + 180);
+                await time.setNextBlockTimestamp(current + 180);
+                await expect(
+                    positionRouter.connect(otherAccount1).executeCloseLiquidityPosition(0n, otherAccount1.address)
+                ).not.to.be.reverted;
             });
         });
     });
@@ -679,6 +716,32 @@ describe("PositionRouter", function () {
                 let [account] = await positionRouter.adjustLiquidityPositionMarginRequests(0n);
                 expect(account).eq(ethers.constants.AddressZero.toString());
             });
+
+            it("should revert with 'TooEarly' if someone who are not the executor executes his own request and pass if sufficient time elapsed", async () => {
+                const {positionRouter, pool, USDC, otherAccount1} = await loadFixture(deployFixture);
+                await pool.setPositionIDAddress(2n, otherAccount1.address);
+                expect(
+                    await positionRouter
+                        .connect(otherAccount1)
+                        .createAdjustLiquidityPositionMargin(pool.address, 2n, 100n, otherAccount1.address, {
+                            value: 3000,
+                        })
+                );
+                const current = await time.latest();
+                await expect(
+                    positionRouter
+                        .connect(otherAccount1)
+                        .executeAdjustLiquidityPositionMargin(0n, otherAccount1.address)
+                )
+                    .to.be.revertedWithCustomError(positionRouter, "TooEarly")
+                    .withArgs(current + 180);
+                await time.setNextBlockTimestamp(current + 180);
+                await expect(
+                    positionRouter
+                        .connect(otherAccount1)
+                        .executeAdjustLiquidityPositionMargin(0n, otherAccount1.address)
+                ).not.to.be.reverted;
+            });
         });
     });
 
@@ -818,6 +881,26 @@ describe("PositionRouter", function () {
                 // trade price is very low for increasing short position, but still
                 // expected to not revert
                 await router.setTradePriceX96(1n);
+                await expect(positionRouter.connect(otherAccount1).executeIncreasePosition(0n, otherAccount1.address))
+                    .not.to.be.reverted;
+            });
+
+            it("should revert with 'TooEarly' if someone who are not the executor executes his own request and pass if sufficient time elapsed", async () => {
+                const {positionRouter, pool, router, otherAccount1} = await loadFixture(deployFixture);
+                await positionRouter
+                    .connect(otherAccount1)
+                    .createIncreasePosition(pool.address, SIDE_SHORT, 100n, 100n, 0n, {
+                        value: 3000,
+                    });
+                const current = await time.latest();
+                const earliest = (await time.latest()) + 180;
+                await router.setTradePriceX96(1n);
+                await time.setNextBlockTimestamp(current + 179);
+                await expect(positionRouter.connect(otherAccount1).executeIncreasePosition(0n, otherAccount1.address))
+                    .to.be.revertedWithCustomError(positionRouter, "TooEarly")
+                    .withArgs(earliest);
+
+                await time.setNextBlockTimestamp(current + 180);
                 await expect(positionRouter.connect(otherAccount1).executeIncreasePosition(0n, otherAccount1.address))
                     .not.to.be.reverted;
             });
@@ -970,6 +1053,23 @@ describe("PositionRouter", function () {
                 await expect(positionRouter.connect(otherAccount1).executeDecreasePosition(0n, otherAccount1.address))
                     .not.to.be.reverted;
             });
+            it("should revert with 'TooEarly' if someone who are not the executor executes his own request and pass if sufficient time elapsed", async () => {
+                const {positionRouter, pool, router, otherAccount1} = await loadFixture(deployFixture);
+                await positionRouter
+                    .connect(otherAccount1)
+                    .createDecreasePosition(pool.address, SIDE_SHORT, 100n, 100n, 1820n, otherAccount1.address, {
+                        value: 3000,
+                    });
+                const current = await time.latest();
+                await router.setTradePriceX96(1810n);
+                await time.setNextBlockTimestamp(current + 179);
+                await expect(positionRouter.connect(otherAccount1).executeDecreasePosition(0n, otherAccount1.address))
+                    .to.be.revertedWithCustomError(positionRouter, "TooEarly")
+                    .withArgs(current + 180);
+                await time.setNextBlockTimestamp(current + 180);
+                await expect(positionRouter.connect(otherAccount1).executeDecreasePosition(0n, otherAccount1.address))
+                    .not.to.be.reverted;
+            });
         });
     });
 
@@ -1083,6 +1183,26 @@ describe("PositionRouter", function () {
                 // delete request
                 let [account] = await positionRouter.increaseRiskBufferFundPositionRequests(0n);
                 expect(account).eq(ethers.constants.AddressZero.toString());
+            });
+            it("should revert with 'TooEarly' if someone who are not the executor executes his own request and pass if sufficient time elapsed", async () => {
+                const {positionRouter, pool, otherAccount1} = await loadFixture(deployFixture);
+                await positionRouter.connect(otherAccount1).createIncreaseRiskBufferFundPosition(pool.address, 100n, {
+                    value: 30000,
+                });
+                const current = await time.latest();
+                await expect(
+                    positionRouter
+                        .connect(otherAccount1)
+                        .executeIncreaseRiskBufferFundPosition(0n, otherAccount1.address)
+                )
+                    .to.be.revertedWithCustomError(positionRouter, "TooEarly")
+                    .withArgs(current + 180);
+                await time.setNextBlockTimestamp(current + 180);
+                await expect(
+                    await positionRouter
+                        .connect(otherAccount1)
+                        .executeIncreaseRiskBufferFundPosition(0n, otherAccount1.address)
+                ).not.to.be.reverted;
             });
         });
     });
@@ -1205,6 +1325,29 @@ describe("PositionRouter", function () {
                 // delete request
                 let [account] = await positionRouter.decreaseRiskBufferFundPositionRequests(0n);
                 expect(account).eq(ethers.constants.AddressZero.toString());
+            });
+
+            it("should revert with 'TooEarly' if someone who are not the executor executes his own request and pass if sufficient time elapsed", async () => {
+                const {positionRouter, pool, otherAccount1, otherAccount2} = await loadFixture(deployFixture);
+                await positionRouter
+                    .connect(otherAccount1)
+                    .createDecreaseRiskBufferFundPosition(pool.address, 100n, otherAccount1.address, {
+                        value: 30000,
+                    });
+                const current = await time.latest();
+                await expect(
+                    positionRouter
+                        .connect(otherAccount1)
+                        .executeDecreaseRiskBufferFundPosition(0n, otherAccount1.address)
+                )
+                    .to.be.revertedWithCustomError(positionRouter, "TooEarly")
+                    .withArgs(current + 180);
+                await time.setNextBlockTimestamp(current + 180);
+                await expect(
+                    await positionRouter
+                        .connect(otherAccount1)
+                        .executeDecreaseRiskBufferFundPosition(0n, otherAccount1.address)
+                ).not.to.be.reverted;
             });
         });
     });
