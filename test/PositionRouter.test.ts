@@ -361,7 +361,7 @@ describe("PositionRouter", function () {
                 expect(account).eq(ethers.constants.AddressZero.toString());
             });
 
-            it("should revert with 'TooEarly' if someone who are not the executor executes his own request", async () => {
+            it("should revert with 'TooEarly' if someone who are not the executor executes his own request and pass if sufficient time elapsed", async () => {
                 const {positionRouter, pool, USDC, otherAccount1} = await loadFixture(deployFixture);
                 await positionRouter.connect(otherAccount1).createOpenLiquidityPosition(pool.address, 1000n, 30000n, {
                     value: 3000,
@@ -535,7 +535,7 @@ describe("PositionRouter", function () {
                 expect(account).eq(ethers.constants.AddressZero.toString());
             });
 
-            it("should revert with 'TooEarly' if someone who are not the executor executes his own request", async () => {
+            it("should revert with 'TooEarly' if someone who are not the executor executes his own request and pass if sufficient time elapsed", async () => {
                 const {positionRouter, pool, otherAccount1, otherAccount2} = await loadFixture(deployFixture);
                 await pool.setPositionIDAddress(2n, otherAccount1.address);
                 await positionRouter
@@ -717,7 +717,7 @@ describe("PositionRouter", function () {
                 expect(account).eq(ethers.constants.AddressZero.toString());
             });
 
-            it("should revert with 'TooEarly' if someone who are not the executor executes his own request", async () => {
+            it("should revert with 'TooEarly' if someone who are not the executor executes his own request and pass if sufficient time elapsed", async () => {
                 const {positionRouter, pool, USDC, otherAccount1} = await loadFixture(deployFixture);
                 await pool.setPositionIDAddress(2n, otherAccount1.address);
                 expect(
@@ -885,7 +885,7 @@ describe("PositionRouter", function () {
                     .not.to.be.reverted;
             });
 
-            it("should revert with 'TooEarly' if someone who are not the executor executes his own request", async () => {
+            it("should revert with 'TooEarly' if someone who are not the executor executes his own request and pass if sufficient time elapsed", async () => {
                 const {positionRouter, pool, router, otherAccount1} = await loadFixture(deployFixture);
                 await positionRouter
                     .connect(otherAccount1)
@@ -1053,7 +1053,7 @@ describe("PositionRouter", function () {
                 await expect(positionRouter.connect(otherAccount1).executeDecreasePosition(0n, otherAccount1.address))
                     .not.to.be.reverted;
             });
-            it("should revert with 'TooEarly' if someone who are not the executor executes his own request", async () => {
+            it("should revert with 'TooEarly' if someone who are not the executor executes his own request and pass if sufficient time elapsed", async () => {
                 const {positionRouter, pool, router, otherAccount1} = await loadFixture(deployFixture);
                 await positionRouter
                     .connect(otherAccount1)
@@ -1184,7 +1184,7 @@ describe("PositionRouter", function () {
                 let [account] = await positionRouter.increaseRiskBufferFundPositionRequests(0n);
                 expect(account).eq(ethers.constants.AddressZero.toString());
             });
-            it("should revert with 'TooEarly' if someone who are not the executor executes his own request", async () => {
+            it("should revert with 'TooEarly' if someone who are not the executor executes his own request and pass if sufficient time elapsed", async () => {
                 const {positionRouter, pool, otherAccount1} = await loadFixture(deployFixture);
                 await positionRouter.connect(otherAccount1).createIncreaseRiskBufferFundPosition(pool.address, 100n, {
                     value: 30000,
@@ -1327,7 +1327,7 @@ describe("PositionRouter", function () {
                 expect(account).eq(ethers.constants.AddressZero.toString());
             });
 
-            it("should revert with 'TooEarly' if someone who are not the executor executes his own request", async () => {
+            it("should revert with 'TooEarly' if someone who are not the executor executes his own request and pass if sufficient time elapsed", async () => {
                 const {positionRouter, pool, otherAccount1, otherAccount2} = await loadFixture(deployFixture);
                 await positionRouter
                     .connect(otherAccount1)
