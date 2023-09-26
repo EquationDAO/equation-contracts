@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.21;
 
-import "./governance/Governable.sol";
-import "./oracle/interfaces/IPriceFeed.sol";
-import "./plugins/interfaces/IOrderBook.sol";
-import "./plugins/interfaces/IPositionRouter.sol";
+import "../governance/Governable.sol";
+import "../oracle/interfaces/IPriceFeed.sol";
+import "../plugins/interfaces/IOrderBook.sol";
+import "../plugins/interfaces/IPositionRouter.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
 
 /// @notice MixedExecutor is a contract that executes multiple calls in a single transaction
