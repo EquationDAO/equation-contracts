@@ -18,6 +18,7 @@ async function main() {
         "0x3B70C25e6aA2e3F58aBE5F64EE66a858cfD9590B",
         "0xf1661E4FCe84054ddD857f28Fe2fB772a1444724",
         "0x94721a19Cd9A55fbcBd9246f405D9FAFb08d21C8",
+        "0x3f08bb3A44A2B9DFa1Eb14C056c44B33dC9Ae8b5",
     ]);
 }
 
