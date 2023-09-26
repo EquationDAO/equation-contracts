@@ -53,6 +53,9 @@ async function main() {
     const poolFactoryAddr = ethers.utils.getContractAddress({from: deployer.address, nonce: nonce++});
     // mixed executor address
     const mixedExecutorAddr = ethers.utils.getContractAddress({from: deployer.address, nonce: nonce++});
+    // executor assistant address
+    const executorAssistantAddr = ethers.utils.getContractAddress({from: deployer.address, nonce: nonce++});
+
     deployments.set("EQU", equAddr);
     deployments.set("veEQU", veEQUAddr);
     deployments.set("EFC", efcAddr);
@@ -65,6 +68,7 @@ async function main() {
     deployments.set("FeeDistributor", feeDistributorAddr);
     deployments.set("PoolFactory", poolFactoryAddr);
     deployments.set("MixedExecutor", mixedExecutorAddr);
+    deployments.set("ExecutorAssistant", executorAssistantAddr);
 
     // deploy tokens
     const EQU = await ethers.getContractFactory("EQU");
@@ -168,6 +172,13 @@ async function main() {
     await mixedExecutor.deployed();
     expectAddr(mixedExecutor.address, mixedExecutorAddr);
     console.log(`MixedExecutor deployed to: ${mixedExecutor.address}`);
+
+    // deploy executor assistant
+    const ExecutorAssistant = await ethers.getContractFactory("ExecutorAssistant");
+    const executorAssistant = await ExecutorAssistant.deploy(positionRouterAddr);
+    await executorAssistant.deployed();
+    expectAddr(executorAssistant.address, executorAssistantAddr);
+    console.log(`ExecutorAssistant deployed to: ${executorAssistant.address}`);
 
     // initialize tokens
     await equ.setMinter(rewardFarmAddr, true);
