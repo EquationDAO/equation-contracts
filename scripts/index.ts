@@ -201,6 +201,9 @@ async function main() {
     // );
     console.log("Initialize price feed finished");
 
+    // initialize fee distributor
+    await feeDistributor.setLockupRewardMultipliers([30, 60, 90], [1, 2, 3]);
+
     // initialize pool factory
     await concatPoolCreationCode(poolFactory);
     await poolFactory.grantRole(

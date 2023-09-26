@@ -9,18 +9,10 @@ async function main() {
     const chainId = (await ethers.provider.getNetwork()).chainId;
     const document = require(`../deployments/${chainId}.json`);
 
-    const RewardFarm = await ethers.getContractAt("RewardFarm", document.deployments.RewardFarm);
-    await RewardFarm.setConfig({
-        liquidityRate: 28_000_000n, // 28%
-        riskBufferFundLiquidityRate: 50_000_000n, // 50%
-        referralTokenRate: 20_000_000n, // 20%
-        referralParentTokenRate: 2_000_000n, // 2%
-    });
-
-    await RewardFarm.setPoolsReward(
-        document.deployments.registerPools.map((item: {pool: any}) => item.pool),
-        network.tokens.map((item) => item.rewardsPerSecond)
-    );
+    for (let item of document.deployments.registerPools) {
+        const Pool = await ethers.getContractAt("Pool", item.pool);
+        await Pool.collectProtocolFee();
+    }
 }
 
 main()

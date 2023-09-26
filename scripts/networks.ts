@@ -62,7 +62,7 @@ const defaultMinExecutionFee = 300_000_000_000_000n; // 0.0003 ETH
 
 export const networks = {
     "arbitrum-goerli": {
-        usd: "0xa20Aa54C853348248C472717a65EFfEDb8357e9D",
+        usd: "0x58e7F6b126eCC1A694B19062317b60Cf474E3D17",
         weth: "0xe39Ab88f8A4777030A534146A9Ca3B52bd5D43A3",
         minExecutionFee: defaultMinExecutionFee,
         farmMintTime: Math.floor(new Date().getTime() / 1000) + 12 * 60 * 60, // FIXME
@@ -109,21 +109,7 @@ export const networks = {
                 tokenCfg: defaultTokenCfg,
                 tokenFeeCfg: defaultTokenFeeCfg,
                 tokenPriceCfg: {
-                    maxPriceImpactLiquidity: 45_000_000n * 10n ** 6n,
-                    liquidationVertexIndex: 4,
-                    vertices: defaultVertices,
-                },
-            },
-            {
-                name: "DAI",
-                address: "0x8DdfE2752C91F4AA20A5aDB7B187C6d6020283D7",
-                chainLinkPriceFeed: "0x103b53E977DA6E4Fa92f76369c8b7e20E7fb7fe1",
-                maxCumulativeDeltaDiff: defaultMaxCumulativeDeltaDiff,
-                rewardsPerSecond: 0n,
-                tokenCfg: defaultTokenCfg,
-                tokenFeeCfg: defaultTokenFeeCfg,
-                tokenPriceCfg: {
-                    maxPriceImpactLiquidity: 35_000_000n * 10n ** 6n,
+                    maxPriceImpactLiquidity: 10_000_000n * 10n ** 6n,
                     liquidationVertexIndex: 4,
                     vertices: defaultVertices,
                 },
@@ -137,16 +123,12 @@ export const networks = {
                 tokenCfg: defaultTokenCfg,
                 tokenFeeCfg: defaultTokenFeeCfg,
                 tokenPriceCfg: {
-                    maxPriceImpactLiquidity: 40_000_000n * 10n ** 6n,
+                    maxPriceImpactLiquidity: 10_000_000n * 10n ** 6n,
                     liquidationVertexIndex: 4,
                     vertices: defaultVertices,
                 },
             },
         ],
-        mixedExecutors: [
-            "0xFc3761a1916929c1E48827Ded15c7224Cd031c3C",
-            "0xE3682CCddeE12eF6B243F1f83DD289794ba87923",
-            "0x3852065c62a42a912bc0cde52fc2861c1c04d3b6",
-        ],
+        mixedExecutors: ["0x748b44dA671C256b9f1F1c2098FA9e477F84B141", "0x866D7d4C811Eb0845D7952F40934dC1F3F2B3Bc0"],
     },
 };
