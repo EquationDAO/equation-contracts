@@ -55,173 +55,191 @@ interface IPositionRouterState is IPositionRouter {
 }
 
 contract ExecutorAssistant {
+    struct IndexPerOperation {
+        /// @dev The start index of the operation
+        uint128 index;
+        /// @dev The next index of the operation
+        uint128 indexNext;
+        /// @dev The end index of the operation.
+        /// If the index == indexNext, indexEnd is invalid.
+        uint128 indexEnd;
+    }
+
     IPositionRouterState public immutable positionRouter;
 
     constructor(IPositionRouterState _positionRouter) {
         positionRouter = _positionRouter;
     }
 
-    /// @dev Calculate the next pool that `Multicall` needs to update the price, and the required endIndex
+    /// @dev Calculate the next pool that `Multicall` needs to update the price, and the required indexEnd
     /// @param _max The maximum index that execute in one call
     /// @return pools The pools that need to update the price, address(0) means no operation
-    /// @return endIndexes The end indexes of each operation, -1 means no operation
+    /// @return indexPerOperations The index of the per operation
     function calculateNextMulticall(
         uint128 _max
-    ) external view returns (IPool[] memory pools, int256[7] memory endIndexes) {
+    ) external view returns (IPool[] memory pools, IndexPerOperation[7] memory indexPerOperations) {
         pools = new IPool[](7 * _max);
         uint256 poolIndex;
 
         // scope for open liquidity position
         {
-            (uint128 openLiquidityPositionIndex, uint128 openLiquidityPositionIndexNext) = (
+            IndexPerOperation memory indexPerOperation = indexPerOperations[0];
+            (indexPerOperation.index, indexPerOperation.indexNext) = (
                 positionRouter.openLiquidityPositionIndex(),
                 positionRouter.openLiquidityPositionIndexNext()
             );
-            if (openLiquidityPositionIndex == openLiquidityPositionIndexNext) {
-                endIndexes[0] = -1;
-            } else {
-                endIndexes[0] = int256(Math.min(openLiquidityPositionIndex + _max, openLiquidityPositionIndexNext));
-                while (openLiquidityPositionIndex < uint128(uint256(endIndexes[0]))) {
+            if (indexPerOperation.index != indexPerOperation.indexNext) {
+                indexPerOperation.indexEnd = uint128(
+                    Math.min(indexPerOperation.index + _max, indexPerOperation.indexNext)
+                );
+                uint128 index = indexPerOperation.index;
+                while (index < indexPerOperation.indexEnd) {
                     IPositionRouter.OpenLiquidityPositionRequest memory request = positionRouter
-                        .openLiquidityPositionRequests(openLiquidityPositionIndex);
+                        .openLiquidityPositionRequests(index);
                     if (request.account != address(0)) pools[poolIndex++] = request.pool;
 
                     // prettier-ignore
-                    unchecked { openLiquidityPositionIndex++; }
+                    unchecked { index++; }
                 }
             }
         }
 
         // scope for close liquidity position
         {
-            (uint128 closeLiquidityPositionIndex, uint128 closeLiquidityPositionIndexNext) = (
+            IndexPerOperation memory indexPerOperation = indexPerOperations[1];
+            (indexPerOperation.index, indexPerOperation.indexNext) = (
                 positionRouter.closeLiquidityPositionIndex(),
                 positionRouter.closeLiquidityPositionIndexNext()
             );
-            if (closeLiquidityPositionIndex == closeLiquidityPositionIndexNext) {
-                endIndexes[1] = -1;
-            } else {
-                endIndexes[1] = int256(Math.min(closeLiquidityPositionIndex + _max, closeLiquidityPositionIndexNext));
-                while (closeLiquidityPositionIndex < uint128(uint256(endIndexes[1]))) {
+            if (indexPerOperation.index != indexPerOperation.indexNext) {
+                indexPerOperation.indexEnd = uint128(
+                    Math.min(indexPerOperation.index + _max, indexPerOperation.indexNext)
+                );
+                uint128 index = indexPerOperation.index;
+                while (index < indexPerOperation.indexEnd) {
                     IPositionRouter.CloseLiquidityPositionRequest memory request = positionRouter
-                        .closeLiquidityPositionRequests(closeLiquidityPositionIndex);
+                        .closeLiquidityPositionRequests(index);
                     if (request.account != address(0)) pools[poolIndex++] = request.pool;
 
                     // prettier-ignore
-                    unchecked { closeLiquidityPositionIndex++; }
+                    unchecked { index++; }
                 }
             }
         }
 
         // scope for adjust liquidity position margin
         {
-            (uint128 adjustLiquidityPositionMarginIndex, uint128 adjustLiquidityPositionMarginIndexNext) = (
+            IndexPerOperation memory indexPerOperation = indexPerOperations[2];
+            (indexPerOperation.index, indexPerOperation.indexNext) = (
                 positionRouter.adjustLiquidityPositionMarginIndex(),
                 positionRouter.adjustLiquidityPositionMarginIndexNext()
             );
-            if (adjustLiquidityPositionMarginIndex == adjustLiquidityPositionMarginIndexNext) {
-                endIndexes[2] = -1;
-            } else {
-                endIndexes[2] = int256(
-                    Math.min(adjustLiquidityPositionMarginIndex + _max, adjustLiquidityPositionMarginIndexNext)
+            if (indexPerOperation.index != indexPerOperation.indexNext) {
+                indexPerOperation.indexEnd = uint128(
+                    Math.min(indexPerOperation.index + _max, indexPerOperation.indexNext)
                 );
-                while (adjustLiquidityPositionMarginIndex < uint128(uint256(endIndexes[2]))) {
+                uint128 index = indexPerOperation.index;
+                while (index < indexPerOperation.indexEnd) {
                     IPositionRouter.AdjustLiquidityPositionMarginRequest memory request = positionRouter
-                        .adjustLiquidityPositionMarginRequests(adjustLiquidityPositionMarginIndex);
+                        .adjustLiquidityPositionMarginRequests(index);
                     if (request.account != address(0)) pools[poolIndex++] = request.pool;
 
                     // prettier-ignore
-                    unchecked { adjustLiquidityPositionMarginIndex++; }
+                    unchecked { index++; }
                 }
             }
         }
 
         // scope for increase risk buffer fund position
         {
-            (uint128 increaseRiskBufferFundPositionIndex, uint128 increaseRiskBufferFundPositionIndexNext) = (
+            IndexPerOperation memory indexPerOperation = indexPerOperations[3];
+            (indexPerOperation.index, indexPerOperation.indexNext) = (
                 positionRouter.increaseRiskBufferFundPositionIndex(),
                 positionRouter.increaseRiskBufferFundPositionIndexNext()
             );
-            if (increaseRiskBufferFundPositionIndex == increaseRiskBufferFundPositionIndexNext) {
-                endIndexes[3] = -1;
-            } else {
-                endIndexes[3] = int256(
-                    Math.min(increaseRiskBufferFundPositionIndex + _max, increaseRiskBufferFundPositionIndexNext)
+            if (indexPerOperation.index != indexPerOperation.indexNext) {
+                indexPerOperation.indexEnd = uint128(
+                    Math.min(indexPerOperation.index + _max, indexPerOperation.indexNext)
                 );
-                while (increaseRiskBufferFundPositionIndex < uint128(uint256(endIndexes[3]))) {
+                uint128 index = indexPerOperation.index;
+                while (index < indexPerOperation.indexEnd) {
                     IPositionRouter.IncreaseRiskBufferFundPositionRequest memory request = positionRouter
-                        .increaseRiskBufferFundPositionRequests(increaseRiskBufferFundPositionIndex);
+                        .increaseRiskBufferFundPositionRequests(index);
                     if (request.account != address(0)) pools[poolIndex++] = request.pool;
 
                     // prettier-ignore
-                    unchecked { increaseRiskBufferFundPositionIndex++; }
+                    unchecked { index++; }
                 }
             }
         }
 
         // scope for decrease risk buffer fund position
         {
-            (uint128 decreaseRiskBufferFundPositionIndex, uint128 decreaseRiskBufferFundPositionIndexNext) = (
+            IndexPerOperation memory indexPerOperation = indexPerOperations[4];
+            (indexPerOperation.index, indexPerOperation.indexNext) = (
                 positionRouter.decreaseRiskBufferFundPositionIndex(),
                 positionRouter.decreaseRiskBufferFundPositionIndexNext()
             );
-            if (decreaseRiskBufferFundPositionIndex == decreaseRiskBufferFundPositionIndexNext) {
-                endIndexes[4] = -1;
-            } else {
-                endIndexes[4] = int256(
-                    Math.min(decreaseRiskBufferFundPositionIndex + _max, decreaseRiskBufferFundPositionIndexNext)
+            if (indexPerOperation.index != indexPerOperation.indexNext) {
+                indexPerOperation.indexEnd = uint128(
+                    Math.min(indexPerOperation.index + _max, indexPerOperation.indexNext)
                 );
-                while (decreaseRiskBufferFundPositionIndex < uint128(uint256(endIndexes[4]))) {
+                uint128 index = indexPerOperation.index;
+                while (index < indexPerOperation.indexEnd) {
                     IPositionRouter.DecreaseRiskBufferFundPositionRequest memory request = positionRouter
-                        .decreaseRiskBufferFundPositionRequests(decreaseRiskBufferFundPositionIndex);
+                        .decreaseRiskBufferFundPositionRequests(index);
                     if (request.account != address(0)) pools[poolIndex++] = request.pool;
 
                     // prettier-ignore
-                    unchecked { decreaseRiskBufferFundPositionIndex++; }
+                    unchecked { index++; }
                 }
             }
         }
 
         // scope for increase position
         {
-            (uint128 increasePositionIndex, uint128 increasePositionIndexNext) = (
+            IndexPerOperation memory indexPerOperation = indexPerOperations[5];
+            (indexPerOperation.index, indexPerOperation.indexNext) = (
                 positionRouter.increasePositionIndex(),
                 positionRouter.increasePositionIndexNext()
             );
-            if (increasePositionIndex == increasePositionIndexNext) {
-                endIndexes[5] = -1;
-            } else {
-                endIndexes[5] = int256(Math.min(increasePositionIndex + _max, increasePositionIndexNext));
-                while (increasePositionIndex < uint128(uint256(endIndexes[5]))) {
+            if (indexPerOperation.index != indexPerOperation.indexNext) {
+                indexPerOperation.indexEnd = uint128(
+                    Math.min(indexPerOperation.index + _max, indexPerOperation.indexNext)
+                );
+                uint128 index = indexPerOperation.index;
+                while (index < indexPerOperation.indexEnd) {
                     IPositionRouter.IncreasePositionRequest memory request = positionRouter.increasePositionRequests(
-                        increasePositionIndex
+                        index
                     );
                     if (request.account != address(0)) pools[poolIndex++] = request.pool;
 
                     // prettier-ignore
-                    unchecked { increasePositionIndex++; }
+                    unchecked { index++; }
                 }
             }
         }
 
         // scope for decrease position
         {
-            (uint128 decreasePositionIndex, uint128 decreasePositionIndexNext) = (
+            IndexPerOperation memory indexPerOperation = indexPerOperations[6];
+            (indexPerOperation.index, indexPerOperation.indexNext) = (
                 positionRouter.decreasePositionIndex(),
                 positionRouter.decreasePositionIndexNext()
             );
-            if (decreasePositionIndex == decreasePositionIndexNext) {
-                endIndexes[6] = -1;
-            } else {
-                endIndexes[6] = int256(Math.min(decreasePositionIndex + _max, decreasePositionIndexNext));
-                while (decreasePositionIndex < uint128(uint256(endIndexes[6]))) {
+            if (indexPerOperation.index != indexPerOperation.indexNext) {
+                indexPerOperation.indexEnd = uint128(
+                    Math.min(indexPerOperation.index + _max, indexPerOperation.indexNext)
+                );
+                uint128 index = indexPerOperation.index;
+                while (index < indexPerOperation.indexEnd) {
                     IPositionRouter.DecreasePositionRequest memory request = positionRouter.decreasePositionRequests(
-                        decreasePositionIndex
+                        index
                     );
                     if (request.account != address(0)) pools[poolIndex++] = request.pool;
 
                     // prettier-ignore
-                    unchecked { decreasePositionIndex++; }
+                    unchecked { index++; }
                 }
             }
         }
