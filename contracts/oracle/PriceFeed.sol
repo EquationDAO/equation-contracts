@@ -25,14 +25,10 @@ contract PriceFeed is IPriceFeed, Governable {
     /// @inheritdoc IPriceFeed
     IChainLinkAggregator public override sequencerUptimeFeed;
     /// @inheritdoc IPriceFeed
-    mapping(IERC20 => IChainLinkAggregator) public override refPriceFeeds;
-    /// @inheritdoc IPriceFeed
-    mapping(IERC20 => uint256) public override refHeartbeatDuration;
-    /// @inheritdoc IPriceFeed
-    mapping(IERC20 => uint256) public override maxCumulativeDeltaDiffs;
+    mapping(IERC20 => TokenConfig) public override tokenConfigs;
 
-    /// @dev Cache of the price
-    mapping(IERC20 => PricePack) private priceCache;
+    /// @dev latest price
+    mapping(IERC20 => PricePack) public override latestPrices;
     mapping(IERC20 => PriceDataItem) private priceDataItems;
 
     modifier onlyUpdater() {
@@ -57,9 +53,18 @@ contract PriceFeed is IPriceFeed, Governable {
         for (uint256 i; i < priceX96sLength; ) {
             uint160 priceX96 = _priceX96s[i];
             IERC20 token = _tokens[i];
-            (uint160 latestRefPriceX96, uint160 minRefPriceX96, uint160 maxRefPriceX96) = _getReferencePriceX96(token);
+            TokenConfig memory tokenConfig = tokenConfigs[token];
+            (uint160 latestRefPriceX96, uint160 minRefPriceX96, uint160 maxRefPriceX96) = _getReferencePriceX96(
+                tokenConfig.refPriceFeed,
+                tokenConfig.refHeartbeatDuration
+            );
 
-            (, bool reachMaxDeltaDiff) = _calculateNewPriceDataItem(token, priceX96, latestRefPriceX96);
+            (, bool reachMaxDeltaDiff) = _calculateNewPriceDataItem(
+                token,
+                priceX96,
+                latestRefPriceX96,
+                tokenConfig.maxCumulativeDeltaDiff
+            );
 
             (minPriceX96s[i], maxPriceX96s[i]) = _reviseMinAndMaxPriceX96(
                 priceX96,
@@ -82,20 +87,24 @@ contract PriceFeed is IPriceFeed, Governable {
     ) external override onlyUpdater {
         uint256 priceX96sLength = _priceX96s.length;
         if (_tokens.length != priceX96sLength) revert InvalidTokenPriceInput(_tokens.length, priceX96sLength);
-
-        if (!_setLastUpdated(_timestamp)) return;
-
         _checkSequencerUp();
 
-        for (uint256 i; i < priceX96sLength; ) {
+        for (uint256 i; i < priceX96sLength; ++i) {
             uint160 priceX96 = _priceX96s[i];
             IERC20 token = _tokens[i];
-            (uint160 latestRefPriceX96, uint160 minRefPriceX96, uint160 maxRefPriceX96) = _getReferencePriceX96(token);
+            PricePack storage pack = latestPrices[token];
+            if (!_setTokenLastUpdated(pack, _timestamp)) continue;
+            TokenConfig memory tokenConfig = tokenConfigs[token];
+            (uint160 latestRefPriceX96, uint160 minRefPriceX96, uint160 maxRefPriceX96) = _getReferencePriceX96(
+                tokenConfig.refPriceFeed,
+                tokenConfig.refHeartbeatDuration
+            );
 
             (PriceDataItem memory newItem, bool reachMaxDeltaDiff) = _calculateNewPriceDataItem(
                 token,
                 priceX96,
-                latestRefPriceX96
+                latestRefPriceX96,
+                tokenConfig.maxCumulativeDeltaDiff
             );
             priceDataItems[token] = newItem;
 
@@ -107,8 +116,6 @@ contract PriceFeed is IPriceFeed, Governable {
                     newItem.cumulativePriceDelta,
                     newItem.cumulativeRefPriceDelta
                 );
-
-            PricePack storage pack = priceCache[token];
             (uint160 minPriceX96, uint160 maxPriceX96) = _reviseMinAndMaxPriceX96(
                 priceX96,
                 minRefPriceX96,
@@ -118,23 +125,20 @@ contract PriceFeed is IPriceFeed, Governable {
             pack.minPriceX96 = minPriceX96;
             pack.maxPriceX96 = maxPriceX96;
             emit PriceUpdated(token, priceX96, minPriceX96, maxPriceX96);
-
-            // prettier-ignore
-            unchecked { ++i; }
         }
     }
 
     /// @inheritdoc IPriceFeed
     function getMinPriceX96(IERC20 _token) external view override returns (uint160 priceX96) {
         _checkSequencerUp();
-        priceX96 = priceCache[_token].minPriceX96;
+        priceX96 = latestPrices[_token].minPriceX96;
         if (priceX96 == 0) revert NotInitialized();
     }
 
     /// @inheritdoc IPriceFeed
     function getMaxPriceX96(IERC20 _token) external view override returns (uint160 priceX96) {
         _checkSequencerUp();
-        priceX96 = priceCache[_token].maxPriceX96;
+        priceX96 = latestPrices[_token].maxPriceX96;
         if (priceX96 == 0) revert NotInitialized();
     }
 
@@ -150,7 +154,7 @@ contract PriceFeed is IPriceFeed, Governable {
 
     /// @inheritdoc IPriceFeed
     function setRefPriceFeeds(IERC20 _token, IChainLinkAggregator _priceFeed) external override onlyGov {
-        refPriceFeeds[_token] = _priceFeed;
+        tokenConfigs[_token].refPriceFeed = _priceFeed;
     }
 
     /// @inheritdoc IPriceFeed
@@ -159,8 +163,8 @@ contract PriceFeed is IPriceFeed, Governable {
     }
 
     /// @inheritdoc IPriceFeed
-    function setRefHeartbeatDuration(IERC20 _token, uint256 _duration) external override onlyGov {
-        refHeartbeatDuration[_token] = _duration;
+    function setRefHeartbeatDuration(IERC20 _token, uint32 _duration) external override onlyGov {
+        tokenConfigs[_token].refHeartbeatDuration = _duration;
     }
 
     /// @inheritdoc IPriceFeed
@@ -174,8 +178,8 @@ contract PriceFeed is IPriceFeed, Governable {
     }
 
     /// @inheritdoc IPriceFeed
-    function setMaxCumulativeDeltaDiffs(IERC20 _token, uint256 _maxCumulativeDeltaDiff) external override onlyGov {
-        maxCumulativeDeltaDiffs[_token] = _maxCumulativeDeltaDiff;
+    function setMaxCumulativeDeltaDiffs(IERC20 _token, uint64 _maxCumulativeDeltaDiff) external override onlyGov {
+        tokenConfigs[_token].maxCumulativeDeltaDiff = _maxCumulativeDeltaDiff;
     }
 
     /// @inheritdoc IPriceFeed
@@ -191,7 +195,8 @@ contract PriceFeed is IPriceFeed, Governable {
     function _calculateNewPriceDataItem(
         IERC20 _token,
         uint160 _priceX96,
-        uint160 _refPriceX96
+        uint160 _refPriceX96,
+        uint64 _maxCumulativeDeltaDiffs
     ) private view returns (PriceDataItem memory item, bool reachMaxDeltaDiff) {
         item = priceDataItems[_token];
         uint32 currentRound = uint32(block.timestamp / slot.cumulativeRoundDuration);
@@ -210,10 +215,9 @@ contract PriceFeed is IPriceFeed, Governable {
 
             item.cumulativeRefPriceDelta = item.cumulativeRefPriceDelta.add(cumulativeRefPriceDelta).toUint64();
             item.cumulativePriceDelta = item.cumulativePriceDelta.add(cumulativePriceDelta).toUint64();
-
             if (
                 item.cumulativePriceDelta > item.cumulativeRefPriceDelta &&
-                item.cumulativePriceDelta - item.cumulativeRefPriceDelta > maxCumulativeDeltaDiffs[_token]
+                item.cumulativePriceDelta - item.cumulativeRefPriceDelta > _maxCumulativeDeltaDiffs
             ) reachMaxDeltaDiff = true;
 
             item.prevRefPriceX96 = _refPriceX96;
@@ -224,25 +228,23 @@ contract PriceFeed is IPriceFeed, Governable {
     }
 
     function _getReferencePriceX96(
-        IERC20 token
+        IChainLinkAggregator _aggregator,
+        uint32 _refHeartbeatDuration
     ) private view returns (uint160 _latestRefPriceX96, uint160 _minRefPriceX96, uint160 _maxRefPriceX96) {
-        IChainLinkAggregator aggregator = refPriceFeeds[token];
-        if (address(aggregator) == address(0)) revert ReferencePriceFeedNotSet();
+        if (address(_aggregator) == address(0)) revert ReferencePriceFeedNotSet();
 
-        (uint80 roundID, int256 refPrice, , uint256 timestamp, ) = aggregator.latestRoundData();
+        (uint80 roundID, int256 refPrice, , uint256 timestamp, ) = _aggregator.latestRoundData();
         if (refPrice <= 0) revert InvalidReferencePrice();
-
-        uint256 duration = refHeartbeatDuration[token];
-        if (duration != 0 && block.timestamp - timestamp > duration)
+        if (_refHeartbeatDuration != 0 && block.timestamp - timestamp > _refHeartbeatDuration)
             revert ReferencePriceTimeout(block.timestamp - timestamp);
 
-        uint256 magnification = 10 ** uint256(aggregator.decimals());
+        uint256 magnification = 10 ** uint256(_aggregator.decimals());
         _latestRefPriceX96 = _toPriceX96(refPrice.toUint256(), magnification);
         if (slot.refPriceExtraSample == 0) return (_latestRefPriceX96, _latestRefPriceX96, _latestRefPriceX96);
 
         (int256 minRefPrice, int256 maxRefPrice) = (refPrice, refPrice);
         for (uint256 i = 1; i <= slot.refPriceExtraSample; ) {
-            (, int256 price, , , ) = aggregator.getRoundData(uint80(roundID - i));
+            (, int256 price, , , ) = _aggregator.getRoundData(uint80(roundID - i));
             if (price > maxRefPrice) maxRefPrice = price;
 
             if (price < minRefPrice) minRefPrice = price;
@@ -264,17 +266,18 @@ contract PriceFeed is IPriceFeed, Governable {
         return _price.toUint160();
     }
 
-    function _setLastUpdated(uint64 _timestamp) private returns (bool) {
+    function _setTokenLastUpdated(PricePack storage _latestPrice, uint64 _timestamp) private returns (bool) {
         // Execution delay may cause the update time to be out of order.
-        if (block.timestamp == slot.lastUpdatedBlockTimestamp || _timestamp <= slot.lastUpdatedTimestamp) return false;
+        if (block.timestamp == _latestPrice.updateBlockTimestamp || _timestamp <= _latestPrice.updateTimestamp)
+            return false;
 
         uint32 _updateTxTimeout = slot.updateTxTimeout;
         // timeout and revert
         if (_timestamp <= block.timestamp - _updateTxTimeout || _timestamp >= block.timestamp + _updateTxTimeout)
             revert InvalidUpdateTimestamp(_timestamp);
 
-        slot.lastUpdatedTimestamp = _timestamp;
-        slot.lastUpdatedBlockTimestamp = block.timestamp.toUint64();
+        _latestPrice.updateTimestamp = _timestamp;
+        _latestPrice.updateBlockTimestamp = block.timestamp.toUint64();
         return true;
     }
 
