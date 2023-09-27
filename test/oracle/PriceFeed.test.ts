@@ -1,5 +1,5 @@
 import {loadFixture, time} from "@nomicfoundation/hardhat-network-helpers";
-import {ethers} from "hardhat";
+import {ethers, network} from "hardhat";
 import {expect} from "chai";
 import {ERC20Test} from "../../typechain-types";
 import {BigNumber, BigNumberish} from "ethers";
@@ -56,16 +56,16 @@ describe("PriceFeed", () => {
             const [, newUpdater, noAccessUser] = await ethers.getSigners();
 
             await priceFeed.setRefHeartbeatDuration(usdc.address, 300);
-            await expect(await priceFeed.refHeartbeatDuration(usdc.address)).to.be.eq(300);
-            await expect(await priceFeed.refHeartbeatDuration(weth.address)).to.be.eq(0);
+            await expect((await priceFeed.tokenConfigs(usdc.address)).refHeartbeatDuration).to.be.eq(300);
+            await expect((await priceFeed.tokenConfigs(weth.address)).refHeartbeatDuration).to.be.eq(0);
 
             await priceFeed.setRefPriceFeeds(usdc.address, mockRefPriceFeed.address);
-            await expect(await priceFeed.refPriceFeeds(usdc.address)).to.be.eq(mockRefPriceFeed.address);
-            await expect(await priceFeed.refHeartbeatDuration(weth.address)).to.be.eq(zeroAddress);
+            await expect((await priceFeed.tokenConfigs(usdc.address)).refPriceFeed).to.be.eq(mockRefPriceFeed.address);
+            await expect((await priceFeed.tokenConfigs(weth.address)).refPriceFeed).to.be.eq(zeroAddress);
 
             await priceFeed.setMaxCumulativeDeltaDiffs(usdc.address, 30000);
-            await expect(await priceFeed.maxCumulativeDeltaDiffs(usdc.address)).to.be.eq(30000);
-            await expect(await priceFeed.maxCumulativeDeltaDiffs(weth.address)).to.be.eq(100000);
+            await expect((await priceFeed.tokenConfigs(usdc.address)).maxCumulativeDeltaDiff).to.be.eq(30000);
+            await expect((await priceFeed.tokenConfigs(weth.address)).maxCumulativeDeltaDiff).to.be.eq(100000);
 
             await priceFeed.setCumulativeRoundDuration(1234);
             await priceFeed.setMaxDeviationRatio(100);
@@ -457,6 +457,134 @@ describe("PriceFeed", () => {
                     latestBlockTimestamp
                 )
             ).not.emit(priceFeed, "PriceUpdated");
+        });
+
+        it("expired price can not be updated", async () => {
+            const {priceFeed, mockRefPriceFeed, weth, usdc} = await loadFixture(deployPriceFeedFixture);
+            const latestBlockTimestamp = await time.latest();
+            await priceFeed.setRefPriceFeeds(weth.address, mockRefPriceFeed.address);
+            await priceFeed.setRefPriceFeeds(usdc.address, mockRefPriceFeed.address);
+            await mockRefPriceFeed.setRoundData(
+                100,
+                102n * 10n ** refPriceDecimals,
+                latestBlockTimestamp,
+                latestBlockTimestamp,
+                100
+            );
+            await expect(
+                priceFeed.setPriceX96s(
+                    [weth.address],
+                    [toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals)],
+                    latestBlockTimestamp
+                )
+            )
+                .emit(priceFeed, "PriceUpdated")
+                .withArgs(
+                    weth.address,
+                    toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals),
+                    toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals),
+                    toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals)
+                );
+
+            await expect(
+                priceFeed.setPriceX96s(
+                    [weth.address],
+                    [toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals)],
+                    latestBlockTimestamp
+                )
+            ).not.emit(priceFeed, "PriceUpdated");
+
+            await expect(
+                priceFeed.setPriceX96s(
+                    [weth.address],
+                    [toPriceX96("108", tokenDecimals, usdDecimals, refPriceDecimals)],
+                    latestBlockTimestamp + 1
+                )
+            )
+                .emit(priceFeed, "PriceUpdated")
+                .withArgs(
+                    weth.address,
+                    toPriceX96("108", tokenDecimals, usdDecimals, refPriceDecimals),
+                    toPriceX96("108", tokenDecimals, usdDecimals, refPriceDecimals),
+                    toPriceX96("108", tokenDecimals, usdDecimals, refPriceDecimals)
+                );
+
+            await expect(
+                priceFeed.setPriceX96s(
+                    [usdc.address],
+                    [toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals)],
+                    latestBlockTimestamp
+                )
+            )
+                .emit(priceFeed, "PriceUpdated")
+                .withArgs(
+                    usdc.address,
+                    toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals),
+                    toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals),
+                    toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals)
+                );
+        });
+
+        it("different token price can be updated in two txs within 1 second", async () => {
+            const {priceFeed, mockRefPriceFeed, weth, usdc} = await loadFixture(deployPriceFeedFixture);
+            const latestBlockTimestamp = await time.latest();
+            await network.provider.send("evm_setAutomine", [false]);
+            await priceFeed.setRefPriceFeeds(weth.address, mockRefPriceFeed.address);
+            await priceFeed.setRefPriceFeeds(usdc.address, mockRefPriceFeed.address);
+            await mockRefPriceFeed.setRoundData(
+                100,
+                102n * 10n ** refPriceDecimals,
+                latestBlockTimestamp,
+                latestBlockTimestamp,
+                100
+            );
+            await network.provider.send("evm_setAutomine", [false]);
+            await priceFeed.setPriceX96s(
+                [weth.address],
+                [toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals)],
+                latestBlockTimestamp
+            );
+            await priceFeed.setPriceX96s(
+                [weth.address],
+                [toPriceX96("999", tokenDecimals, usdDecimals, refPriceDecimals)],
+                latestBlockTimestamp + 1
+            );
+
+            await network.provider.send("evm_setAutomine", [true]);
+            await expect(
+                priceFeed.setPriceX96s(
+                    [usdc.address],
+                    [toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals)],
+                    latestBlockTimestamp
+                )
+            )
+                .emit(priceFeed, "PriceUpdated")
+                .withArgs(
+                    usdc.address,
+                    toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals),
+                    toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals),
+                    toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals)
+                );
+            await expect(await priceFeed.getMinPriceX96(weth.address)).to.be.eq(
+                toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals)
+            );
+            await expect(await priceFeed.getMaxPriceX96(weth.address)).to.be.eq(
+                toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals)
+            );
+            await expect(
+                priceFeed.setPriceX96s(
+                    [weth.address],
+                    [toPriceX96("108", tokenDecimals, usdDecimals, refPriceDecimals)],
+                    latestBlockTimestamp + 1
+                )
+            )
+                .emit(priceFeed, "PriceUpdated")
+                .withArgs(
+                    weth.address,
+                    toPriceX96("108", tokenDecimals, usdDecimals, refPriceDecimals),
+                    toPriceX96("108", tokenDecimals, usdDecimals, refPriceDecimals),
+                    toPriceX96("108", tokenDecimals, usdDecimals, refPriceDecimals)
+                );
         });
 
         it("should revert with `SequencerDown` if sequencer is down", async () => {

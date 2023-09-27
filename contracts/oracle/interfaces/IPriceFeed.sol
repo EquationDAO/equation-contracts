@@ -56,9 +56,13 @@ interface IPriceFeed {
         uint32 maxDeviationRatio;
         uint32 cumulativeRoundDuration;
         uint32 refPriceExtraSample;
-        uint64 lastUpdatedTimestamp;
-        uint64 lastUpdatedBlockTimestamp;
         uint32 updateTxTimeout;
+    }
+
+    struct TokenConfig {
+        IChainLinkAggregator refPriceFeed;
+        uint32 refHeartbeatDuration;
+        uint64 maxCumulativeDeltaDiff;
     }
 
     struct PriceDataItem {
@@ -70,19 +74,19 @@ interface IPriceFeed {
     }
 
     struct PricePack {
+        uint64 updateTimestamp;
         uint160 maxPriceX96;
         uint160 minPriceX96;
+        uint64 updateBlockTimestamp;
     }
 
     /// @notice The 0th storage slot in the price feed stores many values, which helps reduce gas
     /// costs when interacting with the price feed.
-    /// @param maxDeviationRatio Maximum deviation ratio between price and ChainLink price.
-    /// @param cumulativeRoundDuration Period for calculating cumulative deviation ratio.
-    /// @param refPriceExtraSample The number of additional rounds for ChainLink prices to participate in price
+    /// @return maxDeviationRatio Maximum deviation ratio between price and ChainLink price.
+    /// @return cumulativeRoundDuration Period for calculating cumulative deviation ratio.
+    /// @return refPriceExtraSample The number of additional rounds for ChainLink prices to participate in price
     /// update calculation.
-    /// @param lastUpdatedTimestamp The timestamp of the most recently updated price.
-    /// lastUpdatedBlock The block timestamp of the most recent price update transaction execution.
-    /// @param updateTxTimeout The timeout for price update transactions.
+    /// @return updateTxTimeout The timeout for price update transactions.
     function slot()
         external
         view
@@ -90,10 +94,34 @@ interface IPriceFeed {
             uint32 maxDeviationRatio,
             uint32 cumulativeRoundDuration,
             uint32 refPriceExtraSample,
-            uint64 lastUpdatedTimestamp,
-            uint64 lastUpdatedBlockTimestamp,
             uint32 updateTxTimeout
         );
+
+    /// @notice Get token configuration for updating price
+    /// @param token The token address to query the configuration
+    /// @return refPriceFeed ChainLink contract address for corresponding token
+    /// @return refHeartbeatDuration Expected update interval of chain link price feed
+    /// @return maxCumulativeDeltaDiff Maximum cumulative change ratio difference between prices and ChainLink prices
+    /// within a period of time.
+    function tokenConfigs(
+        IERC20 token
+    )
+        external
+        view
+        returns (IChainLinkAggregator refPriceFeed, uint32 refHeartbeatDuration, uint64 maxCumulativeDeltaDiff);
+
+    /// @notice Get latest price data for corresponding token.
+    /// @param token The token address to query the price data
+    /// @return updateTimestamp The timestamp when updater uploads the price
+    /// @return maxPriceX96 Calculated maximum price, as a Q64.96
+    /// @return minPriceX96 Calculated minimum price, as a Q64.96
+    /// @return updateBlockTimestamp The block timestamp when price is committed
+    function latestPrices(
+        IERC20 token
+    )
+        external
+        view
+        returns (uint64 updateTimestamp, uint160 maxPriceX96, uint160 minPriceX96, uint64 updateBlockTimestamp);
 
     /// @notice Update prices
     /// @dev Updater calls this method to update prices for multiple tokens. The contract calculation requires
@@ -146,11 +174,6 @@ interface IPriceFeed {
     /// @param priceFeed ChainLink contract address
     function setRefPriceFeeds(IERC20 token, IChainLinkAggregator priceFeed) external;
 
-    /// @notice Get ChainLink contract address for corresponding token.
-    /// @param token The token address to query
-    /// @return priceFeed ChainLink contract address for corresponding token
-    function refPriceFeeds(IERC20 token) external returns (IChainLinkAggregator priceFeed);
-
     /// @notice Set SequencerUptimeFeed contract address.
     /// @param sequencerUptimeFeed SequencerUptimeFeed contract address
     function setSequencerUptimeFeed(IChainLinkAggregator sequencerUptimeFeed) external;
@@ -163,12 +186,7 @@ interface IPriceFeed {
     /// If ChainLink does not update the price within this period, it is considered that ChainLink has broken down.
     /// @param token The token address to set
     /// @param duration Expected update interval
-    function setRefHeartbeatDuration(IERC20 token, uint256 duration) external;
-
-    /// @notice Get the expected update interval for the ChainLink oracle price of the corresponding token.
-    /// @param token The token address to query
-    /// @return duration Update interval for the ChainLink oracle price of the corresponding token
-    function refHeartbeatDuration(IERC20 token) external returns (uint256 duration);
+    function setRefHeartbeatDuration(IERC20 token, uint32 duration) external;
 
     /// @notice Set maximum deviation ratio between price and ChainLink price.
     /// If exceeded, the updated price will refer to ChainLink price.
@@ -183,14 +201,7 @@ interface IPriceFeed {
     /// within a period of time. If exceeded, the updated price will refer to ChainLink price.
     /// @param token The token address to set
     /// @param maxCumulativeDeltaDiff Maximum cumulative change ratio difference
-    function setMaxCumulativeDeltaDiffs(IERC20 token, uint256 maxCumulativeDeltaDiff) external;
-
-    /// @notice Set the maximum acceptable cumulative change ratio difference between prices and ChainLink prices
-    /// within a period of time.
-    /// @param token The token address to query
-    /// @return maxCumulativeDeltaDiff Maximum cumulative change ratio difference between prices and ChainLink prices
-    /// within a period of time.
-    function maxCumulativeDeltaDiffs(IERC20 token) external returns (uint256 maxCumulativeDeltaDiff);
+    function setMaxCumulativeDeltaDiffs(IERC20 token, uint64 maxCumulativeDeltaDiff) external;
 
     /// @notice Set number of additional rounds for ChainLink prices to participate in price update calculation.
     /// @param refPriceExtraSample The number of additional sampling rounds.
