@@ -60,7 +60,7 @@ contract PriceFeedTest is Test {
         uint160 minPriceX96;
         uint160 maxPriceX96;
         uint256 DELTA_PRECISION = priceFeed.DELTA_PRECISION();
-        (uint32 maxDeviationRatio, , , , , ) = priceFeed.slot();
+        (uint32 maxDeviationRatio, , , ) = priceFeed.slot();
         if (currentRefPrice > currentPriceX96) {
             if (((currentRefPrice - currentPriceX96) * DELTA_PRECISION) / currentRefPrice > maxDeviationRatio) {
                 maxPriceX96 = currentRefPrice;
