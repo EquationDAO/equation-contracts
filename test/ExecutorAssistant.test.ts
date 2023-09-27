@@ -39,14 +39,16 @@ describe("ExecutorAssistant", () => {
     describe("#calculateNextMulticall", () => {
         it("should return -1 if the index is equal to index next", async () => {
             const {executorAssistant} = await loadFixture(deployFixture);
-            const {pools, endIndexes} = await executorAssistant.calculateNextMulticall(10);
+            const {pools, indexPerOperations} = await executorAssistant.calculateNextMulticall(10);
             expect(pools.length).to.eq(70);
             for (let item of pools) {
                 expect(item).to.eq(ethers.constants.AddressZero);
             }
-            expect(endIndexes.length).to.eq(7);
-            for (let item of endIndexes) {
-                expect(item).to.eq(-1);
+            expect(indexPerOperations.length).to.eq(7);
+            for (let item of indexPerOperations) {
+                expect(item.index).to.eq(0);
+                expect(item.indexNext).to.eq(0);
+                expect(item.indexEnd).to.eq(0);
             }
         });
 
@@ -89,7 +91,7 @@ describe("ExecutorAssistant", () => {
                 ethers.constants.AddressZero
             );
 
-            const {pools, endIndexes} = await executorAssistant.calculateNextMulticall(3);
+            const {pools, indexPerOperations} = await executorAssistant.calculateNextMulticall(3);
             expect(pools.length).to.eq(21);
             expect(pools.slice(0, 6)).to.deep.eq([
                 "0x1111111111111111111111111111111111111111",
@@ -102,8 +104,10 @@ describe("ExecutorAssistant", () => {
             for (let i = 6; i < pools.length; i++) {
                 expect(pools[i]).to.eq(ethers.constants.AddressZero);
             }
-            expect(endIndexes.length).to.eq(7);
-            expect(endIndexes).to.deep.eq([3, -1, -1, -1, -1, -1, 3]);
+            expect(indexPerOperations.length).to.eq(7);
+            expect(indexPerOperations.map((ipo) => ipo.index)).to.deep.eq([0, 0, 0, 0, 0, 0, 0]);
+            expect(indexPerOperations.map((ipo) => ipo.indexNext)).to.deep.eq([3, 0, 0, 0, 0, 0, 4]);
+            expect(indexPerOperations.map((ipo) => ipo.indexEnd)).to.deep.eq([3, 0, 0, 0, 0, 0, 3]);
         });
     });
 });
