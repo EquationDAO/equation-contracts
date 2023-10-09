@@ -22,6 +22,8 @@ interface IPluginManager {
     error PluginAlreadyApproved();
     /// @notice Plugin is not approved
     error PluginNotApproved();
+    /// @notice Liquidator is already registered
+    error LiquidatorAlreadyRegistered();
 
     /// @notice Register a new plugin
     /// @dev The call will fail if the caller is not the governor or the plugin is already registered
@@ -48,4 +50,14 @@ interface IPluginManager {
     /// @param plugin The plugin to check
     /// @return True if the plugin is approved for the account, false otherwise
     function isPluginApproved(address account, address plugin) external view returns (bool);
+
+    /// @notice Register a new liquidator
+    /// @dev The call will fail if the caller if not the governor or the liquidator is already registered
+    /// @param liquidator The liquidator to register
+    function registerLiquidator(address liquidator) external;
+
+    /// @notice Checks if a liquidator is registered
+    /// @param liquidator The liquidator to check
+    /// @return True if the liquidator is registered, false otherwise
+    function isRegisteredLiquidator(address liquidator) external view returns (bool);
 }

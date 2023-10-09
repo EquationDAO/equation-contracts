@@ -143,6 +143,23 @@ contract Router is PluginManager {
         return _pool.decreasePosition(_account, _side, _marginDelta, _sizeDelta, _receiver);
     }
 
+    /// @notice Close a position by the liquidator
+    /// @param _pool The pool in which to close position
+    /// @param _account The owner of the position
+    /// @param _side The side of the position (Long or Short)
+    /// @param _sizeDelta The decrease in size
+    /// @param _receiver The address to receive the margin
+    function pluginClosePositionByLiquidator(
+        IPool _pool,
+        address _account,
+        Side _side,
+        uint128 _sizeDelta,
+        address _receiver
+    ) external {
+        _onlyLiquidator();
+        _pool.decreasePosition(_account, _side, 0, _sizeDelta, _receiver);
+    }
+
     /// @notice Collect the referral fee
     /// @param _pool The pool in which to collect referral fee
     /// @param _referralToken The id of the referral token
@@ -243,5 +260,9 @@ contract Router is PluginManager {
 
     function _onlyPluginApproved(address _account) internal view {
         if (!isPluginApproved(_account, msg.sender)) revert CallerUnauthorized();
+    }
+
+    function _onlyLiquidator() internal view {
+        if (!isRegisteredLiquidator(msg.sender)) revert CallerUnauthorized();
     }
 }
