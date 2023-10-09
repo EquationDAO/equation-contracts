@@ -281,6 +281,7 @@ contract Pool is IPool, ReentrancyGuard {
     /// @inheritdoc IPoolLiquidityPosition
     function liquidateLiquidityPosition(uint96 _positionID, address _feeReceiver) external override nonReentrant {
         _onlyLiquidityPositionLiquidator();
+
         _validateLiquidityPosition(_positionID);
 
         _sampleAndAdjustFundingRate();
@@ -754,21 +755,21 @@ contract Pool is IPool, ReentrancyGuard {
     /// @inheritdoc IPool
     /// @dev This function does not include the nonReentrant modifier because it is intended
     /// to be called internally by the contract itself.
-    function changePriceVertex(uint8 startExclusive, uint8 endInclusive) external override {
+    function changePriceVertex(uint8 _startExclusive, uint8 _endInclusive) external override {
         if (msg.sender != address(this)) revert InvalidCaller(address(this));
 
         unchecked {
             // If the vertex represented by end is the same as the vertex represented by end + 1,
             // then the vertices in the range (start, LATEST_VERTEX] need to be updated
-            if (endInclusive < Constants.LATEST_VERTEX) {
-                PriceVertex memory previous = priceState0.priceVertices[endInclusive];
-                PriceVertex memory next = priceState0.priceVertices[endInclusive + 1];
+            if (_endInclusive < Constants.LATEST_VERTEX) {
+                PriceVertex memory previous = priceState0.priceVertices[_endInclusive];
+                PriceVertex memory next = priceState0.priceVertices[_endInclusive + 1];
                 if (previous.size >= next.size || previous.premiumRateX96 >= next.premiumRateX96)
-                    endInclusive = Constants.LATEST_VERTEX;
+                    _endInclusive = Constants.LATEST_VERTEX;
             }
         }
 
-        _changePriceVertex(startExclusive, endInclusive);
+        _changePriceVertex(_startExclusive, _endInclusive);
     }
 
     /// @inheritdoc IPool
@@ -906,14 +907,14 @@ contract Pool is IPool, ReentrancyGuard {
     }
 
     /// @dev Change the price vertex
-    /// @param startExclusive The start index of the price vertex to be changed, exclusive
-    /// @param endInclusive The end index of the price vertex to be changed, inclusive
-    function _changePriceVertex(uint8 startExclusive, uint8 endInclusive) private {
+    /// @param _startExclusive The start index of the price vertex to be changed, exclusive
+    /// @param _endInclusive The end index of the price vertex to be changed, inclusive
+    function _changePriceVertex(uint8 _startExclusive, uint8 _endInclusive) private {
         uint160 indexPriceX96 = priceFeed.getMaxPriceX96(token);
         uint128 liquidity = uint128(Math.min(globalLiquidityPosition.liquidity, priceState0.maxPriceImpactLiquidity));
 
         unchecked {
-            for (uint8 index = startExclusive + 1; index <= endInclusive; ++index) {
+            for (uint8 index = _startExclusive + 1; index <= _endInclusive; ++index) {
                 (uint32 balanceRate, uint32 premiumRate) = poolFactory.tokenPriceVertexConfigs(token, index);
                 (uint128 sizeAfter, uint128 premiumRateAfterX96) = _calculatePriceVertex(
                     balanceRate,
@@ -933,10 +934,10 @@ contract Pool is IPool, ReentrancyGuard {
 
                 // If the vertex represented by end is the same as the vertex represented by end + 1,
                 // then the vertices in range (start, LATEST_VERTEX] need to be updated
-                if (index == endInclusive && endInclusive < Constants.LATEST_VERTEX) {
+                if (index == _endInclusive && _endInclusive < Constants.LATEST_VERTEX) {
                     PriceVertex memory next = priceState0.priceVertices[index + 1];
                     if (sizeAfter >= next.size || premiumRateAfterX96 >= next.premiumRateX96)
-                        endInclusive = Constants.LATEST_VERTEX;
+                        _endInclusive = Constants.LATEST_VERTEX;
                 }
             }
         }
@@ -1044,9 +1045,9 @@ contract Pool is IPool, ReentrancyGuard {
     }
 
     function _liquidatePosition(
-        GlobalLiquidityPosition memory globalLiquidityPositionCache,
-        Position memory positionCache,
-        TradingFeeState memory tradingFeeState,
+        GlobalLiquidityPosition memory _globalLiquidityPositionCache,
+        Position memory _positionCache,
+        TradingFeeState memory _tradingFeeState,
         address _account,
         Side _side,
         uint160 decreaseIndexPriceX96,
@@ -1057,18 +1058,18 @@ contract Pool is IPool, ReentrancyGuard {
         _transferOutAndUpdateBalance(_feeReceiver, tokenConfig.liquidationExecutionFee);
 
         (uint160 liquidationPriceX96, int256 adjustedFundingFee) = PositionUtil.calculateLiquidationPriceX96(
-            positionCache,
+            _positionCache,
             previousGlobalFundingRate,
             _side,
             requiredFundingFee,
             tokenConfig.liquidationFeeRatePerPosition,
-            tradingFeeState.tradingFeeRate,
+            _tradingFeeState.tradingFeeRate,
             tokenConfig.liquidationExecutionFee
         );
 
         uint128 liquidationFee = PositionUtil.calculateLiquidationFee(
-            positionCache.size,
-            positionCache.entryPriceX96,
+            _positionCache.size,
+            _positionCache.entryPriceX96,
             tokenConfig.liquidationFeeRatePerPosition
         );
         int256 riskBufferFundDelta = int256(uint256(liquidationFee));
@@ -1077,16 +1078,16 @@ contract Pool is IPool, ReentrancyGuard {
             riskBufferFundDelta += _adjustFundingRateByLiquidation(_side, requiredFundingFee, adjustedFundingFee);
 
         uint128 tradingFee = _adjustGlobalLiquidityPosition(
-            globalLiquidityPositionCache,
-            tradingFeeState,
+            _globalLiquidityPositionCache,
+            _tradingFeeState,
             _account,
             _side.flip(),
             liquidationPriceX96,
-            positionCache.size,
+            _positionCache.size,
             riskBufferFundDelta
         );
 
-        _decreaseGlobalPosition(_side, positionCache.size);
+        _decreaseGlobalPosition(_side, _positionCache.size);
 
         delete positions[_account][_side];
 

@@ -69,11 +69,13 @@ contract PositionRouter is IPositionRouter, Governable, ReentrancyGuard {
         emit MinExecutionFeeUpdated(_minExecutionFee);
     }
 
+    /// @inheritdoc IPositionRouter
     function updatePositionExecutor(address _account, bool _active) external override onlyGov {
         positionExecutors[_account] = _active;
         emit PositionExecutorUpdated(_account, _active);
     }
 
+    /// @inheritdoc IPositionRouter
     function updateDelayValues(
         uint32 _minBlockDelayExecutor,
         uint32 _minTimeDelayPublic,
@@ -85,11 +87,13 @@ contract PositionRouter is IPositionRouter, Governable, ReentrancyGuard {
         emit DelayValuesUpdated(_minBlockDelayExecutor, _minTimeDelayPublic, _maxTimeDelay);
     }
 
+    /// @inheritdoc IPositionRouter
     function updateMinExecutionFee(uint256 _minExecutionFee) external override onlyGov {
         minExecutionFee = _minExecutionFee;
         emit MinExecutionFeeUpdated(_minExecutionFee);
     }
 
+    /// @inheritdoc IPositionRouter
     function updateExecutionGasLimit(uint160 _executionGasLimit) external override onlyGov {
         executionGasLimit = _executionGasLimit;
     }

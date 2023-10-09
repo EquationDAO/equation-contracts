@@ -55,6 +55,8 @@ async function main() {
     const mixedExecutorAddr = ethers.utils.getContractAddress({from: deployer.address, nonce: nonce++});
     // executor assistant address
     const executorAssistantAddr = ethers.utils.getContractAddress({from: deployer.address, nonce: nonce++});
+    // liquidator address
+    const liquidatorAddr = ethers.utils.getContractAddress({from: deployer.address, nonce: nonce++});
 
     deployments.set("EQU", equAddr);
     deployments.set("veEQU", veEQUAddr);
@@ -69,6 +71,7 @@ async function main() {
     deployments.set("PoolFactory", poolFactoryAddr);
     deployments.set("MixedExecutor", mixedExecutorAddr);
     deployments.set("ExecutorAssistant", executorAssistantAddr);
+    deployments.set("Liquidator", liquidatorAddr);
 
     // deploy tokens
     const EQU = await ethers.getContractFactory("EQU");
@@ -168,7 +171,7 @@ async function main() {
 
     // deploy mixed executor
     const MixedExecutor = await ethers.getContractFactory("MixedExecutor");
-    const mixedExecutor = await MixedExecutor.deploy(positionRouterAddr, priceFeedAddr, orderBookAddr);
+    const mixedExecutor = await MixedExecutor.deploy(liquidatorAddr, positionRouterAddr, priceFeedAddr, orderBookAddr);
     await mixedExecutor.deployed();
     expectAddr(mixedExecutor.address, mixedExecutorAddr);
     console.log(`MixedExecutor deployed to: ${mixedExecutor.address}`);
@@ -180,12 +183,20 @@ async function main() {
     expectAddr(executorAssistant.address, executorAssistantAddr);
     console.log(`ExecutorAssistant deployed to: ${executorAssistant.address}`);
 
+    // deploy liquidator
+    const Liquidator = await ethers.getContractFactory("Liquidator");
+    const liquidator = await Liquidator.deploy(routerAddr, poolFactoryAddr, network.usd, efc.address);
+    await liquidator.deployed();
+    expectAddr(liquidator.address, liquidatorAddr);
+    console.log(`Liquidator deployed to: ${liquidator.address}`);
+
     // initialize tokens
     await equ.setMinter(rewardFarmAddr, true);
     await (veEQU as MultiMinter).setMinter(feeDistributor.address, true);
     console.log("Initialize tokens finished");
 
     // initialize plugins
+    await router.registerLiquidator(liquidatorAddr);
     await router.registerPlugin(rewardCollectorAddr);
     await router.registerPlugin(orderBookAddr);
     await router.registerPlugin(positionRouterAddr);
@@ -219,11 +230,11 @@ async function main() {
     await concatPoolCreationCode(poolFactory);
     await poolFactory.grantRole(
         ethers.utils.keccak256(ethers.utils.toUtf8Bytes("ROLE_POSITION_LIQUIDATOR")),
-        mixedExecutor.address
+        liquidatorAddr
     );
     await poolFactory.grantRole(
         ethers.utils.keccak256(ethers.utils.toUtf8Bytes("ROLE_LIQUIDITY_POSITION_LIQUIDATOR")),
-        mixedExecutor.address
+        liquidatorAddr
     );
     console.log("Initialize pool factory finished");
 
@@ -233,6 +244,10 @@ async function main() {
         await mixedExecutor.setExecutor(item, true);
     }
     console.log("Initialize mixed executor finished");
+
+    // initialize liquidator
+    await liquidator.updateExecutor(mixedExecutorAddr, true);
+    console.log("Initialize liquidator finished");
 
     // write deployments to file
     const deploymentsOutput = {

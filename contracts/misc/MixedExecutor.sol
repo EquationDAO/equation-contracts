@@ -4,6 +4,7 @@ pragma solidity =0.8.21;
 import "../governance/Governable.sol";
 import "../oracle/interfaces/IPriceFeed.sol";
 import "../plugins/interfaces/IOrderBook.sol";
+import "../plugins/interfaces/ILiquidator.sol";
 import "../plugins/interfaces/IPositionRouter.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
 
@@ -31,6 +32,7 @@ contract MixedExecutor is Multicall, Governable {
     }
 
     mapping(address => bool) public executors;
+    ILiquidator public immutable liquidator;
     /// @notice The address of position router
     IPositionRouter public immutable positionRouter;
     /// @notice The address of price feed
@@ -46,8 +48,8 @@ contract MixedExecutor is Multicall, Governable {
         _;
     }
 
-    constructor(IPositionRouter _router, IPriceFeed _priceFeed, IOrderBook _orderBook) {
-        (positionRouter, priceFeed, orderBook) = (_router, _priceFeed, _orderBook);
+    constructor(ILiquidator _liquidator, IPositionRouter _router, IPriceFeed _priceFeed, IOrderBook _orderBook) {
+        (liquidator, positionRouter, priceFeed, orderBook) = (_liquidator, _router, _priceFeed, _orderBook);
         slot.cancelOrderIfFailedStatus = true;
     }
 
@@ -185,7 +187,7 @@ contract MixedExecutor is Multicall, Governable {
     /// @param _positionID The position ID
     /// @param _requireSuccess True if the execution error is ignored, false otherwise.
     function liquidateLiquidityPosition(IPool _pool, uint96 _positionID, bool _requireSuccess) external onlyExecutor {
-        try _pool.liquidateLiquidityPosition(_positionID, _getFeeReceiver()) {} catch {
+        try liquidator.liquidateLiquidityPosition(_pool, _positionID, _getFeeReceiver()) {} catch {
             if (_requireSuccess) revert ExecutionError();
         }
     }
@@ -196,7 +198,7 @@ contract MixedExecutor is Multicall, Governable {
     /// @param _side The side of the position (Long or Short)
     /// @param _requireSuccess True if the execution error is ignored, false otherwise.
     function liquidatePosition(IPool _pool, address _account, Side _side, bool _requireSuccess) external onlyExecutor {
-        try _pool.liquidatePosition(_account, _side, _getFeeReceiver()) {} catch {
+        try liquidator.liquidatePosition(_pool, _account, _side, _getFeeReceiver()) {} catch {
             if (_requireSuccess) revert ExecutionError();
         }
     }
