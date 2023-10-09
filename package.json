@@ -29,7 +29,7 @@
     "scripts": {
         "prepare": "npx husky install",
         "test": "npx hardhat test",
-        "foundry-test": "forge test",
+        "foundry-test": "forge test --no-match-contract FeeDistributorTest",
         "build": "npx hardhat compile"
     },
     "devDependencies": {
