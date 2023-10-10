@@ -426,7 +426,11 @@ contract FeeDistributor is IFeeDistributor, IFeeDistributorCallback, ReentrancyG
         feeToken.safeTransfer(_receiver, _amount);
     }
 
-    function _computeV3PoolAddress(address token0, address token1, uint24 fee) private view returns (address pool) {
-        pool = Create2.computeAddress(keccak256(abi.encode(token0, token1, fee)), V3_POOL_INIT_HASH, v3PoolFactory);
+    function _computeV3PoolAddress(
+        address _token0,
+        address _token1,
+        uint24 _fee
+    ) internal view virtual returns (address pool) {
+        pool = Create2.computeAddress(keccak256(abi.encode(_token0, _token1, _fee)), V3_POOL_INIT_HASH, v3PoolFactory);
     }
 }
