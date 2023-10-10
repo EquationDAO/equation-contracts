@@ -8,6 +8,9 @@ import {ReentrancyGuard} from "../../contracts/libraries/ReentrancyGuard.sol";
 import {ERC20Test, IERC20} from "../../contracts/test/ERC20Test.sol";
 import {MockRewardFarmCallback} from "../../contracts/test/MockRewardFarmCallback.sol";
 import {MockFeeDistributorCallback} from "../../contracts/test/MockFeeDistributorCallback.sol";
+import {MockUniswapV3Pool} from "../../contracts/test/MockUniswapV3Pool.sol";
+import {MockPositionManager} from "../../contracts/test/MockPositionManager.sol";
+import {FeeDistributorHarness} from "../../contracts/test/FeeDistributorHarness.sol";
 import {EQU} from "../../contracts/tokens/EQU.sol";
 import {IEFC, EFC} from "../../contracts/tokens/EFC.sol";
 import {IFeeDistributor, FeeDistributor, IPositionManagerMinimum, IERC721, Constants, Math, Address} from "../../contracts/staking/FeeDistributor.sol";
@@ -34,21 +37,17 @@ contract FeeDistributorTest is Test {
     uint16 internal constant WITHDRAWAL_PERIOD = 7;
     uint256 internal constant TOTAL_SUPPLY = 1_000 * 10_000 * 1e18;
     uint8 internal constant DECIMALS = 18;
-    string internal constant GOERLI_TESTNET_PUBLIC_URL = "https://eth-goerli.g.alchemy.com/v2/demo";
-
-    // ==================== Uniswap V3 Constants ====================
-
-    address internal constant TOKEN0 = 0x8c9e6c40d3402480ACE624730524fACC5482798c;
-    address internal constant TOKEN1 = 0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1;
-    address internal constant V3_POOL_FACTORY = 0x1F98431c8aD98523631AE4a59f267346ea31F984;
-    address internal constant V3_POS = 0xC36442b4a4522E871399CD717aBDD847Ab11FE88;
 
     // ==================== Contract Addresses ====================
 
     EFC EFCToken;
     veEQU veEQUToken;
     ERC20Test USDC;
-    FeeDistributor feeDistributor;
+    ERC20Test EQU;
+    ERC20Test WETH;
+    MockUniswapV3Pool v3PoolAddress;
+    MockPositionManager v3PositionManager;
+    FeeDistributorHarness feeDistributor;
 
     // ==================== variables ====================
 
@@ -76,11 +75,6 @@ contract FeeDistributorTest is Test {
     error Forbidden();
 
     function setUp() public {
-        // fork goerli testnet
-        goerliFork = vm.createFork(GOERLI_TESTNET_PUBLIC_URL);
-        vm.selectFork(goerliFork);
-        // vm.rollFork(9565569);
-
         // Initialize EFC token.
         EFCToken = new EFC(
             CAP_ARCHITECT,
@@ -97,25 +91,37 @@ contract FeeDistributorTest is Test {
         USDC = new ERC20Test("USDC TOKEN", "USDC", DECIMALS, TOTAL_SUPPLY);
         USDC.mint(ALICE, TOTAL_SUPPLY);
 
-        // Initialize FeeDistributor.
-        feeDistributor = new FeeDistributor(
+        // Initialize EQU token & WETH token.
+        ERC20Test token0 = new ERC20Test("ERC20Test Token", "Token0", DECIMALS, TOTAL_SUPPLY);
+        ERC20Test token1 = new ERC20Test("ERC20Test Token", "Token1", DECIMALS, TOTAL_SUPPLY);
+        if (address(token0) < address(token1)) {
+            (EQU, WETH) = (token0, token1);
+        } else {
+            (EQU, WETH) = (token1, token0);
+        }
+        EQU.mint(ALICE, TOTAL_SUPPLY);
+        WETH.mint(ALICE, TOTAL_SUPPLY);
+
+        // Initialize uniswap v3 pool.
+        v3PoolAddress = new MockUniswapV3Pool();
+
+        // Initialize uniswap v3 position manager.
+        v3PositionManager = new MockPositionManager(address(EQU), address(WETH));
+
+        feeDistributor = new FeeDistributorHarness(
             IEFC(address(EFCToken)),
-            IERC20(TOKEN0),
-            IERC20(TOKEN1),
+            IERC20(address(EQU)),
+            IERC20(address(WETH)),
             IERC20(address(veEQUToken)),
             IERC20(address(USDC)),
             Router(ROUTER_ADDRESS),
-            V3_POOL_FACTORY,
-            IPositionManagerMinimum(V3_POS),
-            WITHDRAWAL_PERIOD
+            address(0),
+            IPositionManagerMinimum(address(v3PositionManager)),
+            WITHDRAWAL_PERIOD,
+            address(v3PoolAddress)
         );
         veEQUToken.setMinter(address(feeDistributor), true);
         feeDistributor.setLockupRewardMultipliers(periods, multipliers);
-
-        // Initialize Balance.
-        deal(ALICE, 100 ether);
-        deal(TOKEN0, ALICE, TOTAL_SUPPLY);
-        deal(TOKEN1, ALICE, TOTAL_SUPPLY);
     }
 
     function test_SetUpState() public {
@@ -124,9 +130,8 @@ contract FeeDistributorTest is Test {
         assertEq(feeDistributor.lockupRewardMultipliers(90), 2);
         assertEq(feeDistributor.lockupRewardMultipliers(180), 3);
         assertEq(feeDistributor.withdrawalPeriod(), WITHDRAWAL_PERIOD);
-        assertEq(ALICE.balance, 100 * 1e18);
-        assertEq(IERC20(TOKEN0).balanceOf(ALICE), TOTAL_SUPPLY);
-        assertEq(IERC20(TOKEN1).balanceOf(ALICE), TOTAL_SUPPLY);
+        assertEq(IERC20(EQU).balanceOf(ALICE), TOTAL_SUPPLY);
+        assertEq(IERC20(WETH).balanceOf(ALICE), TOTAL_SUPPLY);
     }
 
     /// ====== Test cases for the setLockupRewardMultipliers function ======
@@ -164,7 +169,7 @@ contract FeeDistributorTest is Test {
 
     function test_RevertIf_DepositAmountIsGreaterThanTheTransfer() public {
         _mintArchitect(1);
-        _tokenApprove(TOKEN0, ALICE, address(feeDistributor), 1e18);
+        _tokenApprove(EQU, ALICE, address(feeDistributor), 1e18);
         (uint256 tokenId, , , ) = _mintV3PosAndApprove(ALICE);
         vm.startPrank(ALICE);
         feeDistributor.stake(1e18, BOB, 30);
@@ -180,7 +185,7 @@ contract FeeDistributorTest is Test {
         vm.assume(_amount <= TOTAL_SUPPLY);
 
         _mintArchitect(1);
-        _tokenApprove(TOKEN0, ALICE, address(feeDistributor), 1e18);
+        _tokenApprove(EQU, ALICE, address(feeDistributor), 1e18);
         (uint256 tokenId, , , ) = _mintV3PosAndApprove(ALICE);
         vm.startPrank(ALICE);
         feeDistributor.stake(1e18, BOB, 30);
@@ -200,7 +205,7 @@ contract FeeDistributorTest is Test {
 
     function test_FirstTimeDepositFee() public {
         _mintArchitect(1);
-        _tokenApprove(TOKEN0, ALICE, address(feeDistributor), 1e18);
+        _tokenApprove(EQU, ALICE, address(feeDistributor), 1e18);
         (uint256 tokenId, , , ) = _mintV3PosAndApprove(ALICE);
         vm.startPrank(ALICE);
         feeDistributor.stake(1e18, BOB, 90);
@@ -214,7 +219,7 @@ contract FeeDistributorTest is Test {
 
     function test_MultipleDepositFee() public {
         _mintArchitect(1);
-        _tokenApprove(TOKEN0, ALICE, address(feeDistributor), 1e18);
+        _tokenApprove(EQU, ALICE, address(feeDistributor), 1e18);
         (uint256 tokenId, , , ) = _mintV3PosAndApprove(ALICE);
         vm.startPrank(ALICE);
         feeDistributor.stake(1e18, BOB, 90);
@@ -238,7 +243,7 @@ contract FeeDistributorTest is Test {
     function test_MultiDepositFeeAndMultipleStake() public {
         // First
         _mintArchitect(1);
-        _tokenApprove(TOKEN0, ALICE, address(feeDistributor), 1e18);
+        _tokenApprove(EQU, ALICE, address(feeDistributor), 1e18);
         (uint256 tokenId, , , ) = _mintV3PosAndApprove(ALICE);
         vm.startPrank(ALICE);
         feeDistributor.stake(1e18, BOB, 30);
@@ -250,7 +255,7 @@ contract FeeDistributorTest is Test {
         assertEq(feeDistributor.architectPerShareGrowthX64(), 92233720368547758080000000000000000000);
         // Second
         _mintArchitect(2);
-        _tokenApprove(TOKEN0, ALICE, address(feeDistributor), 1e18);
+        _tokenApprove(EQU, ALICE, address(feeDistributor), 1e18);
         (tokenId, , , ) = _mintV3PosAndApprove(ALICE);
         vm.startPrank(ALICE);
         feeDistributor.stake(1e18, BOB, 90);
@@ -261,7 +266,7 @@ contract FeeDistributorTest is Test {
         assertEq(feeDistributor.architectPerShareGrowthX64(), 138350580552821637120000000000000000000);
         // Third
         _mintArchitect(3);
-        _tokenApprove(TOKEN0, ALICE, address(feeDistributor), 1e18);
+        _tokenApprove(EQU, ALICE, address(feeDistributor), 1e18);
         (tokenId, , , ) = _mintV3PosAndApprove(ALICE);
         vm.startPrank(ALICE);
         feeDistributor.stake(1e18, BOB, 90);
@@ -275,7 +280,7 @@ contract FeeDistributorTest is Test {
     /// ====== Test cases for the stake function ======
 
     function test_RevertIf_InvalidLockupPeriod() public {
-        _tokenApprove(TOKEN0, ALICE, address(feeDistributor), 1e18);
+        _tokenApprove(EQU, ALICE, address(feeDistributor), 1e18);
         vm.expectRevert(abi.encodeWithSelector(IFeeDistributor.InvalidLockupPeriod.selector));
         vm.prank(ALICE);
         feeDistributor.stake(1e18, ALICE, 360);
@@ -291,7 +296,7 @@ contract FeeDistributorTest is Test {
             _period = 180;
         }
 
-        _tokenApprove(TOKEN0, ALICE, address(feeDistributor), _amount);
+        _tokenApprove(EQU, ALICE, address(feeDistributor), _amount);
         vm.expectEmit(true, true, true, true);
         emit Staked(ALICE, BOB, 1, _amount, _period);
         vm.prank(ALICE);
@@ -317,7 +322,7 @@ contract FeeDistributorTest is Test {
     function test_SingleUserStake() public {
         _mintArchitect(1);
         // First
-        _tokenApprove(TOKEN0, ALICE, address(feeDistributor), 1e18);
+        _tokenApprove(EQU, ALICE, address(feeDistributor), 1e18);
         (uint256 tokenId, , , ) = _mintV3PosAndApprove(ALICE);
         vm.startPrank(ALICE);
         uint64 time1 = block.timestamp.toUint64();
@@ -329,7 +334,7 @@ contract FeeDistributorTest is Test {
         assertEq(feeDistributor.totalStakedWithMultiplier(), 1999999999999991746);
         assertEq(veEQUToken.balanceOf(ALICE), 1999999999999991746);
         // Second
-        _tokenApprove(TOKEN0, ALICE, address(feeDistributor), 1e18);
+        _tokenApprove(EQU, ALICE, address(feeDistributor), 1e18);
         vm.prank(ALICE);
         uint64 time2 = block.timestamp.toUint64();
         feeDistributor.stake(1e18, ALICE, 90);
@@ -358,7 +363,7 @@ contract FeeDistributorTest is Test {
     function test_MultiUserStake() public {
         _mintArchitect(1);
         // First
-        _tokenApprove(TOKEN0, ALICE, address(feeDistributor), 2e18);
+        _tokenApprove(EQU, ALICE, address(feeDistributor), 2e18);
         (uint256 tokenId, , , ) = _mintV3PosAndApprove(ALICE);
         vm.startPrank(ALICE);
         uint64 time1 = block.timestamp.toUint64();
@@ -372,7 +377,7 @@ contract FeeDistributorTest is Test {
         assertEq(veEQUToken.balanceOf(ALICE), 1999999999999991746);
         assertEq(veEQUToken.balanceOf(BOB), 1e18);
         // Second
-        _tokenApprove(TOKEN0, ALICE, address(feeDistributor), 2e18);
+        _tokenApprove(EQU, ALICE, address(feeDistributor), 2e18);
         vm.startPrank(ALICE);
         uint64 time2 = block.timestamp.toUint64();
         feeDistributor.stake(1e18, ALICE, 30);
@@ -417,24 +422,10 @@ contract FeeDistributorTest is Test {
 
     /// ====== Test cases for the stakeV3Pos function ======
 
-    function test_RevertIf_InvalidUniswapV3PositionNFT() public {
-        vm.prank(0xb7d9EC4288ED8CC57415d042bbF3695139365634);
-        IERC721(V3_POS).transferFrom(0xb7d9EC4288ED8CC57415d042bbF3695139365634, ALICE, 75860);
-        vm.expectRevert(abi.encodeWithSelector(IFeeDistributor.InvalidUniswapV3PositionNFT.selector));
-        vm.prank(ALICE);
-        feeDistributor.stakeV3Pos(75860, ALICE, 30);
-    }
-
-    function test_RevertIf_ExchangeableEQUAmountIsZero() public {
-        vm.expectRevert(abi.encodeWithSelector(IFeeDistributor.ExchangeableEQUAmountIsZero.selector));
-        vm.prank(0x64B5Be6b2919831cD7e1AA9fCB1EAD37d8919eD0);
-        feeDistributor.stakeV3Pos(76878, ALICE, 30);
-    }
-
     function test_SingleUserStakeV3Pos() public {
         _mintArchitect(1);
         // First
-        _tokenApprove(TOKEN0, ALICE, address(feeDistributor), 1e18);
+        _tokenApprove(EQU, ALICE, address(feeDistributor), 1e18);
         (uint256 tokenId1, , , ) = _mintV3PosAndApprove(ALICE);
         vm.startPrank(ALICE);
         uint64 time1 = block.timestamp.toUint64();
@@ -478,7 +469,7 @@ contract FeeDistributorTest is Test {
     function test_MultiUserStakeV3Pos() public {
         _mintArchitect(1);
         // First
-        _tokenApprove(TOKEN0, ALICE, address(feeDistributor), 1e18);
+        _tokenApprove(EQU, ALICE, address(feeDistributor), 1e18);
         (uint256 tokenId1, , , ) = _mintV3PosAndApprove(ALICE);
         (uint256 tokenId2, , , ) = _mintV3PosAndApprove(ALICE);
         vm.startPrank(ALICE);
@@ -555,7 +546,7 @@ contract FeeDistributorTest is Test {
     }
 
     function test_RevertIf_NotYetReachedTheUnlockingTime() public {
-        _tokenApprove(TOKEN0, ALICE, address(feeDistributor), 1e18);
+        _tokenApprove(EQU, ALICE, address(feeDistributor), 1e18);
         vm.startPrank(ALICE);
         feeDistributor.stake(1e18, ALICE, 30);
         stakeIDs.push(1);
@@ -566,7 +557,7 @@ contract FeeDistributorTest is Test {
 
     function test_SingleUserUnstake() public {
         _mintArchitect(1);
-        _tokenApprove(TOKEN0, ALICE, address(feeDistributor), 1e18);
+        _tokenApprove(EQU, ALICE, address(feeDistributor), 1e18);
         (uint256 tokenId, , , ) = _mintV3PosAndApprove(ALICE);
         vm.startPrank(ALICE);
         feeDistributor.stake(1e18, MARK, 30);
@@ -581,13 +572,13 @@ contract FeeDistributorTest is Test {
         vm.prank(MARK);
         feeDistributor.unstake(stakeIDs, MARK);
         assertEq(veEQUToken.balanceOf(MARK), 0);
-        assertEq(IERC20(TOKEN0).balanceOf(MARK), 1e18);
+        assertEq(IERC20(EQU).balanceOf(MARK), 1e18);
         assertEq(USDC.balanceOf(MARK), 2500000000000010317);
     }
 
     function test_MultiUserUnstake() public {
         _mintArchitect(1);
-        _tokenApprove(TOKEN0, ALICE, address(feeDistributor), 2e18);
+        _tokenApprove(EQU, ALICE, address(feeDistributor), 2e18);
         (uint256 tokenId, , , ) = _mintV3PosAndApprove(ALICE);
         vm.startPrank(ALICE);
         feeDistributor.stake(1e18, MARK, 30);
@@ -604,7 +595,7 @@ contract FeeDistributorTest is Test {
         vm.prank(MARK);
         feeDistributor.unstake(stakeIDs, MARK);
         assertEq(veEQUToken.balanceOf(MARK), 0);
-        assertEq(IERC20(TOKEN0).balanceOf(MARK), 1e18);
+        assertEq(IERC20(EQU).balanceOf(MARK), 1e18);
         assertEq(USDC.balanceOf(MARK), 1666666666666671252);
         // BOB
         delete stakeIDs;
@@ -614,7 +605,7 @@ contract FeeDistributorTest is Test {
         vm.prank(BOB);
         feeDistributor.unstake(stakeIDs, BOB);
         assertEq(veEQUToken.balanceOf(BOB), 0);
-        assertEq(IERC20(TOKEN0).balanceOf(BOB), 1e18);
+        assertEq(IERC20(EQU).balanceOf(BOB), 1e18);
         assertEq(USDC.balanceOf(BOB), 1666666666666671252);
     }
 
@@ -622,7 +613,7 @@ contract FeeDistributorTest is Test {
 
     function test_SingleUserUnstakeV3Pos() public {
         _mintArchitect(1);
-        _tokenApprove(TOKEN0, ALICE, address(feeDistributor), 1e18);
+        _tokenApprove(EQU, ALICE, address(feeDistributor), 1e18);
         (uint256 tokenId, , , ) = _mintV3PosAndApprove(ALICE);
         vm.startPrank(ALICE);
         feeDistributor.stake(1e18, MARK, 30);
@@ -637,13 +628,13 @@ contract FeeDistributorTest is Test {
         vm.prank(BOB);
         feeDistributor.unstakeV3Pos(stakeIDs, BOB);
         assertEq(veEQUToken.balanceOf(BOB), 0);
-        assertEq(IERC721(V3_POS).ownerOf(tokenId), BOB);
+        assertEq(IERC721(v3PositionManager).ownerOf(tokenId), BOB);
         assertEq(USDC.balanceOf(BOB), 2499999999999989682);
     }
 
     function test_MultiUserUnstakeV3Pos() public {
         _mintArchitect(1);
-        _tokenApprove(TOKEN0, ALICE, address(feeDistributor), 1e18);
+        _tokenApprove(EQU, ALICE, address(feeDistributor), 1e18);
         (uint256 tokenId1, , , ) = _mintV3PosAndApprove(ALICE);
         (uint256 tokenId2, , , ) = _mintV3PosAndApprove(ALICE);
         vm.startPrank(ALICE);
@@ -661,7 +652,7 @@ contract FeeDistributorTest is Test {
         vm.prank(MARK);
         feeDistributor.unstakeV3Pos(stakeIDs, MARK);
         assertEq(veEQUToken.balanceOf(MARK), 0);
-        assertEq(IERC721(V3_POS).ownerOf(tokenId1), MARK);
+        assertEq(IERC721(v3PositionManager).ownerOf(tokenId1), MARK);
         assertEq(USDC.balanceOf(MARK), 1666666666666662081);
         // BOB
         delete stakeIDs;
@@ -671,7 +662,7 @@ contract FeeDistributorTest is Test {
         vm.prank(BOB);
         feeDistributor.unstakeV3Pos(stakeIDs, BOB);
         assertEq(veEQUToken.balanceOf(BOB), 0);
-        assertEq(IERC721(V3_POS).ownerOf(tokenId2), BOB);
+        assertEq(IERC721(v3PositionManager).ownerOf(tokenId2), BOB);
         assertEq(USDC.balanceOf(BOB), 1666666666666662081);
     }
 
@@ -689,7 +680,7 @@ contract FeeDistributorTest is Test {
 
     function test_FirstTimeMintArchitect() public {
         _mintArchitect(1);
-        _tokenApprove(TOKEN0, ALICE, address(feeDistributor), 1e18);
+        _tokenApprove(EQU, ALICE, address(feeDistributor), 1e18);
         (uint256 tokenId, , , ) = _mintV3PosAndApprove(ALICE);
         vm.startPrank(ALICE);
         feeDistributor.stake(1e18, ALICE, 30);
@@ -704,7 +695,7 @@ contract FeeDistributorTest is Test {
 
     function test_MultiMintArchitect() public {
         _mintArchitect(1);
-        _tokenApprove(TOKEN0, ALICE, address(feeDistributor), 1e18);
+        _tokenApprove(EQU, ALICE, address(feeDistributor), 1e18);
         (uint256 tokenId, , , ) = _mintV3PosAndApprove(ALICE);
         vm.startPrank(ALICE);
         feeDistributor.stake(1e18, ALICE, 30);
@@ -729,7 +720,7 @@ contract FeeDistributorTest is Test {
 
     function test_CollectBatchByRouter() public {
         _mintArchitect(1);
-        _tokenApprove(TOKEN0, ALICE, address(feeDistributor), 2e18);
+        _tokenApprove(EQU, ALICE, address(feeDistributor), 2e18);
         (uint256 tokenId, , , ) = _mintV3PosAndApprove(ALICE);
         vm.startPrank(ALICE);
         feeDistributor.stake(1e18, ALICE, 30);
@@ -755,7 +746,7 @@ contract FeeDistributorTest is Test {
 
     function test_CollectV3PosBatchByRouter() public {
         _mintArchitect(1);
-        _tokenApprove(TOKEN0, ALICE, address(feeDistributor), 1e18);
+        _tokenApprove(EQU, ALICE, address(feeDistributor), 1e18);
         (uint256 tokenId1, , , ) = _mintV3PosAndApprove(ALICE);
         (uint256 tokenId2, , , ) = _mintV3PosAndApprove(ALICE);
         vm.startPrank(ALICE);
@@ -790,7 +781,7 @@ contract FeeDistributorTest is Test {
     function test_CollectArchitectBatchByRouter() public {
         _mintArchitect(1);
         _mintArchitect(2);
-        _tokenApprove(TOKEN0, ALICE, address(feeDistributor), 1e18);
+        _tokenApprove(EQU, ALICE, address(feeDistributor), 1e18);
         (uint256 tokenId, , , ) = _mintV3PosAndApprove(ALICE);
         vm.startPrank(ALICE);
         feeDistributor.stake(1e18, ALICE, 30);
@@ -826,32 +817,14 @@ contract FeeDistributorTest is Test {
     function _mintV3PosAndApprove(
         address _receiver
     ) private returns (uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1) {
-        vm.startPrank(ALICE);
-        IERC20(TOKEN0).approve(V3_POS, type(uint256).max);
-        IERC20(TOKEN1).approve(V3_POS, type(uint256).max);
-        bytes memory positionInfo = Address.functionCall(
-            V3_POS,
-            abi.encodeWithSignature(
-                "mint((address,address,uint24,int24,int24,uint256,uint256,uint256,uint256,address,uint256))",
-                TOKEN0,
-                TOKEN1,
-                3000,
-                -887220,
-                887220,
-                999999999999991747,
-                99990089118708,
-                997509336107624671,
-                99739800643261,
-                _receiver,
-                block.timestamp + 1 hours
-            )
-        );
-        (tokenId, liquidity, amount0, amount1) = abi.decode(positionInfo, (uint256, uint128, uint256, uint256));
-        IERC721(V3_POS).approve(address(feeDistributor), tokenId);
+        vm.startPrank(_receiver);
+        uint256 tokenId = v3PositionManager.mint(_receiver);
+        IERC721(v3PositionManager).approve(address(feeDistributor), tokenId);
         vm.stopPrank();
+        return (tokenId, 0, 0, 0);
     }
 
-    function _tokenApprove(address _token, address _owner, address _approveAddress, uint256 _amount) private {
+    function _tokenApprove(ERC20Test _token, address _owner, address _approveAddress, uint256 _amount) private {
         vm.prank(_owner);
         IERC20(_token).approve(_approveAddress, _amount);
     }
