@@ -2,8 +2,8 @@
 pragma solidity =0.8.21;
 
 import "../plugins/Router.sol";
-import {FeeDistributor} from "../staking/FeeDistributor.sol";
-import {IEFC} from "../tokens/interfaces/IEFC.sol";
+import "../staking/FeeDistributor.sol";
+import "../tokens/interfaces/IEFC.sol";
 import "../staking/interfaces/IUniswapV3Minimum.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
