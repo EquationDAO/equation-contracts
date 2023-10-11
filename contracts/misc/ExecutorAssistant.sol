@@ -243,5 +243,7 @@ contract ExecutorAssistant {
                 }
             }
         }
+        uint dropNum = pools.length - poolIndex;
+        assembly { mstore(pools, sub(mload(pools), dropNum))}
     }
 }
