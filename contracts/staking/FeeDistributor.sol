@@ -337,7 +337,7 @@ contract FeeDistributor is IFeeDistributor, IFeeDistributorCallback, ReentrancyG
         for (uint256 i; i < _tokenIDs.length; ++i) {
             tokenID = _tokenIDs[i];
 
-            amount = (_architectPerShareGrowthX64 - architectPerShareGrowthX64s[tokenID]) / Constants.Q64;
+            amount = (_architectPerShareGrowthX64 - architectPerShareGrowthX64s[tokenID]) >> 64;
             architectPerShareGrowthX64s[tokenID] = _architectPerShareGrowthX64;
 
             rewardAmount += amount;
