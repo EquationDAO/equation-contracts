@@ -26,11 +26,6 @@ interface IPriceFeed {
         uint64 cumulativeRefDelta
     );
 
-    /// @notice Invalid tokens and prices due to length mismatch.
-    /// @param tokensLength The length of tokens
-    /// @param priceX96sLength The length of prices
-    error InvalidTokenPriceInput(uint256 tokensLength, uint256 priceX96sLength);
-
     /// @notice Price not be initialized
     error NotInitialized();
 
@@ -80,6 +75,11 @@ interface IPriceFeed {
         uint160 maxPriceX96;
         uint160 minPriceX96;
         uint64 updateBlockTimestamp;
+    }
+
+    struct TokenPrice {
+        IERC20 token;
+        uint160 priceX96;
     }
 
     /// @notice The 0th storage slot in the price feed stores many values, which helps reduce gas
@@ -138,17 +138,14 @@ interface IPriceFeed {
     /// Then the price of ETH/USDC pair is 2000 / (10 ^ 18) * (10 ^ 6)
     ///
     /// Finally convert the price to Q64.96, ETH/USDC priceX96 = 2000 / (10 ^ 18) * (10 ^ 6) * (2 ^ 96)
-    /// @param tokens Array of token addresses to update prices for
-    /// @param priceX96s Array of prices to be updated by updater
+    /// @param tokenPrices Array of token addresses and prices to update for
     /// @param timestamp The timestamp of price update
-    function setPriceX96s(IERC20[] calldata tokens, uint160[] calldata priceX96s, uint64 timestamp) external;
+    function setPriceX96s(TokenPrice[] calldata tokenPrices, uint64 timestamp) external;
 
     /// @notice calculate min and max price if passed a specific price value
-    /// @param tokens Array of token addresses to update prices for
-    /// @param priceX96s Array of prices to be updated by updater
+    /// @param tokenPrices Array of token addresses and prices to update for
     function calculatePriceX96s(
-        IERC20[] calldata tokens,
-        uint160[] calldata priceX96s
+        TokenPrice[] calldata tokenPrices
     ) external view returns (uint160[] memory minPriceX96s, uint160[] memory maxPriceX96s);
 
     /// @notice Get minimum token price
