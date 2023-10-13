@@ -29,7 +29,8 @@ contract RewardFarm is IRewardFarm, IRewardFarmCallback, Governable, ReentrancyG
     Router public immutable router;
     /// @dev The referral multiplier after binding the referralToken.
     /// When calculating liquidity reward, if a referral code is bound, the liquidity is multiplied by this value.
-    /// This value is calculated by multiplying the actual value with `Constants.BASIS_POINTS_DIVISOR`
+    /// This value is calculated by multiplying the actual value with `Constants.BASIS_POINTS_DIVISOR`,
+    /// For example, 110000000 represents a multiplier of 1.1.
     uint32 public immutable referralMultiplier;
     uint64 public immutable mintTime;
 
