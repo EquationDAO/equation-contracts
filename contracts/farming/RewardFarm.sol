@@ -74,7 +74,7 @@ contract RewardFarm is IRewardFarm, IRewardFarmCallback, Governable, ReentrancyG
         uint64 _mintTime,
         uint32 _referralMultiplier
     ) {
-        if (_mintTime < block.timestamp) revert InvalidMintTime();
+        if (_mintTime < block.timestamp) revert InvalidMintTime(_mintTime);
         poolFactory = _poolFactory;
         router = _router;
         EFC = _EFC;
@@ -723,7 +723,7 @@ contract RewardFarm is IRewardFarm, IRewardFarmCallback, Governable, ReentrancyG
     function _validateConfig(Config memory _newCfg) private pure {
         uint256 totalRate = uint256(_newCfg.liquidityRate) + _newCfg.riskBufferFundLiquidityRate;
         totalRate += _newCfg.referralTokenRate + _newCfg.referralParentTokenRate;
-        if (totalRate != Constants.BASIS_POINTS_DIVISOR) revert InvalidMiningRate();
+        if (totalRate != Constants.BASIS_POINTS_DIVISOR) revert InvalidMiningRate(totalRate);
     }
 
     function _isReferralParentToken(uint256 _referralToken) private pure returns (bool) {

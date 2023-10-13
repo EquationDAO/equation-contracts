@@ -136,9 +136,11 @@ interface IRewardFarm {
     /// @notice Invalid pool
     error InvalidPool(IPool pool);
     /// @notice Invalid mint time
-    error InvalidMintTime();
+    /// @param mintTime The time of starting minting
+    error InvalidMintTime(uint64 mintTime);
     /// @notice Invalid mining rate
-    error InvalidMiningRate();
+    /// @param rate The rate of mining
+    error InvalidMiningRate(uint256 rate);
     /// @notice Too many pools
     error TooManyPools();
     /// @notice Invalid reward cap
