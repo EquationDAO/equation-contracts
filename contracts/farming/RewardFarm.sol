@@ -418,7 +418,7 @@ contract RewardFarm is IRewardFarm, IRewardFarmCallback, Governable, ReentrancyG
     }
 
     function _unmaskPoolIndex(uint256 _poolIndex) private pure returns (uint8) {
-        return uint8(_poolIndex & (~uint8(0)));
+        return uint8(_poolIndex);
     }
 
     /// @notice Calculate per share growth of liquidity
