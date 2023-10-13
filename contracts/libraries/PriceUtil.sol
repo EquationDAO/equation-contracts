@@ -34,7 +34,7 @@ library PriceUtil {
     error MaxPremiumRateExceeded();
 
     /// @notice Emitted when sizeDelta is zero
-    error InvalidSizeDelta();
+    error ZeroSizeDelta();
 
     /// @notice Calculate trade price and update the price state when traders adjust positions.
     /// For liquidations, call this function to update the price state but the trade price returned is invalid
@@ -53,7 +53,7 @@ library PriceUtil {
         uint160 _indexPriceX96,
         bool _liquidation
     ) public returns (uint160 tradePriceX96) {
-        if (_sizeDelta == 0) revert InvalidSizeDelta();
+        if (_sizeDelta == 0) revert ZeroSizeDelta();
         IPool.GlobalLiquidityPosition memory globalPositionCache = _globalPosition;
         PriceStateCache memory priceStateCache = PriceStateCache({
             maxPriceImpactLiquidity: _priceState.maxPriceImpactLiquidity,
@@ -79,7 +79,7 @@ library PriceUtil {
 
         if (!improveBalance) {
             globalPositionCache.side = _side.flip();
-            globalPositionCache.netSize += (_sizeDelta - totalBufferUsed);
+            globalPositionCache.netSize += _sizeDelta - totalBufferUsed;
             globalPositionCache.liquidationBufferNetSize += totalBufferUsed;
         } else {
             // When the net position of LP decreases and reaches or crosses the vertex,
@@ -92,7 +92,7 @@ library PriceUtil {
                 _priceState.pendingVertexIndex = priceStateCache.currentVertexIndex;
             }
 
-            globalPositionCache.netSize -= (_sizeDelta - sizeLeft - totalBufferUsed);
+            globalPositionCache.netSize -= _sizeDelta - sizeLeft - totalBufferUsed;
             globalPositionCache.liquidationBufferNetSize -= totalBufferUsed;
         }
 
