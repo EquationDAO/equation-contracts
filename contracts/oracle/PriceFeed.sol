@@ -234,7 +234,7 @@ contract PriceFeed is IPriceFeed, Governable {
         if (address(_aggregator) == address(0)) revert ReferencePriceFeedNotSet();
 
         (uint80 roundID, int256 refPrice, , uint256 timestamp, ) = _aggregator.latestRoundData();
-        if (refPrice <= 0) revert InvalidReferencePrice();
+        if (refPrice <= 0) revert InvalidReferencePrice(refPrice);
         if (_refHeartbeatDuration != 0 && block.timestamp - timestamp > _refHeartbeatDuration)
             revert ReferencePriceTimeout(block.timestamp - timestamp);
 
@@ -252,7 +252,7 @@ contract PriceFeed is IPriceFeed, Governable {
             // prettier-ignore
             unchecked { ++i; }
         }
-        if (minRefPrice <= 0) revert InvalidReferencePrice();
+        if (minRefPrice <= 0) revert InvalidReferencePrice(refPrice);
 
         _minRefPriceX96 = _toPriceX96(minRefPrice.toUint256(), magnification);
         _maxRefPriceX96 = _toPriceX96(maxRefPrice.toUint256(), magnification);
@@ -314,6 +314,6 @@ contract PriceFeed is IPriceFeed, Governable {
         if (answer != 0) revert SequencerDown();
 
         // Make sure the grace period has passed after the sequencer is back up.
-        if (block.timestamp - startedAt <= GRACE_PERIOD_TIME) revert GracePeriodNotOver();
+        if (block.timestamp - startedAt <= GRACE_PERIOD_TIME) revert GracePeriodNotOver(startedAt);
     }
 }
