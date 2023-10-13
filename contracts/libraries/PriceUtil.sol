@@ -275,13 +275,11 @@ library PriceUtil {
     }
 
     function calculateReachedAndSizeUsed(MoveStep memory _step) internal pure returns (bool reached, uint128 sizeUsed) {
-        if (_step.improveBalance) {
-            reached = _step.sizeLeft >= _step.current.size - _step.to.size;
-            sizeUsed = reached ? _step.current.size - _step.to.size : _step.sizeLeft;
-        } else {
-            reached = _step.sizeLeft >= _step.to.size - _step.current.size;
-            sizeUsed = reached ? _step.to.size - _step.current.size : _step.sizeLeft;
-        }
+        uint128 sizeCost = _step.improveBalance
+            ? _step.current.size - _step.to.size
+            : _step.to.size - _step.current.size;
+        reached = _step.sizeLeft >= sizeCost;
+        sizeUsed = reached ? sizeCost : _step.sizeLeft;
     }
 
     function calculatePremiumRateAfterX96(
