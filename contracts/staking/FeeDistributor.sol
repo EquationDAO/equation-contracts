@@ -92,15 +92,11 @@ contract FeeDistributor is IFeeDistributor, IFeeDistributorCallback, ReentrancyG
     }
 
     /// @inheritdoc IFeeDistributor
-    function setLockupRewardMultipliers(
-        uint16[] calldata _periods,
-        uint16[] calldata _multipliers
-    ) external override nonReentrant onlyGov {
-        if (_periods.length != _multipliers.length) revert UnequalLengths();
-        for (uint256 i; i < _periods.length; ++i) {
-            lockupRewardMultipliers[_periods[i]] = _multipliers[i];
+    function setLockupRewardMultipliers(LockData[] calldata _lockDataList) external override nonReentrant onlyGov {
+        for (uint256 i; i < _lockDataList.length; ++i) {
+            lockupRewardMultipliers[_lockDataList[i].period] = _lockDataList[i].multiplier;
         }
-        emit LockupRewardMultipliersSet(_periods, _multipliers);
+        emit LockupRewardMultipliersSet(_lockDataList);
     }
 
     /// @inheritdoc IFeeDistributor
