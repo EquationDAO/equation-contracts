@@ -114,7 +114,12 @@ interface IRewardFarm {
     /// @param referralTokens The IDs of the referral tokens
     /// @param receiver The address to receive the referral reward
     /// @param rewardDebt The amount of the referral reward received
-    event ReferralRewardCollected(IPool[] pools, uint256[] referralTokens, address receiver, uint256 rewardDebt);
+    event ReferralRewardCollected(
+        IPool[] pools,
+        uint256[] referralTokens,
+        address indexed receiver,
+        uint256 rewardDebt
+    );
 
     /// @notice Emitted when configuration is changed
     /// @param newConfig The new configuration
