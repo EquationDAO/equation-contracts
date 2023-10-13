@@ -344,6 +344,7 @@ contract FeeDistributor is IFeeDistributor, IFeeDistributorCallback, ReentrancyG
     ) private returns (uint256 amount) {
         StakeInfo memory stakeInfoCache = _stakeInfos[_owner][_id];
         unchecked {
+            // Because the total amount of EQU issued is 10 million, it will never overflow here.
             amount = Math.mulDiv(
                 perShareGrowthX64 - stakeInfoCache.perShareGrowthX64,
                 stakeInfoCache.amount * stakeInfoCache.multiplier,
