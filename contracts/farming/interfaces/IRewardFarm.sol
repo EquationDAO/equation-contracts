@@ -221,7 +221,7 @@ interface IRewardFarm {
     struct Position {
         /// @dev The bitwise representation of the pool index with existing position
         Bitmap bitmap;
-        /// @dev MMapping of pool to position value
+        /// @dev Mapping of pool to position value
         mapping(IPool => SidePosition) sidePositions;
     }
 
