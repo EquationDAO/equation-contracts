@@ -52,6 +52,7 @@ contract PriceFeed is IPriceFeed, Governable {
             uint160 priceX96 = _tokenPrices[i].priceX96;
             IERC20 token = _tokenPrices[i].token;
             TokenConfig memory tokenConfig = tokenConfigs[token];
+            if (address(tokenConfig.refPriceFeed) == address(0)) revert ReferencePriceFeedNotSet();
             (uint160 latestRefPriceX96, uint160 minRefPriceX96, uint160 maxRefPriceX96) = _getReferencePriceX96(
                 tokenConfig.refPriceFeed,
                 tokenConfig.refHeartbeatDuration
@@ -88,6 +89,7 @@ contract PriceFeed is IPriceFeed, Governable {
             PricePack storage pack = latestPrices[token];
             if (!_setTokenLastUpdated(pack, _timestamp)) continue;
             TokenConfig memory tokenConfig = tokenConfigs[token];
+            if (address(tokenConfig.refPriceFeed) == address(0)) revert ReferencePriceFeedNotSet();
             (uint160 latestRefPriceX96, uint160 minRefPriceX96, uint160 maxRefPriceX96) = _getReferencePriceX96(
                 tokenConfig.refPriceFeed,
                 tokenConfig.refHeartbeatDuration
@@ -224,8 +226,6 @@ contract PriceFeed is IPriceFeed, Governable {
         IChainLinkAggregator _aggregator,
         uint32 _refHeartbeatDuration
     ) private view returns (uint160 _latestRefPriceX96, uint160 _minRefPriceX96, uint160 _maxRefPriceX96) {
-        if (address(_aggregator) == address(0)) revert ReferencePriceFeedNotSet();
-
         (uint80 roundID, int256 refPrice, , uint256 timestamp, ) = _aggregator.latestRoundData();
         if (refPrice <= 0) revert InvalidReferencePrice(refPrice);
         if (_refHeartbeatDuration != 0 && block.timestamp - timestamp > _refHeartbeatDuration)
@@ -254,8 +254,9 @@ contract PriceFeed is IPriceFeed, Governable {
     function _toPriceX96(uint256 _price, uint256 _magnification) private pure returns (uint160) {
         // prettier-ignore
         unchecked { _price = Math.mulDiv(_price, Constants.Q96, uint256(10) ** TOKEN_DECIMALS); }
-        // prettier-ignore
-        unchecked { _price = Math.mulDiv(_price, uint256(10) ** USD_DECIMALS, _magnification); }
+        _price = uint256(10) ** USD_DECIMALS >= _magnification
+            ? _price * (uint256(10) ** USD_DECIMALS / _magnification)
+            : _price / (_magnification / uint256(10) ** USD_DECIMALS);
         return _price.toUint160();
     }
 
