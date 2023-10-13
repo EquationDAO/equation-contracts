@@ -103,7 +103,7 @@ interface IFeeDistributor {
     /// @notice Invalid NFT owner
     error InvalidNFTOwner(address owner, uint256 tokenID);
     /// @notice Invalid lockup period
-    error InvalidLockupPeriod();
+    error InvalidLockupPeriod(uint16 period);
     /// @notice Invalid StakeID
     error InvalidStakeID(uint256 id);
     /// @notice Not yet reached the unlocking time
@@ -111,7 +111,7 @@ interface IFeeDistributor {
     /// @notice Deposit amount is greater than the transfer amount
     error DepositAmountIsGreaterThanTheTransfer(uint256 depositAmount, uint256 balance);
     /// @notice The NFT is not part of the EQU-WETH pool
-    error InvalidUniswapV3PositionNFT();
+    error InvalidUniswapV3PositionNFT(address token0, address token1);
     /// @notice The exchangeable amount of EQU is 0
     error ExchangeableEQUAmountIsZero();
 
