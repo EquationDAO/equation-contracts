@@ -176,12 +176,12 @@ interface IRewardFarm {
     }
 
     struct RewardWithPosition {
-        /// @dev The total liquidity of all referee
+        /// @dev The total liquidity of all referees
         uint128 liquidity;
         /// @dev The snapshot of
         /// `PoolReward.referralTokenRewardGrowthX64` or `PoolReward.referralParentTokenRewardGrowthX64`
         uint128 rewardGrowthX64;
-        /// @dev The total position value of all referee
+        /// @dev The total position value of all referees
         uint128 position;
         /// @dev The snapshot of
         /// `PoolReward.referralTokenPositionRewardGrowthX64` or `PoolReward.referralParentTokenPositionRewardGrowthX64`
