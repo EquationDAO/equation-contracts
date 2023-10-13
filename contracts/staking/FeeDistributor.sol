@@ -283,21 +283,21 @@ contract FeeDistributor is IFeeDistributor, IFeeDistributorCallback, ReentrancyG
         address _owner,
         address _receiver,
         uint256 _id,
-        uint256 _amount
-    ) internal returns (uint256 amount) {
-        amount = _collectWithoutTransfer(v3PosStakeInfos, _owner, _id);
+        uint256 _unstakeAmount
+    ) internal returns (uint256 rewardAmount) {
+        rewardAmount = _collectWithoutTransfer(v3PosStakeInfos, _owner, _id);
         IERC721(address(v3PositionManager)).safeTransferFrom(address(this), _receiver, _id);
-        emit V3PosUnstaked(_owner, _receiver, _id, _amount, amount);
+        emit V3PosUnstaked(_owner, _receiver, _id, _unstakeAmount, rewardAmount);
     }
 
     function _unstake(
         address _owner,
         address _receiver,
         uint256 _id,
-        uint256 _amount
-    ) internal returns (uint256 amount) {
-        amount = _collectWithoutTransfer(stakeInfos, _owner, _id);
-        emit Unstaked(_owner, _receiver, _id, _amount, amount);
+        uint256 _unstakeAmount
+    ) internal returns (uint256 rewardAmount) {
+        rewardAmount = _collectWithoutTransfer(stakeInfos, _owner, _id);
+        emit Unstaked(_owner, _receiver, _id, _unstakeAmount, rewardAmount);
     }
 
     function _collectBatch(
@@ -323,18 +323,18 @@ contract FeeDistributor is IFeeDistributor, IFeeDistributorCallback, ReentrancyG
         address _owner,
         address _receiver,
         uint256 _id
-    ) internal returns (uint256 amount) {
-        amount = _collectWithoutTransfer(v3PosStakeInfos, _owner, _id);
-        emit V3PosCollected(_owner, _receiver, _id, amount);
+    ) internal returns (uint256 rewardAmount) {
+        rewardAmount = _collectWithoutTransfer(v3PosStakeInfos, _owner, _id);
+        emit V3PosCollected(_owner, _receiver, _id, rewardAmount);
     }
 
     function _collectEQUWithoutTransfer(
         address _owner,
         address _receiver,
         uint256 _id
-    ) internal returns (uint256 amount) {
-        amount = _collectWithoutTransfer(stakeInfos, _owner, _id);
-        emit Collected(_owner, _receiver, _id, amount);
+    ) internal returns (uint256 rewardAmount) {
+        rewardAmount = _collectWithoutTransfer(stakeInfos, _owner, _id);
+        emit Collected(_owner, _receiver, _id, rewardAmount);
     }
 
     function _collectWithoutTransfer(
