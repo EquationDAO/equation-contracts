@@ -191,14 +191,14 @@ interface IRewardFarm {
     struct ReferralReward {
         /// @dev Unclaimed reward amount
         uint256 rewardDebt;
-        /// @dev Mapping of referral reward to pool
+        /// @dev Mapping of pool to referral reward
         mapping(IPool => RewardWithPosition) rewards;
     }
 
     struct RiskBufferFundReward {
         /// @dev Unclaimed reward amount
         uint256 rewardDebt;
-        /// @dev Mapping of risk buffer fund reward to pool
+        /// @dev Mapping of pool to risk buffer fund reward
         mapping(IPool => Reward) rewards;
     }
 
@@ -207,7 +207,7 @@ interface IRewardFarm {
         Bitmap bitmap;
         /// @dev Unclaimed reward amount
         uint256 rewardDebt;
-        /// @dev Mapping of liquidity reward to pool
+        /// @dev Mapping of pool to liquidity reward
         mapping(IPool => Reward) rewards;
     }
 
@@ -221,7 +221,7 @@ interface IRewardFarm {
     struct Position {
         /// @dev The bitwise representation of the pool index with existing position
         Bitmap bitmap;
-        /// @dev Mapping of position value to pool
+        /// @dev MMapping of pool to position value
         mapping(IPool => SidePosition) sidePositions;
     }
 
