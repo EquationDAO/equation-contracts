@@ -64,13 +64,25 @@ contract FeeDistributorTest is Test {
         uint160 perShareGrowthAfterX64,
         uint160 architectPerShareGrowthAfterX64
     );
-    event Staked(address indexed sender, address indexed account, uint256 id, uint256 amount, uint16 period);
+    event Staked(address indexed sender, address indexed account, uint256 indexed id, uint256 amount, uint16 period);
     event LockupRewardMultipliersSet(uint16[] periods, uint16[] multipliers);
-    event Unstaked(address indexed owner, address indexed receiver, uint256 id, uint256 amount0, uint256 amount1);
-    event V3PosUnstaked(address indexed owner, address indexed receiver, uint256 id, uint256 amount0, uint256 amount1);
-    event Collected(address indexed owner, address indexed receiver, uint256 id, uint256 amount);
-    event V3PosCollected(address indexed owner, address indexed receiver, uint256 id, uint256 amount);
-    event ArchitectCollected(address indexed receiver, uint256 tokenID, uint256 amount);
+    event Unstaked(
+        address indexed owner,
+        address indexed receiver,
+        uint256 indexed id,
+        uint256 amount0,
+        uint256 amount1
+    );
+    event V3PosUnstaked(
+        address indexed owner,
+        address indexed receiver,
+        uint256 indexed id,
+        uint256 amount0,
+        uint256 amount1
+    );
+    event Collected(address indexed owner, address indexed receiver, uint256 indexed id, uint256 amount);
+    event V3PosCollected(address indexed owner, address indexed receiver, uint256 indexed id, uint256 amount);
+    event ArchitectCollected(address indexed receiver, uint256 indexed tokenID, uint256 amount);
 
     error Forbidden();
 
