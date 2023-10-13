@@ -15,7 +15,7 @@ contract PriceFeed is IPriceFeed, Governable {
     /// @dev value difference precision
     uint256 public constant DELTA_PRECISION = 1000 * 1000;
     /// @dev seconds after l2 sequencer comes back online that we start accepting price feed data.
-    uint256 public constant GRACE_PERIOD_TIME = 1800; // 30 min
+    uint256 public constant GRACE_PERIOD_TIME = 30 minutes;
     uint8 public constant USD_DECIMALS = 6;
     uint8 public constant TOKEN_DECIMALS = 18;
 
@@ -37,7 +37,7 @@ contract PriceFeed is IPriceFeed, Governable {
     }
 
     constructor() {
-        (slot.maxDeviationRatio, slot.cumulativeRoundDuration, slot.updateTxTimeout) = (100 * 1000, 60, 60);
+        (slot.maxDeviationRatio, slot.cumulativeRoundDuration, slot.updateTxTimeout) = (100e3, 1 minutes, 1 minutes);
     }
 
     /// @inheritdoc IPriceFeed
