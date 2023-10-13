@@ -6,10 +6,12 @@ Side constant SHORT = Side.wrap(2);
 
 type Side is uint8;
 
-using {normalize, isLong, isShort, flip, eq as ==} for Side global;
+error InvalidSide(Side side);
 
-function normalize(Side self) pure returns (Side) {
-    return Side.unwrap(self) == Side.unwrap(LONG) ? LONG : SHORT;
+using {requireValid, isLong, isShort, flip, eq as ==} for Side global;
+
+function requireValid(Side self) pure {
+    if (!isLong(self) && !isShort(self)) revert InvalidSide(self);
 }
 
 function isLong(Side self) pure returns (bool) {
