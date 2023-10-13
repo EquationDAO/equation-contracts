@@ -7,10 +7,10 @@ interface IFeeDistributor {
     /// @notice Emitted when EQU tokens are staked
     /// @param sender The address to apply for staking
     /// @param account Which address to stake to
-    /// @param stakeID Index of EQU tokens staking information
+    /// @param id Index of EQU tokens staking information
     /// @param amount The amount of EQU tokens that already staked
     /// @param period Lockup period
-    event Staked(address indexed sender, address indexed account, uint256 stakeID, uint256 amount, uint16 period);
+    event Staked(address indexed sender, address indexed account, uint256 id, uint256 amount, uint16 period);
 
     /// @notice Emitted when Uniswap V3 positions NFTs are staked
     /// @param sender The address to apply for staking
