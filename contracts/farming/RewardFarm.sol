@@ -425,7 +425,7 @@ contract RewardFarm is IRewardFarm, IRewardFarmCallback, Governable, ReentrancyG
         uint256 _amount,
         uint256 _totalLiquidity
     ) private pure returns (uint128 perShareGrowthX64) {
-        if (_totalLiquidity != 0) perShareGrowthX64 = Math.mulDiv(_amount, Constants.Q64, _totalLiquidity).toUint128();
+        if (_totalLiquidity != 0) perShareGrowthX64 = ((_amount << 64) / _totalLiquidity).toUint128();
     }
 
     function _searchBitmap(
