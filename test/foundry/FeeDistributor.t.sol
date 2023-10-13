@@ -293,7 +293,7 @@ contract FeeDistributorTest is Test {
 
     function test_RevertIf_InvalidLockupPeriod() public {
         _tokenApprove(EQU, ALICE, address(feeDistributor), 1e18);
-        vm.expectRevert(abi.encodeWithSelector(IFeeDistributor.InvalidLockupPeriod.selector));
+        vm.expectRevert(abi.encodeWithSelector(IFeeDistributor.InvalidLockupPeriod.selector, 360));
         vm.prank(ALICE);
         feeDistributor.stake(1e18, ALICE, 360);
     }

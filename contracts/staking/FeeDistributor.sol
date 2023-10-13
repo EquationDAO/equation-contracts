@@ -227,7 +227,7 @@ contract FeeDistributor is IFeeDistributor, IFeeDistributorCallback, ReentrancyG
         uint16 _period
     ) private {
         uint16 multiplier = lockupRewardMultipliers[_period];
-        if (multiplier == 0) revert InvalidLockupPeriod();
+        if (multiplier == 0) revert InvalidLockupPeriod(_period);
 
         _stakeInfos[_receiver][_id] = StakeInfo({
             amount: _amount,
@@ -418,7 +418,7 @@ contract FeeDistributor is IFeeDistributor, IFeeDistributorCallback, ReentrancyG
     }
 
     function _validateTokenPair(address _token0, address _token1) private view {
-        if (address(EQU) != _token0 || address(WETH) != _token1) revert InvalidUniswapV3PositionNFT();
+        if (address(EQU) != _token0 || address(WETH) != _token1) revert InvalidUniswapV3PositionNFT(_token0, _token1);
     }
 
     function _transferOutAndUpdateFeeBalance(address _receiver, uint256 _amount) private {
