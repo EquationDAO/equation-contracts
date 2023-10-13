@@ -1141,7 +1141,8 @@ contract Pool is IPool, ReentrancyGuard {
         emit GlobalRiskBufferFundChanged(riskBufferFundAfter);
 
         uint256 realizedProfitGrowthAfterX64 = _positionCache.realizedProfitGrowthX64 +
-            Math.mulDiv(liquidityFee, Constants.Q64, _positionCache.liquidity);
+            (uint256(liquidityFee) << 64) /
+            _positionCache.liquidity;
         globalLiquidityPosition.realizedProfitGrowthX64 = realizedProfitGrowthAfterX64;
         emit GlobalLiquidityPositionRealizedProfitGrowthChanged(realizedProfitGrowthAfterX64);
     }
