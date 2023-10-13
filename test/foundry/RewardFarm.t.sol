@@ -88,7 +88,7 @@ contract RewardFarmTest is Test {
         uint256 rewardDebtDelta
     );
     event ReferralPositionRewardDebtChanged(IPool indexed pool, uint256 indexed referralToken, uint256 rewardDebtDelta);
-    event ReferralRewardCollected(IPool[] pools, uint256[] referralTokens, address receiver, uint256 rewardDebt);
+    event ReferralRewardCollected(IPool[] pools, uint256[] referralTokens, address indexed receiver, uint256 rewardDebt);
     event ConfigChanged(IRewardFarm.Config newConfig);
     event RewardCapChanged(uint128 rewardCapAfter);
     event Transfer(address indexed from, address indexed to, uint256 value);
@@ -185,7 +185,7 @@ contract RewardFarmTest is Test {
         assertEqUint(otherRewardFarm.mintTime(), 1);
         assertEqUint(otherRewardFarm.referralMultiplier(), REFERRAL_MULTIPLIER);
 
-        vm.expectRevert(IRewardFarm.InvalidMintTime.selector);
+        vm.expectRevert(abi.encodeWithSelector(IRewardFarm.InvalidMintTime.selector,1000));
         vm.warp(2000);
         otherRewardFarm = new RewardFarm(poolFactory, router, efc, equ, 1000, REFERRAL_MULTIPLIER);
     }
@@ -439,7 +439,7 @@ contract RewardFarmTest is Test {
         otherRewardFarm.setConfig(rightConfig);
 
         IRewardFarm.Config memory errorConfig = IRewardFarm.Config(4000, 1600, 4000, 400);
-        vm.expectRevert(IRewardFarm.InvalidMiningRate.selector);
+        vm.expectRevert(abi.encodeWithSelector(IRewardFarm.InvalidMiningRate.selector,10000));
         otherRewardFarm.setConfig(errorConfig);
 
         vm.warp(100);
