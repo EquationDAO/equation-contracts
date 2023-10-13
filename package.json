@@ -46,6 +46,7 @@
     },
     "dependencies": {
         "@openzeppelin/contracts": "^4.9.3",
-        "@uniswap/v4-core": "github:Uniswap/v4-core"
+        "@uniswap/v4-core": "github:Uniswap/v4-core",
+        "solady": "^0.0.124"
     }
 }
