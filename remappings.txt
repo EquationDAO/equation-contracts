@@ -1,1 +1,2 @@
 @openzeppelin/=node_modules/@openzeppelin/
+solady/=node_modules/solady/
