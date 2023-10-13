@@ -432,11 +432,11 @@ contract Pool is IPool, ReentrancyGuard {
         uint128 _marginDelta,
         uint128 _sizeDelta
     ) external override nonReentrant returns (uint160 tradePriceX96) {
+        _side.requireValid();
         _onlyRouter();
 
         _sampleAndAdjustFundingRate();
 
-        _side = _side.normalize();
         Position memory positionCache = positions[_account][_side];
         if (positionCache.size == 0) {
             if (_sizeDelta == 0) revert PositionNotFound(_account, _side);
