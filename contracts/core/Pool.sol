@@ -839,10 +839,10 @@ contract Pool is IPool, ReentrancyGuard {
         if (!poolFactory.hasRole(Constants.ROLE_POSITION_LIQUIDATOR, msg.sender)) revert CallerNotLiquidator();
     }
 
-    function _validateTransferInAndUpdateBalance(uint256 _amount) private {
+    function _validateTransferInAndUpdateBalance(uint128 _amount) private {
         uint128 balanceAfter = usd.balanceOf(address(this)).toUint128();
         if (balanceAfter - usdBalance < _amount) revert InsufficientBalance(usdBalance, _amount);
-        usdBalance = balanceAfter;
+        usdBalance += _amount;
     }
 
     function _transferOutAndUpdateBalance(address _to, uint256 _amount) private {
