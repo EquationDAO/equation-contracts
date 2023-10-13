@@ -145,7 +145,7 @@ contract FeeDistributor is IFeeDistributor, IFeeDistributorCallback, ReentrancyG
     ) external override nonReentrant returns (uint256 rewardAmount) {
         uint256 totalStakedAmount;
 
-        (rewardAmount, totalStakedAmount) = _unstakeBatch(stakeInfos, msg.sender, _receiver, _ids, false);
+        (rewardAmount, totalStakedAmount) = _unstakeBatch(stakeInfos, msg.sender, _receiver, _ids, _unstake);
 
         EQU.safeTransfer(_receiver, totalStakedAmount);
     }
@@ -155,7 +155,7 @@ contract FeeDistributor is IFeeDistributor, IFeeDistributorCallback, ReentrancyG
         uint256[] calldata _ids,
         address _receiver
     ) external override nonReentrant returns (uint256 rewardAmount) {
-        (rewardAmount, ) = _unstakeBatch(v3PosStakeInfos, msg.sender, _receiver, _ids, true);
+        (rewardAmount, ) = _unstakeBatch(v3PosStakeInfos, msg.sender, _receiver, _ids, _unstakeV3Pos);
     }
 
     /// @inheritdoc IFeeDistributorCallback
@@ -172,7 +172,7 @@ contract FeeDistributor is IFeeDistributor, IFeeDistributorCallback, ReentrancyG
         address _receiver,
         uint256[] calldata _ids
     ) external override onlyRouter nonReentrant returns (uint256 rewardAmount) {
-        rewardAmount = _collectBatch(_owner, _receiver, _ids, false);
+        rewardAmount = _collectBatch(_owner, _receiver, _ids, _collectEQUWithoutTransfer);
     }
 
     /// @inheritdoc IFeeDistributor
@@ -181,7 +181,7 @@ contract FeeDistributor is IFeeDistributor, IFeeDistributorCallback, ReentrancyG
         address _receiver,
         uint256[] calldata _ids
     ) external override onlyRouter nonReentrant returns (uint256 rewardAmount) {
-        rewardAmount = _collectBatch(_owner, _receiver, _ids, true);
+        rewardAmount = _collectBatch(_owner, _receiver, _ids, _collectV3PosWithoutTransfer);
     }
 
     /// @inheritdoc IFeeDistributor
@@ -197,7 +197,7 @@ contract FeeDistributor is IFeeDistributor, IFeeDistributorCallback, ReentrancyG
         address _receiver,
         uint256[] calldata _ids
     ) public override nonReentrant returns (uint256 rewardAmount) {
-        rewardAmount = _collectBatch(msg.sender, _receiver, _ids, false);
+        rewardAmount = _collectBatch(msg.sender, _receiver, _ids, _collectEQUWithoutTransfer);
     }
 
     /// @inheritdoc IFeeDistributor
@@ -205,7 +205,7 @@ contract FeeDistributor is IFeeDistributor, IFeeDistributorCallback, ReentrancyG
         address _receiver,
         uint256[] calldata _ids
     ) public override nonReentrant returns (uint256 rewardAmount) {
-        rewardAmount = _collectBatch(msg.sender, _receiver, _ids, true);
+        rewardAmount = _collectBatch(msg.sender, _receiver, _ids, _collectV3PosWithoutTransfer);
     }
 
     /// @inheritdoc IFeeDistributor
@@ -249,7 +249,7 @@ contract FeeDistributor is IFeeDistributor, IFeeDistributorCallback, ReentrancyG
         address _owner,
         address _receiver,
         uint256[] calldata _ids,
-        bool _isUniswapV3Pos
+        function(address, address, uint256, uint256) internal returns (uint256) _op
     ) private returns (uint256 rewardAmount, uint256 totalStakedAmount) {
         uint256 id;
         uint256 amount;
@@ -266,14 +266,8 @@ contract FeeDistributor is IFeeDistributor, IFeeDistributorCallback, ReentrancyG
                 totalStakedAmount += stakeInfoCache.amount;
                 totalStakedWithMultiplierDelta += stakeInfoCache.amount * stakeInfoCache.multiplier;
 
-                if (_isUniswapV3Pos) {
-                    amount = _collectWithoutTransfer(v3PosStakeInfos, _owner, id);
-                    IERC721(address(v3PositionManager)).safeTransferFrom(address(this), _receiver, id);
-                    emit V3PosUnstaked(_owner, _receiver, id, stakeInfoCache.amount, amount);
-                } else {
-                    amount = _collectWithoutTransfer(stakeInfos, _owner, id);
-                    emit Unstaked(_owner, _receiver, id, stakeInfoCache.amount, amount);
-                }
+                amount = _op(_owner, _receiver, id, stakeInfoCache.amount);
+
                 delete _stakeInfos[_owner][id];
                 rewardAmount = rewardAmount.add(amount);
             }
@@ -285,29 +279,62 @@ contract FeeDistributor is IFeeDistributor, IFeeDistributorCallback, ReentrancyG
         Address.functionCall(address(veEQU), abi.encodeWithSelector(0x9dc29fac, _owner, totalStakedAmount));
     }
 
+    function _unstakeV3Pos(
+        address _owner,
+        address _receiver,
+        uint256 _id,
+        uint256 _unstakeAmount
+    ) internal returns (uint256 rewardAmount) {
+        rewardAmount = _collectWithoutTransfer(v3PosStakeInfos, _owner, _id);
+        IERC721(address(v3PositionManager)).safeTransferFrom(address(this), _receiver, _id);
+        emit V3PosUnstaked(_owner, _receiver, _id, _unstakeAmount, rewardAmount);
+    }
+
+    function _unstake(
+        address _owner,
+        address _receiver,
+        uint256 _id,
+        uint256 _unstakeAmount
+    ) internal returns (uint256 rewardAmount) {
+        rewardAmount = _collectWithoutTransfer(stakeInfos, _owner, _id);
+        emit Unstaked(_owner, _receiver, _id, _unstakeAmount, rewardAmount);
+    }
+
     function _collectBatch(
         address _owner,
         address _receiver,
         uint256[] calldata _ids,
-        bool _isUniswapV3Pos
+        function(address, address, uint256) internal returns (uint256) _op
     ) private returns (uint256 rewardAmount) {
         uint256 id;
         uint256 amount;
         for (uint256 i; i < _ids.length; ++i) {
             id = _ids[i];
 
-            if (_isUniswapV3Pos) {
-                amount = _collectWithoutTransfer(v3PosStakeInfos, _owner, id);
-                emit V3PosCollected(_owner, _receiver, id, amount);
-            } else {
-                amount = _collectWithoutTransfer(stakeInfos, _owner, id);
-                emit Collected(_owner, _receiver, id, amount);
-            }
+            amount = _op(_owner, _receiver, id);
 
             rewardAmount += amount;
         }
 
         _transferOutAndUpdateFeeBalance(_receiver, rewardAmount);
+    }
+
+    function _collectV3PosWithoutTransfer(
+        address _owner,
+        address _receiver,
+        uint256 _id
+    ) internal returns (uint256 rewardAmount) {
+        rewardAmount = _collectWithoutTransfer(v3PosStakeInfos, _owner, _id);
+        emit V3PosCollected(_owner, _receiver, _id, rewardAmount);
+    }
+
+    function _collectEQUWithoutTransfer(
+        address _owner,
+        address _receiver,
+        uint256 _id
+    ) internal returns (uint256 rewardAmount) {
+        rewardAmount = _collectWithoutTransfer(stakeInfos, _owner, _id);
+        emit Collected(_owner, _receiver, _id, rewardAmount);
     }
 
     function _collectWithoutTransfer(
