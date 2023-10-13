@@ -16,7 +16,7 @@ interface IPositionRouter {
     /// @notice Emitted when delay parameter updated
     /// @param minBlockDelayExecutor The new min block delay for executor to execute requests
     /// @param minTimeDelayPublic The new min time delay for public to execute requests
-    /// @param maxTimeDelay Te new max time delay until request expires
+    /// @param maxTimeDelay The new max time delay until request expires
     event DelayValuesUpdated(uint32 minBlockDelayExecutor, uint32 minTimeDelayPublic, uint32 maxTimeDelay);
 
     /// @notice Emitted when open liquidity position request created
