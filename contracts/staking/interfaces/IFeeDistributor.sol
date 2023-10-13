@@ -10,7 +10,7 @@ interface IFeeDistributor {
     /// @param id Index of EQU tokens staking information
     /// @param amount The amount of EQU tokens that already staked
     /// @param period Lockup period
-    event Staked(address indexed sender, address indexed account, uint256 id, uint256 amount, uint16 period);
+    event Staked(address indexed sender, address indexed account, uint256 indexed id, uint256 amount, uint16 period);
 
     /// @notice Emitted when Uniswap V3 positions NFTs are staked
     /// @param sender The address to apply for staking
@@ -18,7 +18,13 @@ interface IFeeDistributor {
     /// @param id Index of Uniswap V3 positions NFTs staking information
     /// @param amount The amount of Uniswap V3 positions NFT converted into EQU tokens that already staked
     /// @param period Lockup period
-    event V3PosStaked(address indexed sender, address indexed account, uint256 id, uint256 amount, uint16 period);
+    event V3PosStaked(
+        address indexed sender,
+        address indexed account,
+        uint256 indexed id,
+        uint256 amount,
+        uint16 period
+    );
 
     /// @notice Emitted when EQU tokens are unstaked
     /// @param owner The address to apply for unstaking
@@ -26,7 +32,13 @@ interface IFeeDistributor {
     /// @param id Index of EQU tokens staking information
     /// @param amount0 The amount of EQU tokens that already unstaked
     /// @param amount1 The amount of staking rewards received
-    event Unstaked(address indexed owner, address indexed receiver, uint256 id, uint256 amount0, uint256 amount1);
+    event Unstaked(
+        address indexed owner,
+        address indexed receiver,
+        uint256 indexed id,
+        uint256 amount0,
+        uint256 amount1
+    );
 
     /// @notice Emitted when Uniswap V3 positions NFTs are unstaked
     /// @param owner The address to apply for unstaking
@@ -34,27 +46,33 @@ interface IFeeDistributor {
     /// @param id Index of Uniswap V3 positions NFTs staking information
     /// @param amount0 The amount of Uniswap V3 positions NFT converted into EQU tokens that already unstaked
     /// @param amount1 The amount of staking rewards received
-    event V3PosUnstaked(address indexed owner, address indexed receiver, uint256 id, uint256 amount0, uint256 amount1);
+    event V3PosUnstaked(
+        address indexed owner,
+        address indexed receiver,
+        uint256 indexed id,
+        uint256 amount0,
+        uint256 amount1
+    );
 
     /// @notice Emitted when claiming stake rewards
     /// @param owner The address to apply for claiming staking rewards
     /// @param receiver The address used to receive staking rewards
     /// @param id Index of EQU tokens staking information
     /// @param amount The amount of staking rewards received
-    event Collected(address indexed owner, address indexed receiver, uint256 id, uint256 amount);
+    event Collected(address indexed owner, address indexed receiver, uint256 indexed id, uint256 amount);
 
     /// @notice Emitted when claiming stake rewards
     /// @param owner The address to apply for claiming staking rewards
     /// @param receiver The address used to receive staking rewards
     /// @param id Index of Uniswap V3 positions NFTs staking information
     /// @param amount The amount of staking rewards received
-    event V3PosCollected(address indexed owner, address indexed receiver, uint256 id, uint256 amount);
+    event V3PosCollected(address indexed owner, address indexed receiver, uint256 indexed id, uint256 amount);
 
     /// @notice Emitted when claiming Architect-type NFT rewards
     /// @param receiver The address used to receive rewards
     /// @param tokenID The ID of the Architect-type NFT
     /// @param amount The amount of rewards received
-    event ArchitectCollected(address indexed receiver, uint256 tokenID, uint256 amount);
+    event ArchitectCollected(address indexed receiver, uint256 indexed tokenID, uint256 amount);
 
     /// @notice Emitted when deposit staking reward tokens
     /// @param amount The amount of staking reward tokens deposited
