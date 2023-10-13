@@ -44,10 +44,15 @@ contract RewardFarm is IRewardFarm, IRewardFarmCallback, Governable, ReentrancyG
     /// @inheritdoc IRewardFarm
     mapping(IPool => PoolReward) public override poolRewards;
 
+    /// @dev Mapping of referral reward information to referral token
     mapping(uint256 => ReferralReward) public referralRewards;
+    /// @dev Mapping of risk buffer fund reward information to account
     mapping(address => RiskBufferFundReward) public riskBufferFundRewards;
+    /// @dev Account with a bound referral code
     mapping(address => bool) public alreadyBoundReferralTokens;
+    /// @dev Mapping of liquidity reward information to account
     mapping(address => LiquidityReward) public liquidityRewards;
+    /// @dev Mapping of position information to account
     mapping(address => Position) public positions;
 
     uint256 public poolIndexNext;
