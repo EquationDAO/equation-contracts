@@ -111,7 +111,15 @@ describe("PriceFeed", () => {
             const {priceFeed, mockRefPriceFeed, weth} = await loadFixture(deployPriceFeedFixture);
             const latestBlockTimestamp = await time.latest();
             await expect(
-                priceFeed.setPriceX96s([weth.address], [1], latestBlockTimestamp)
+                priceFeed.setPriceX96s(
+                    [
+                        {
+                            token: weth.address,
+                            priceX96: 1,
+                        },
+                    ],
+                    latestBlockTimestamp
+                )
             ).to.be.revertedWithCustomError(priceFeed, "ReferencePriceFeedNotSet");
 
             await priceFeed.setRefPriceFeeds(weth.address, mockRefPriceFeed.address);
@@ -124,7 +132,15 @@ describe("PriceFeed", () => {
             await priceFeed.setRefPriceFeeds(weth.address, mockRefPriceFeed.address);
             await mockRefPriceFeed.setRoundData(100, -179070000000, 1684331747, 1684331747, 100);
             await expect(
-                priceFeed.setPriceX96s([weth.address], [1], latestBlockTimestamp)
+                priceFeed.setPriceX96s(
+                    [
+                        {
+                            token: weth.address,
+                            priceX96: 1,
+                        },
+                    ],
+                    latestBlockTimestamp
+                )
             ).to.be.revertedWithCustomError(priceFeed, "InvalidReferencePrice");
             await mockRefPriceFeed.setRoundData(
                 101,
@@ -134,7 +150,15 @@ describe("PriceFeed", () => {
                 101
             );
             await expect(
-                priceFeed.setPriceX96s([weth.address], [1], latestBlockTimestamp)
+                priceFeed.setPriceX96s(
+                    [
+                        {
+                            token: weth.address,
+                            priceX96: 1,
+                        },
+                    ],
+                    latestBlockTimestamp
+                )
             ).to.be.revertedWithCustomError(priceFeed, "SafeCastOverflowedUintDowncast");
         });
 
@@ -152,7 +176,15 @@ describe("PriceFeed", () => {
             );
             await priceFeed.setRefHeartbeatDuration(weth.address, heartbeatDuration);
             await expect(
-                priceFeed.setPriceX96s([weth.address], [1], latestBlockTimestamp)
+                priceFeed.setPriceX96s(
+                    [
+                        {
+                            token: weth.address,
+                            priceX96: 1,
+                        },
+                    ],
+                    latestBlockTimestamp
+                )
             ).to.be.revertedWithCustomError(priceFeed, "ReferencePriceTimeout");
         });
 
@@ -167,10 +199,12 @@ describe("PriceFeed", () => {
                 latestBlockTimestamp,
                 100
             );
-            const preCalculated = await priceFeed.calculatePriceX96s(
-                [weth.address],
-                [toPriceX96("111", tokenDecimals, usdDecimals, refPriceDecimals)]
-            );
+            const preCalculated = await priceFeed.calculatePriceX96s([
+                {
+                    token: weth.address,
+                    priceX96: toPriceX96("111", tokenDecimals, usdDecimals, refPriceDecimals),
+                },
+            ]);
             await expect(preCalculated.maxPriceX96s[0]).to.be.eq(
                 toPriceX96("111", tokenDecimals, usdDecimals, refPriceDecimals)
             );
@@ -179,8 +213,12 @@ describe("PriceFeed", () => {
             );
             await expect(
                 priceFeed.setPriceX96s(
-                    [weth.address],
-                    [toPriceX96("111", tokenDecimals, usdDecimals, refPriceDecimals)],
+                    [
+                        {
+                            token: weth.address,
+                            priceX96: toPriceX96("111", tokenDecimals, usdDecimals, refPriceDecimals),
+                        },
+                    ],
                     latestBlockTimestamp
                 )
             )
@@ -210,10 +248,12 @@ describe("PriceFeed", () => {
                 latestBlockTimestamp,
                 100
             );
-            const preCalculated = await priceFeed.calculatePriceX96s(
-                [weth.address],
-                [toPriceX96("110", tokenDecimals, usdDecimals, refPriceDecimals)]
-            );
+            const preCalculated = await priceFeed.calculatePriceX96s([
+                {
+                    token: weth.address,
+                    priceX96: toPriceX96("110", tokenDecimals, usdDecimals, refPriceDecimals),
+                },
+            ]);
             await expect(preCalculated.maxPriceX96s[0]).to.be.eq(
                 toPriceX96("110", tokenDecimals, usdDecimals, refPriceDecimals)
             );
@@ -222,8 +262,12 @@ describe("PriceFeed", () => {
             );
             await expect(
                 priceFeed.setPriceX96s(
-                    [weth.address],
-                    [toPriceX96("110", tokenDecimals, usdDecimals, refPriceDecimals)],
+                    [
+                        {
+                            token: weth.address,
+                            priceX96: toPriceX96("110", tokenDecimals, usdDecimals, refPriceDecimals),
+                        },
+                    ],
                     latestBlockTimestamp
                 )
             )
@@ -254,10 +298,12 @@ describe("PriceFeed", () => {
                 latestBlockTimestamp,
                 100
             );
-            const preCalculated = await priceFeed.calculatePriceX96s(
-                [weth.address],
-                [toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals)]
-            );
+            const preCalculated = await priceFeed.calculatePriceX96s([
+                {
+                    token: weth.address,
+                    priceX96: toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals),
+                },
+            ]);
             await expect(preCalculated.maxPriceX96s[0]).to.be.eq(
                 toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals)
             );
@@ -266,8 +312,12 @@ describe("PriceFeed", () => {
             );
             await expect(
                 priceFeed.setPriceX96s(
-                    [weth.address],
-                    [toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals)],
+                    [
+                        {
+                            token: weth.address,
+                            priceX96: toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals),
+                        },
+                    ],
                     latestBlockTimestamp - 1
                 )
             )
@@ -285,10 +335,12 @@ describe("PriceFeed", () => {
                 latestBlockTimestamp,
                 101
             );
-            const preCalculated2 = await priceFeed.calculatePriceX96s(
-                [weth.address],
-                [toPriceX96("90", tokenDecimals, usdDecimals, refPriceDecimals)]
-            );
+            const preCalculated2 = await priceFeed.calculatePriceX96s([
+                {
+                    token: weth.address,
+                    priceX96: toPriceX96("90", tokenDecimals, usdDecimals, refPriceDecimals),
+                },
+            ]);
             await expect(preCalculated2.maxPriceX96s[0]).to.be.eq(
                 toPriceX96("99", tokenDecimals, usdDecimals, refPriceDecimals)
             );
@@ -297,8 +349,13 @@ describe("PriceFeed", () => {
             );
             await expect(
                 priceFeed.setPriceX96s(
-                    [weth.address],
-                    [toPriceX96("90", tokenDecimals, usdDecimals, refPriceDecimals)],
+                    [
+                        {
+                            token: weth.address,
+                            priceX96: toPriceX96("90", tokenDecimals, usdDecimals, refPriceDecimals),
+                        },
+                    ],
+
                     latestBlockTimestamp
                 )
             )
@@ -337,8 +394,12 @@ describe("PriceFeed", () => {
                 100
             );
             await priceFeed.setPriceX96s(
-                [weth.address],
-                [toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals)],
+                [
+                    {
+                        token: weth.address,
+                        priceX96: toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals),
+                    },
+                ],
                 latestBlockTimestamp - 1
             );
             await mockRefPriceFeed.setRoundData(
@@ -348,10 +409,12 @@ describe("PriceFeed", () => {
                 latestBlockTimestamp,
                 101
             );
-            const preCalculated = await priceFeed.calculatePriceX96s(
-                [weth.address],
-                [toPriceX96("90", tokenDecimals, usdDecimals, refPriceDecimals)]
-            );
+            const preCalculated = await priceFeed.calculatePriceX96s([
+                {
+                    token: weth.address,
+                    priceX96: toPriceX96("90", tokenDecimals, usdDecimals, refPriceDecimals),
+                },
+            ]);
             await expect(preCalculated.maxPriceX96s[0]).to.be.eq(
                 toPriceX96("102", tokenDecimals, usdDecimals, refPriceDecimals)
             );
@@ -360,8 +423,12 @@ describe("PriceFeed", () => {
             );
             await expect(
                 priceFeed.setPriceX96s(
-                    [weth.address],
-                    [toPriceX96("90", tokenDecimals, usdDecimals, refPriceDecimals)],
+                    [
+                        {
+                            token: weth.address,
+                            priceX96: toPriceX96("90", tokenDecimals, usdDecimals, refPriceDecimals),
+                        },
+                    ],
                     latestBlockTimestamp
                 )
             )
@@ -401,8 +468,12 @@ describe("PriceFeed", () => {
             );
             await expect(
                 priceFeed.setPriceX96s(
-                    [weth.address],
-                    [toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals)],
+                    [
+                        {
+                            token: weth.address,
+                            priceX96: toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals),
+                        },
+                    ],
                     latestBlockTimestamp
                 )
             )
@@ -420,10 +491,12 @@ describe("PriceFeed", () => {
                 latestBlockTimestamp,
                 101
             );
-            const preCalculated = await priceFeed.calculatePriceX96s(
-                [weth.address],
-                [toPriceX96("90", tokenDecimals, usdDecimals, refPriceDecimals)]
-            );
+            const preCalculated = await priceFeed.calculatePriceX96s([
+                {
+                    token: weth.address,
+                    priceX96: toPriceX96("90", tokenDecimals, usdDecimals, refPriceDecimals),
+                },
+            ]);
             await expect(preCalculated.maxPriceX96s[0]).to.be.eq(
                 toPriceX96("102", tokenDecimals, usdDecimals, refPriceDecimals)
             );
@@ -432,8 +505,12 @@ describe("PriceFeed", () => {
             );
             await expect(
                 priceFeed.setPriceX96s(
-                    [weth.address],
-                    [toPriceX96("90", tokenDecimals, usdDecimals, refPriceDecimals)],
+                    [
+                        {
+                            token: weth.address,
+                            priceX96: toPriceX96("90", tokenDecimals, usdDecimals, refPriceDecimals),
+                        },
+                    ],
                     latestBlockTimestamp + 1
                 )
             )
@@ -452,8 +529,12 @@ describe("PriceFeed", () => {
             );
             await expect(
                 priceFeed.setPriceX96s(
-                    [weth.address],
-                    [toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals)],
+                    [
+                        {
+                            token: weth.address,
+                            priceX96: toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals),
+                        },
+                    ],
                     latestBlockTimestamp
                 )
             ).not.emit(priceFeed, "PriceUpdated");
@@ -473,8 +554,12 @@ describe("PriceFeed", () => {
             );
             await expect(
                 priceFeed.setPriceX96s(
-                    [weth.address],
-                    [toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals)],
+                    [
+                        {
+                            token: weth.address,
+                            priceX96: toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals),
+                        },
+                    ],
                     latestBlockTimestamp
                 )
             )
@@ -488,16 +573,24 @@ describe("PriceFeed", () => {
 
             await expect(
                 priceFeed.setPriceX96s(
-                    [weth.address],
-                    [toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals)],
+                    [
+                        {
+                            token: weth.address,
+                            priceX96: toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals),
+                        },
+                    ],
                     latestBlockTimestamp
                 )
             ).not.emit(priceFeed, "PriceUpdated");
 
             await expect(
                 priceFeed.setPriceX96s(
-                    [weth.address],
-                    [toPriceX96("108", tokenDecimals, usdDecimals, refPriceDecimals)],
+                    [
+                        {
+                            token: weth.address,
+                            priceX96: toPriceX96("108", tokenDecimals, usdDecimals, refPriceDecimals),
+                        },
+                    ],
                     latestBlockTimestamp + 1
                 )
             )
@@ -511,8 +604,12 @@ describe("PriceFeed", () => {
 
             await expect(
                 priceFeed.setPriceX96s(
-                    [usdc.address],
-                    [toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals)],
+                    [
+                        {
+                            token: usdc.address,
+                            priceX96: toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals),
+                        },
+                    ],
                     latestBlockTimestamp
                 )
             )
@@ -540,21 +637,33 @@ describe("PriceFeed", () => {
             );
             await network.provider.send("evm_setAutomine", [false]);
             await priceFeed.setPriceX96s(
-                [weth.address],
-                [toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals)],
+                [
+                    {
+                        token: weth.address,
+                        priceX96: toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals),
+                    },
+                ],
                 latestBlockTimestamp
             );
             await priceFeed.setPriceX96s(
-                [weth.address],
-                [toPriceX96("999", tokenDecimals, usdDecimals, refPriceDecimals)],
+                [
+                    {
+                        token: weth.address,
+                        priceX96: toPriceX96("999", tokenDecimals, usdDecimals, refPriceDecimals),
+                    },
+                ],
                 latestBlockTimestamp + 1
             );
 
             await network.provider.send("evm_setAutomine", [true]);
             await expect(
                 priceFeed.setPriceX96s(
-                    [usdc.address],
-                    [toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals)],
+                    [
+                        {
+                            token: usdc.address,
+                            priceX96: toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals),
+                        },
+                    ],
                     latestBlockTimestamp
                 )
             )
@@ -573,8 +682,12 @@ describe("PriceFeed", () => {
             );
             await expect(
                 priceFeed.setPriceX96s(
-                    [weth.address],
-                    [toPriceX96("108", tokenDecimals, usdDecimals, refPriceDecimals)],
+                    [
+                        {
+                            token: weth.address,
+                            priceX96: toPriceX96("108", tokenDecimals, usdDecimals, refPriceDecimals),
+                        },
+                    ],
                     latestBlockTimestamp + 1
                 )
             )
@@ -603,8 +716,12 @@ describe("PriceFeed", () => {
             await sequencerUptimeFeed.setRoundData(100, 1, 0, 0, 100);
             await expect(
                 priceFeed.setPriceX96s(
-                    [weth.address],
-                    [toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals)],
+                    [
+                        {
+                            token: weth.address,
+                            priceX96: toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals),
+                        },
+                    ],
                     latestBlockTimestamp - 1
                 )
             ).revertedWithCustomError(priceFeed, "SequencerDown");
@@ -628,8 +745,12 @@ describe("PriceFeed", () => {
             await sequencerUptimeFeed.setRoundData(100, 0, latestBlockTimestamp - 1700, 0, 100);
             await expect(
                 priceFeed.setPriceX96s(
-                    [weth.address],
-                    [toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals)],
+                    [
+                        {
+                            token: weth.address,
+                            priceX96: toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals),
+                        },
+                    ],
                     latestBlockTimestamp - 1
                 )
             ).revertedWithCustomError(priceFeed, "GracePeriodNotOver");
@@ -660,8 +781,12 @@ describe("PriceFeed", () => {
             await sequencerUptimeFeed.setRoundData(100, 0, latestBlockTimestamp - 2000, 0, 100);
             await expect(
                 priceFeed.setPriceX96s(
-                    [weth.address],
-                    [toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals)],
+                    [
+                        {
+                            token: weth.address,
+                            priceX96: toPriceX96("109", tokenDecimals, usdDecimals, refPriceDecimals),
+                        },
+                    ],
                     latestBlockTimestamp - 1
                 )
             )

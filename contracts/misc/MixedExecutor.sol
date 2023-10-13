@@ -25,12 +25,6 @@ contract MixedExecutor is Multicall, Governable {
         uint64 timestamp;
     }
 
-    struct FastSetPricesParams {
-        IERC20[] tokens;
-        uint160[] priceX96s;
-        uint64 timestamp;
-    }
-
     mapping(address => bool) public executors;
     ILiquidator public immutable liquidator;
     /// @notice The address of position router
@@ -84,29 +78,25 @@ contract MixedExecutor is Multicall, Governable {
     function setPriceX96s(SetPricesParams calldata _params) external onlyExecutor {
         uint256 priceX96sLen = _params.priceX96s.length;
         uint256 tokensLen = tokens.length;
-        // fast path
-        if (priceX96sLen == tokensLen) {
-            priceFeed.setPriceX96s(tokens, _params.priceX96s, _params.timestamp);
-            return;
-        }
 
-        IERC20[] memory paramsTokens = new IERC20[](priceX96sLen);
+        IPriceFeed.TokenPrice[] memory tokenPrices = new IPriceFeed.TokenPrice[](priceX96sLen);
         for (uint256 i; i < priceX96sLen; ) {
             if (i >= tokensLen) break;
 
-            paramsTokens[i] = tokens[i];
+            tokenPrices[i] = IPriceFeed.TokenPrice({token: tokens[i], priceX96: _params.priceX96s[i]});
 
             // prettier-ignore
             unchecked { ++i; }
         }
-        priceFeed.setPriceX96s(paramsTokens, _params.priceX96s, _params.timestamp);
+        priceFeed.setPriceX96s(tokenPrices, _params.timestamp);
     }
 
     /// @notice Update prices
     /// @dev This function is used to update the price of only a subset of tokens
-    /// @param _params The price message to update
-    function fastSetPriceX96s(FastSetPricesParams calldata _params) external onlyExecutor {
-        priceFeed.setPriceX96s(_params.tokens, _params.priceX96s, _params.timestamp);
+    /// @param _tokenPrices Array of token addresses and prices to update for
+    /// @param _timestamp The timestamp of price update
+    function fastSetPriceX96s(IPriceFeed.TokenPrice[] calldata _tokenPrices, uint64 _timestamp) external onlyExecutor {
+        priceFeed.setPriceX96s(_tokenPrices, _timestamp);
     }
 
     /// @notice Execute multiple liquidity position requests

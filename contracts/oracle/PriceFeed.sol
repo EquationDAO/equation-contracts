@@ -42,17 +42,15 @@ contract PriceFeed is IPriceFeed, Governable {
 
     /// @inheritdoc IPriceFeed
     function calculatePriceX96s(
-        IERC20[] calldata _tokens,
-        uint160[] calldata _priceX96s
+        TokenPrice[] calldata _tokenPrices
     ) external view returns (uint160[] memory minPriceX96s, uint160[] memory maxPriceX96s) {
-        uint256 priceX96sLength = _priceX96s.length;
-        if (_tokens.length != priceX96sLength) revert InvalidTokenPriceInput(_tokens.length, priceX96sLength);
+        uint256 priceX96sLength = _tokenPrices.length;
 
         minPriceX96s = new uint160[](priceX96sLength);
         maxPriceX96s = new uint160[](priceX96sLength);
         for (uint256 i; i < priceX96sLength; ) {
-            uint160 priceX96 = _priceX96s[i];
-            IERC20 token = _tokens[i];
+            uint160 priceX96 = _tokenPrices[i].priceX96;
+            IERC20 token = _tokenPrices[i].token;
             TokenConfig memory tokenConfig = tokenConfigs[token];
             (uint160 latestRefPriceX96, uint160 minRefPriceX96, uint160 maxRefPriceX96) = _getReferencePriceX96(
                 tokenConfig.refPriceFeed,
@@ -80,18 +78,13 @@ contract PriceFeed is IPriceFeed, Governable {
     }
 
     /// @inheritdoc IPriceFeed
-    function setPriceX96s(
-        IERC20[] calldata _tokens,
-        uint160[] calldata _priceX96s,
-        uint64 _timestamp
-    ) external override onlyUpdater {
-        uint256 priceX96sLength = _priceX96s.length;
-        if (_tokens.length != priceX96sLength) revert InvalidTokenPriceInput(_tokens.length, priceX96sLength);
+    function setPriceX96s(TokenPrice[] calldata _tokenPrices, uint64 _timestamp) external override onlyUpdater {
+        uint256 tokenPricesLength = _tokenPrices.length;
         _checkSequencerUp();
 
-        for (uint256 i; i < priceX96sLength; ++i) {
-            uint160 priceX96 = _priceX96s[i];
-            IERC20 token = _tokens[i];
+        for (uint256 i; i < tokenPricesLength; ++i) {
+            uint160 priceX96 = _tokenPrices[i].priceX96;
+            IERC20 token = _tokenPrices[i].token;
             PricePack storage pack = latestPrices[token];
             if (!_setTokenLastUpdated(pack, _timestamp)) continue;
             TokenConfig memory tokenConfig = tokenConfigs[token];
