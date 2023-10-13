@@ -123,7 +123,7 @@ library PriceUtil {
             ? Math.ceilDiv(tradePriceX96TimesSizeTotal, _sizeDelta).toUint160()
             : (tradePriceX96TimesSizeTotal / _sizeDelta).toUint160();
 
-        // write the changes back to storage
+        // Write the changes back to storage
         _globalPosition.side = globalPositionCache.side;
         _globalPosition.netSize = globalPositionCache.netSize;
         _globalPosition.liquidationBufferNetSize = globalPositionCache.liquidationBufferNetSize;
@@ -153,7 +153,7 @@ library PriceUtil {
             to: IPool.PriceVertex(0, 0)
         });
         if (!step.improveBalance) {
-            // balance rate got worse
+            // Balance rate got worse
             if (_priceStateCache.currentVertexIndex == 0) _priceStateCache.currentVertexIndex = 1;
             uint8 end = _liquidation ? _priceStateCache.liquidationVertexIndex + 1 : Constants.VERTEX_NUM;
             for (uint8 i = _priceStateCache.currentVertexIndex; i < end && step.sizeLeft > 0; ++i) {
@@ -161,7 +161,7 @@ library PriceUtil {
                 (uint160 tradePriceX96, uint128 sizeUsed, , int256 premiumRateAfterX96) = simulateMove(step);
 
                 if (sizeUsed < step.sizeLeft && !(_liquidation && i == _priceStateCache.liquidationVertexIndex)) {
-                    // crossed
+                    // Crossed
                     // prettier-ignore
                     unchecked { _priceStateCache.currentVertexIndex = i + 1; }
                     step.current = step.to;
@@ -186,11 +186,10 @@ library PriceUtil {
                 emit LiquidationBufferNetSizeChanged(liquidationVertexIndex, liquidationBufferNetSizeAfter);
             }
         } else {
-            // balance rate got better
-            // note that when `i` == 0, loop continues to use liquidation buffer in (0, 0)
-            for (int8 i = int8(_priceStateCache.currentVertexIndex); i >= 0 && step.sizeLeft > 0; --i) {
-                // use liquidation buffer in `from`
-                uint128 bufferSizeAfter = _priceState.liquidationBufferNetSizes[uint8(i)];
+            // Balance rate got better, note that when `i` == 0, loop continues to use liquidation buffer in (0, 0)
+            for (uint8 i = _priceStateCache.currentVertexIndex; i >= 0 && step.sizeLeft > 0; --i) {
+                // Use liquidation buffer in `from`
+                uint128 bufferSizeAfter = _priceState.liquidationBufferNetSizes[i];
                 if (bufferSizeAfter > 0) {
                     uint128 sizeUsed = uint128(Math.min(bufferSizeAfter, step.sizeLeft));
                     uint160 tradePriceX96 = calculateMarketPriceX96(
@@ -201,7 +200,7 @@ library PriceUtil {
                     );
                     // prettier-ignore
                     unchecked { bufferSizeAfter -= sizeUsed; }
-                    _priceState.liquidationBufferNetSizes[uint8(i)] = bufferSizeAfter;
+                    _priceState.liquidationBufferNetSizes[i] = bufferSizeAfter;
                     // prettier-ignore
                     unchecked { totalBufferUsed += sizeUsed; }
 
@@ -210,15 +209,15 @@ library PriceUtil {
                     tradePriceX96TimesSizeTotal += uint256(tradePriceX96) * sizeUsed;
                     emit LiquidationBufferNetSizeChanged(uint8(i), bufferSizeAfter);
                 }
-
-                if (step.sizeLeft > 0 && i > 0) {
+                if (i == 0) break;
+                if (step.sizeLeft > 0) {
                     step.from = _priceState.priceVertices[uint8(i)];
                     step.to = _priceState.priceVertices[uint8(i - 1)];
                     (uint160 tradePriceX96, uint128 sizeUsed, bool reached, int256 premiumRateAfterX96) = simulateMove(
                         step
                     );
                     if (reached) {
-                        // reached or crossed
+                        // Reached or crossed
                         _priceStateCache.currentVertexIndex = uint8(i - 1);
                         step.current = step.to;
                     }
@@ -275,11 +274,13 @@ library PriceUtil {
     }
 
     function calculateReachedAndSizeUsed(MoveStep memory _step) internal pure returns (bool reached, uint128 sizeUsed) {
-        uint128 sizeCost = _step.improveBalance
-            ? _step.current.size - _step.to.size
-            : _step.to.size - _step.current.size;
-        reached = _step.sizeLeft >= sizeCost;
-        sizeUsed = reached ? sizeCost : _step.sizeLeft;
+        if (_step.improveBalance) {
+            reached = _step.sizeLeft >= _step.current.size - _step.to.size;
+            sizeUsed = reached ? _step.current.size - _step.to.size : _step.sizeLeft;
+        } else {
+            reached = _step.sizeLeft >= _step.to.size - _step.current.size;
+            sizeUsed = reached ? _step.to.size - _step.current.size : _step.sizeLeft;
+        }
     }
 
     function calculatePremiumRateAfterX96(
