@@ -54,10 +54,10 @@ contract FeeDistributorTest is Test {
     uint256 goerliFork;
     uint256[] stakeIDs;
     address[] addresses;
-    FeeDistributor.LockData[] lockDataList = [
-        IFeeDistributor.LockData({period: 30, multiplier: 1}),
-        IFeeDistributor.LockData({period: 90, multiplier: 2}),
-        IFeeDistributor.LockData({period: 180, multiplier: 3})
+    FeeDistributor.LockupRewardMultiplierParameter[] lockupRewardMultiplierParameters = [
+        IFeeDistributor.LockupRewardMultiplierParameter({period: 30, multiplier: 1}),
+        IFeeDistributor.LockupRewardMultiplierParameter({period: 90, multiplier: 2}),
+        IFeeDistributor.LockupRewardMultiplierParameter({period: 180, multiplier: 3})
     ];
 
     event FeeDeposited(
@@ -68,7 +68,9 @@ contract FeeDistributorTest is Test {
         uint160 architectPerShareGrowthAfterX64
     );
     event Staked(address indexed sender, address indexed account, uint256 indexed id, uint256 amount, uint16 period);
-    event LockupRewardMultipliersSet(IFeeDistributor.LockData[] lockDataList);
+    event LockupRewardMultipliersSet(
+        IFeeDistributor.LockupRewardMultiplierParameter[] lockupRewardMultiplierParameters
+    );
     event Unstaked(
         address indexed owner,
         address indexed receiver,
@@ -136,7 +138,7 @@ contract FeeDistributorTest is Test {
             address(v3PoolAddress)
         );
         veEQUToken.setMinter(address(feeDistributor), true);
-        feeDistributor.setLockupRewardMultipliers(lockDataList);
+        feeDistributor.setLockupRewardMultipliers(lockupRewardMultiplierParameters);
     }
 
     function test_SetUpState() public {
@@ -154,13 +156,13 @@ contract FeeDistributorTest is Test {
     function test_RevertIf_CallerNotGovAddress() public {
         vm.expectRevert(abi.encodeWithSelector(Forbidden.selector));
         vm.prank(ALICE);
-        feeDistributor.setLockupRewardMultipliers(lockDataList);
+        feeDistributor.setLockupRewardMultipliers(lockupRewardMultiplierParameters);
     }
 
     function test_SetLockupRewardMultipliers() public {
         vm.expectEmit(true, true, true, true);
-        emit LockupRewardMultipliersSet(lockDataList);
-        feeDistributor.setLockupRewardMultipliers(lockDataList);
+        emit LockupRewardMultipliersSet(lockupRewardMultiplierParameters);
+        feeDistributor.setLockupRewardMultipliers(lockupRewardMultiplierParameters);
     }
 
     /// ====== Test cases for the depositFee function ======

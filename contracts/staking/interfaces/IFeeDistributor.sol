@@ -89,8 +89,8 @@ interface IFeeDistributor {
     );
 
     /// @notice Emitted when the lockup periods and lockup multipliers are set
-    /// @param lockDataList The list of LockData
-    event LockupRewardMultipliersSet(LockData[] lockDataList);
+    /// @param lockupRewardMultiplierParameters The list of LockupRewardMultiplierParameter
+    event LockupRewardMultipliersSet(LockupRewardMultiplierParameter[] lockupRewardMultiplierParameters);
 
     /// @notice The number of Architect-type NFT that has been mined is 0
     /// or the EQU tokens that Uniswap V3 positions NFTs converted into total staked amount is 0.
@@ -120,7 +120,7 @@ interface IFeeDistributor {
         uint160 perShareGrowthX64;
     }
 
-    struct LockData {
+    struct LockupRewardMultiplierParameter {
         uint16 period;
         uint16 multiplier;
     }
@@ -196,8 +196,10 @@ interface IFeeDistributor {
     function architectPerShareGrowthX64s(uint256 tokenID) external view returns (uint160 perShareGrowthX64);
 
     /// @notice Set lockup reward multiplier
-    /// @param lockDataList The list of LockData
-    function setLockupRewardMultipliers(LockData[] calldata lockDataList) external;
+    /// @param lockupRewardMultiplierParameters The list of LockupRewardMultiplierParameter
+    function setLockupRewardMultipliers(
+        LockupRewardMultiplierParameter[] calldata lockupRewardMultiplierParameters
+    ) external;
 
     /// @notice Deposite staking reward tokens
     /// @param amount The amount of reward tokens deposited
