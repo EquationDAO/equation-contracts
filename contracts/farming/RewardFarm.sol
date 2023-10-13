@@ -150,9 +150,9 @@ contract RewardFarm is IRewardFarm, IRewardFarmCallback, Governable, ReentrancyG
         // prettier-ignore
         unchecked { riskBufferFundReward.rewardDebt += rewardDebtDelta; } // overflow is desired
 
-        poolReward.riskBufferFundLiquidity = _liquidityAfter > liquidityBefore
-            ? poolReward.riskBufferFundLiquidity + (_liquidityAfter - liquidityBefore).toUint128()
-            : poolReward.riskBufferFundLiquidity - (liquidityBefore - _liquidityAfter).toUint128();
+        poolReward.riskBufferFundLiquidity = (
+            (uint256(poolReward.riskBufferFundLiquidity) + _liquidityAfter - liquidityBefore)
+        ).toUint128();
     }
 
     /// @inheritdoc IRewardFarmCallback
