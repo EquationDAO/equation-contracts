@@ -38,7 +38,8 @@ interface IPriceFeed {
     error ReferencePriceFeedNotSet();
 
     /// @notice Invalid reference price
-    error InvalidReferencePrice();
+    /// @param referencePrice Reference price
+    error InvalidReferencePrice(int256 referencePrice);
 
     /// @notice Reference price timeout
     /// @param elapsed The time elapsed since the last price update.
@@ -50,7 +51,8 @@ interface IPriceFeed {
     /// @notice L2 sequencer is down
     error SequencerDown();
     /// @notice Grace period is not over
-    error GracePeriodNotOver();
+    /// @param sequencerUptime Sequencer uptime
+    error GracePeriodNotOver(uint256 sequencerUptime);
 
     struct Slot {
         uint32 maxDeviationRatio;
