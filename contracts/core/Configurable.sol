@@ -154,11 +154,13 @@ abstract contract Configurable is IConfigurable, Governable, ReentrancyGuard {
             for (uint8 i = 2; i < Constants.VERTEX_NUM; ++i) {
                 if (
                     _newCfg.vertices[i - 1].balanceRate > _newCfg.vertices[i].balanceRate ||
-                    _newCfg.vertices[i - 1].premiumRate > _newCfg.vertices[i].premiumRate ||
-                    _newCfg.vertices[i].balanceRate > Constants.BASIS_POINTS_DIVISOR ||
-                    _newCfg.vertices[i].premiumRate > Constants.BASIS_POINTS_DIVISOR
+                    _newCfg.vertices[i - 1].premiumRate > _newCfg.vertices[i].premiumRate
                 ) revert InvalidVertex(i);
             }
+            if (
+                _newCfg.vertices[Constants.LATEST_VERTEX].balanceRate > Constants.BASIS_POINTS_DIVISOR ||
+                _newCfg.vertices[Constants.LATEST_VERTEX].premiumRate > Constants.BASIS_POINTS_DIVISOR
+            ) revert InvalidVertex(Constants.LATEST_VERTEX);
         }
     }
 }
