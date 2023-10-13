@@ -10,12 +10,12 @@ exports[`FundingRateUtil gas tests #calculateFundingRateGrowthX96 receivedSize i
 
 exports[`FundingRateUtil gas tests #samplePremiumRate time delta is 3 seconds 1`] = `5638`;
 
-exports[`FundingRateUtil gas tests #samplePremiumRate time delta is 24 seconds 1`] = `16912`;
+exports[`FundingRateUtil gas tests #samplePremiumRate time delta is 24 seconds 1`] = `16875`;
 
-exports[`FundingRateUtil gas tests #samplePremiumRate time delta is 1900 seconds 1`] = `16912`;
+exports[`FundingRateUtil gas tests #samplePremiumRate time delta is 1900 seconds 1`] = `16875`;
 
-exports[`FundingRateUtil gas tests #samplePremiumRate time delta is 3700 seconds 1`] = `17574`;
+exports[`FundingRateUtil gas tests #samplePremiumRate time delta is 3700 seconds 1`] = `17521`;
 
-exports[`FundingRateUtil gas tests #samplePremiumRate time delta is 7200 seconds 1`] = `17574`;
+exports[`FundingRateUtil gas tests #samplePremiumRate time delta is 7200 seconds 1`] = `17521`;
 
-exports[`FundingRateUtil gas tests #samplePremiumRate time delta is 9000 seconds 1`] = `17574`;
+exports[`FundingRateUtil gas tests #samplePremiumRate time delta is 9000 seconds 1`] = `17521`;

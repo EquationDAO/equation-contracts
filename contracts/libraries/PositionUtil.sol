@@ -131,9 +131,9 @@ library PositionUtil {
         int192 _positionFundingRateGrowthX96,
         uint128 _positionSize
     ) internal pure returns (int256 fundingFee) {
-        int192 deltaX96 = _globalFundingRateGrowthX96 - _positionFundingRateGrowthX96;
-        if (deltaX96 >= 0) fundingFee = Math.mulDiv(uint192(deltaX96), _positionSize, Constants.Q96).toInt256();
-        else fundingFee = -Math.mulDivUp(uint192(-deltaX96), _positionSize, Constants.Q96).toInt256();
+        int256 deltaX96 = _globalFundingRateGrowthX96 - _positionFundingRateGrowthX96;
+        if (deltaX96 >= 0) fundingFee = Math.mulDiv(uint256(deltaX96), _positionSize, Constants.Q96).toInt256();
+        else fundingFee = -Math.mulDivUp(uint256(-deltaX96), _positionSize, Constants.Q96).toInt256();
     }
 
     /// @notice Calculate the maintenance margin
