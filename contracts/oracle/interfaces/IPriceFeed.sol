@@ -51,7 +51,7 @@ interface IPriceFeed {
     /// @notice L2 sequencer is down
     error SequencerDown();
     /// @notice Grace period is not over
-    /// @param sequencerUptime sequencer uptime
+    /// @param sequencerUptime Sequencer uptime
     error GracePeriodNotOver(uint256 sequencerUptime);
 
     struct Slot {
