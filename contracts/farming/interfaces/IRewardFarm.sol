@@ -169,40 +169,59 @@ interface IRewardFarm {
     }
 
     struct Reward {
+        /// @dev The liquidity of risk buffer fund position or LP position
         uint128 liquidity;
+        /// @dev The snapshot of `PoolReward.riskBufferFundRewardGrowthX64` or `PoolReward.liquidityRewardGrowthX64`
         uint128 rewardGrowthX64;
     }
 
     struct RewardWithPosition {
+        /// @dev The total liquidity of all referees
         uint128 liquidity;
+        /// @dev The snapshot of
+        /// `PoolReward.referralTokenRewardGrowthX64` or `PoolReward.referralParentTokenRewardGrowthX64`
         uint128 rewardGrowthX64;
+        /// @dev The total position value of all referees
         uint128 position;
+        /// @dev The snapshot of
+        /// `PoolReward.referralTokenPositionRewardGrowthX64` or `PoolReward.referralParentTokenPositionRewardGrowthX64`
         uint128 positionRewardGrowthX64;
     }
 
     struct ReferralReward {
+        /// @dev Unclaimed reward amount
         uint256 rewardDebt;
+        /// @dev Mapping of pool to referral reward
         mapping(IPool => RewardWithPosition) rewards;
     }
 
     struct RiskBufferFundReward {
+        /// @dev Unclaimed reward amount
         uint256 rewardDebt;
+        /// @dev Mapping of pool to risk buffer fund reward
         mapping(IPool => Reward) rewards;
     }
 
     struct LiquidityReward {
+        /// @dev The bitwise representation of the pool index with existing LP position
         Bitmap bitmap;
+        /// @dev Unclaimed reward amount
         uint256 rewardDebt;
+        /// @dev Mapping of pool to liquidity reward
         mapping(IPool => Reward) rewards;
     }
 
     struct SidePosition {
+        /// @dev Value of long position
         uint128 long;
+        /// @dev Value of short position
         uint128 short;
     }
 
     struct Position {
+        /// @dev The bitwise representation of the pool index with existing position
         Bitmap bitmap;
+        /// @dev Mapping of pool to position value
         mapping(IPool => SidePosition) sidePositions;
     }
 
