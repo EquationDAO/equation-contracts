@@ -14,6 +14,8 @@ contract Router is PluginManager {
 
     /// @notice Caller is not a plugin or not approved
     error CallerUnauthorized();
+    /// @notice Owner mismatch
+    error OwnerMismatch(address owner, address expectedOwner);
 
     constructor(IEFC _EFC, IRewardFarm _rewardFarm, IFeeDistributor _feeDistributor) {
         (EFC, rewardFarm, feeDistributor) = (_EFC, _rewardFarm, _feeDistributor);
@@ -212,7 +214,13 @@ contract Router is PluginManager {
         uint256[] calldata _referralTokens,
         address _receiver
     ) external returns (uint256 rewardDebt) {
-        for (uint256 i; i < _referralTokens.length; ++i) _onlyPluginApproved(EFC.ownerOf(_referralTokens[i]));
+        uint256 tokensLen = _referralTokens.length;
+        require(tokensLen > 0);
+
+        address owner = EFC.ownerOf(_referralTokens[0]);
+        _onlyPluginApproved(owner);
+        for (uint256 i = 1; i < tokensLen; ++i)
+            if (EFC.ownerOf(_referralTokens[i]) != owner) revert OwnerMismatch(EFC.ownerOf(_referralTokens[i]), owner);
 
         return rewardFarm.collectReferralRewardBatch(_pools, _referralTokens, _receiver);
     }
@@ -253,7 +261,13 @@ contract Router is PluginManager {
         address _receiver,
         uint256[] calldata _tokenIDs
     ) external returns (uint256 rewardDebt) {
-        for (uint256 i; i < _tokenIDs.length; ++i) _onlyPluginApproved(EFC.ownerOf(_tokenIDs[i]));
+        uint256 idsLen = _tokenIDs.length;
+        require(idsLen > 0);
+
+        address owner = EFC.ownerOf(_tokenIDs[0]);
+        _onlyPluginApproved(owner);
+        for (uint256 i = 1; i < idsLen; ++i)
+            if (EFC.ownerOf(_tokenIDs[i]) != owner) revert OwnerMismatch(EFC.ownerOf(_tokenIDs[i]), owner);
 
         return feeDistributor.collectArchitectBatchByRouter(_receiver, _tokenIDs);
     }

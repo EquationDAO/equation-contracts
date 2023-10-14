@@ -424,9 +424,18 @@ describe("Router", () => {
         it("should pass", async () => {
             const {user, other, gov, router, mockEFC, mockPool} = await loadFixture(deployFixture);
             await mockEFC.setOwner(1, user.address);
+            await mockEFC.setOwner(2, user.address);
+            await mockEFC.setOwner(3, user.address);
             await router.connect(gov).registerPlugin(other.address);
             await router.connect(user).approvePlugin(other.address);
-            await router.connect(other).pluginCollectFarmReferralRewardBatch([mockPool.address], [1], user.address);
+            await router
+                .connect(other)
+                .pluginCollectFarmReferralRewardBatch([mockPool.address], [1, 2, 3], user.address);
+        });
+        it("should revert if tokens length is zero", async () => {
+            const {user, other, gov, erc20, router, mockPool} = await loadFixture(deployFixture);
+            await expect(router.pluginCollectFarmReferralRewardBatch([mockPool.address], [1], user.address)).to
+                .reverted;
         });
         it("should revert if owner is not a plugin approved", async () => {
             const {user, other, gov, erc20, router, mockPool} = await loadFixture(deployFixture);
@@ -435,6 +444,20 @@ describe("Router", () => {
             await expect(
                 router.connect(other).pluginCollectFarmReferralRewardBatch([mockPool.address], [1], user.address)
             ).to.revertedWithCustomError(router, "CallerUnauthorized");
+        });
+        it("should revert if owner mismatch", async () => {
+            const {user, other, gov, router, mockEFC, mockPool} = await loadFixture(deployFixture);
+            await mockEFC.setOwner(1, user.address);
+            await mockEFC.setOwner(2, user.address);
+            await mockEFC.setOwner(3, other.address);
+
+            await router.connect(gov).registerPlugin(other.address);
+            await router.connect(user).approvePlugin(other.address);
+            await expect(
+                router.connect(other).pluginCollectFarmReferralRewardBatch([mockPool.address], [1, 2, 3], user.address)
+            )
+                .to.revertedWithCustomError(router, "OwnerMismatch")
+                .withArgs(other.address, user.address);
         });
     });
 
