@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.21;
+pragma solidity ^0.8.0;
 
 /// @title Plugin Manager Interface
 /// @notice The interface defines the functions to manage plugins
