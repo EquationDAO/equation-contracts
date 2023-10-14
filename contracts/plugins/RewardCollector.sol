@@ -8,17 +8,15 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 contract RewardCollector is Multicall {
     using SafeMath for uint256;
 
-    IERC20 public immutable EQU;
     Router public immutable router;
+    IERC20 public immutable EQU;
     IEFC public immutable EFC;
 
     error InvalidCaller(address caller, address requiredCaller);
     error InsufficientBalance(uint256 amount, uint256 requiredAmount);
 
     constructor(Router _router, IERC20 _EQU, IEFC _EFC) {
-        router = _router;
-        EQU = _EQU;
-        EFC = _EFC;
+        (router, EQU, EFC) = (_router, _EQU, _EFC);
     }
 
     function sweepToken(IERC20 _token, uint256 _amountMinimum, address _receiver) external returns (uint256 amount) {
@@ -33,12 +31,14 @@ contract RewardCollector is Multicall {
         uint256[] calldata _referralTokens
     ) external returns (uint256 amount) {
         _validateOwner(_referralTokens);
+
         IPool pool;
-        for (uint256 i; i < _pools.length; ++i) {
-            pool = _pools[i];
-            for (uint256 j; j < _referralTokens.length; ++j) {
+        uint256 poolsLen = _pools.length;
+        uint256 tokensLen;
+        for (uint256 i; i < poolsLen; ++i) {
+            (pool, tokensLen) = (_pools[i], _referralTokens.length);
+            for (uint256 j; j < tokensLen; ++j)
                 amount += router.pluginCollectReferralFee(pool, _referralTokens[j], address(this));
-            }
         }
     }
 
@@ -72,8 +72,8 @@ contract RewardCollector is Multicall {
     }
 
     function _validateOwner(uint256[] calldata _referralTokens) private view {
-        address caller = msg.sender;
-        for (uint256 i; i < _referralTokens.length; ++i) {
+        (address caller, uint256 tokensLen) = (msg.sender, _referralTokens.length);
+        for (uint256 i; i < tokensLen; ++i) {
             if (EFC.ownerOf(_referralTokens[i]) != caller)
                 revert InvalidCaller(caller, EFC.ownerOf(_referralTokens[i]));
         }
