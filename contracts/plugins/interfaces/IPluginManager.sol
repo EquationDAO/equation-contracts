@@ -4,6 +4,10 @@ pragma solidity ^0.8.0;
 /// @title Plugin Manager Interface
 /// @notice The interface defines the functions to manage plugins
 interface IPluginManager {
+    /// @notice Emitted when a new plugin is registered
+    /// @param plugin The registered plugin
+    event PluginRegistered(address indexed plugin);
+
     /// @notice Emitted when a plugin is approved
     /// @param account The account that approved the plugin
     /// @param plugin The approved plugin
@@ -14,16 +18,20 @@ interface IPluginManager {
     /// @param plugin The revoked plugin
     event PluginRevoked(address indexed account, address indexed plugin);
 
+    /// @notice Emitted when a new liquidator is registered
+    /// @param liquidator The registered liquidator
+    event LiquidatorRegistered(address indexed liquidator);
+
     /// @notice Plugin is already registered
-    error PluginAlreadyRegistered();
+    error PluginAlreadyRegistered(address plugin);
     /// @notice Plugin is not registered
-    error PluginNotRegistered();
+    error PluginNotRegistered(address plugin);
     /// @notice Plugin is already approved
-    error PluginAlreadyApproved();
+    error PluginAlreadyApproved(address sender, address plugin);
     /// @notice Plugin is not approved
-    error PluginNotApproved();
+    error PluginNotApproved(address sender, address plugin);
     /// @notice Liquidator is already registered
-    error LiquidatorAlreadyRegistered();
+    error LiquidatorAlreadyRegistered(address liquidator);
 
     /// @notice Register a new plugin
     /// @dev The call will fail if the caller is not the governor or the plugin is already registered
