@@ -23,43 +23,48 @@ interface IConfigurable {
     );
 
     /// @notice Token is not enabled
-    error TokenNotEnabled();
+    error TokenNotEnabled(IERC20 token);
     /// @notice Token is already enabled
-    error TokenAlreadyEnabled();
+    error TokenAlreadyEnabled(IERC20 token);
     /// @notice Invalid maximum risk rate for LP positions
-    error InvalidMaxRiskRatePerLiquidityPosition();
+    error InvalidMaxRiskRatePerLiquidityPosition(uint32 maxRiskRatePerLiquidityPosition);
     /// @notice Invalid maximum leverage for LP positions
-    error InvalidMaxLeveragePerLiquidityPosition();
+    error InvalidMaxLeveragePerLiquidityPosition(uint32 maxLeveragePerLiquidityPosition);
     /// @notice Invalid maximum leverage for trader positions
-    error InvalidMaxLeveragePerPosition();
+    error InvalidMaxLeveragePerPosition(uint32 maxLeveragePerPosition);
     /// @notice Invalid liquidation fee rate for trader positions
-    error InvalidLiquidationFeeRatePerPosition();
+    error InvalidLiquidationFeeRatePerPosition(uint32 liquidationFeeRatePerPosition);
     /// @notice Invalid interest rate
-    error InvalidInterestRate();
+    error InvalidInterestRate(uint32 interestRate);
     /// @notice Invalid maximum funding rate
-    error InvalidMaxFundingRate();
+    error InvalidMaxFundingRate(uint32 maxFundingRate);
     /// @notice Invalid trading fee rate
-    error InvalidTradingFeeRate();
+    error InvalidTradingFeeRate(uint32 tradingFeeRate);
     /// @notice Invalid liquidity fee rate
-    error InvalidLiquidityFeeRate();
+    error InvalidLiquidityFeeRate(uint32 liquidityFeeRate);
     /// @notice Invalid protocol fee rate
-    error InvalidProtocolFeeRate();
+    error InvalidProtocolFeeRate(uint32 protocolFeeRate);
     /// @notice Invalid referral return fee rate
-    error InvalidReferralReturnFeeRate();
+    error InvalidReferralReturnFeeRate(uint32 referralReturnFeeRate);
     /// @notice Invalid referral parent return fee rate
-    error InvalidReferralParentReturnFeeRate();
+    error InvalidReferralParentReturnFeeRate(uint32 referralParentReturnFeeRate);
     /// @notice Invalid referral discount rate
-    error InvalidReferralDiscountRate();
+    error InvalidReferralDiscountRate(uint32 referralDiscountRate);
     /// @notice Invalid fee rate
-    error InvalidFeeRate();
+    error InvalidFeeRate(
+        uint32 liquidityFeeRate,
+        uint32 protocolFeeRate,
+        uint32 referralReturnFeeRate,
+        uint32 referralParentReturnFeeRate
+    );
     /// @notice Invalid maximum price impact liquidity
-    error InvalidMaxPriceImpactLiquidity();
+    error InvalidMaxPriceImpactLiquidity(uint128 maxPriceImpactLiquidity);
     /// @notice Invalid vertices length
     /// @dev The length of vertices must be equal to the `VERTEX_NUM`
-    error InvalidVerticesLength();
+    error InvalidVerticesLength(uint256 length, uint256 requiredLength);
     /// @notice Invalid liquidation vertex index
     /// @dev The liquidation vertex index must be less than the length of vertices
-    error InvalidLiquidationVertexIndex();
+    error InvalidLiquidationVertexIndex(uint8 liquidationVertexIndex);
     /// @notice Invalid vertex
     /// @param index The index of the vertex
     error InvalidVertex(uint8 index);
