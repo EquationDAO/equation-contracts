@@ -194,6 +194,7 @@ contract RewardFarm is IRewardFarm, IRewardFarmCallback, Governable, ReentrancyG
             sidePosition.short = positionAfter;
         }
 
+        // Using bitwise operations can efficiently check the exists of either long or short positions.
         if ((beforeMasked == 0 && afterMasked != 0) || (beforeMasked != 0 && afterMasked == 0))
             position.bitmap = position.bitmap.flip(_unmaskPoolIndex(_poolIndex)); // flip the bit
 
