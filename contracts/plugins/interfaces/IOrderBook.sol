@@ -254,6 +254,7 @@ interface IOrderBook {
     /// @param pool The pool address of position to create orders
     /// @param side The side of the position (Long or Short)
     /// @param marginDeltas The decreases in margin
+    /// @param sizeDeltas The decreases in size
     /// @param triggerMarketPriceX96s Market prices to trigger the order, as Q64.96s
     /// @param acceptableTradePriceX96s Acceptable worst trade prices of the orders, as Q64.96s
     /// @param receiver Margin recipient address
