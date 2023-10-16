@@ -147,6 +147,12 @@ contract MixedExecutor is Multicall, Governable {
         _pool.sampleAndAdjustFundingRate();
     }
 
+    /// @notice Collect protocol fee
+    /// @param _pool The pool address
+    function collectProtocolFee(IPool _pool) external {
+        _pool.collectProtocolFee();
+    }
+
     /// @notice Execute an existing increase order
     /// @param _orderIndex The index of order to execute
     /// @param _requireSuccess True if the execution error is ignored, false otherwise.
