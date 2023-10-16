@@ -21,9 +21,9 @@ contract PositionRouter is IPositionRouter, Governable, ReentrancyGuard {
 
     // pack into a single slot to save gas
     uint32 public minBlockDelayExecutor;
-    uint32 public minTimeDelayPublic = 180;
-    uint32 public maxTimeDelay = 1800;
-    uint160 public executionGasLimit = 1_000_000;
+    uint32 public minTimeDelayPublic = 3 minutes;
+    uint32 public maxTimeDelay = 30 minutes;
+    uint160 public executionGasLimit = 1_000_000 wei;
 
     mapping(address => bool) public positionExecutors;
 
