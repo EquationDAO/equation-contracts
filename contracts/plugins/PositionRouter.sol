@@ -21,9 +21,9 @@ contract PositionRouter is IPositionRouter, Governable, ReentrancyGuard {
 
     // pack into a single slot to save gas
     uint32 public minBlockDelayExecutor;
-    uint32 public minTimeDelayPublic = 180;
-    uint32 public maxTimeDelay = 1800;
-    uint160 public executionGasLimit = 1_000_000;
+    uint32 public minTimeDelayPublic = 3 minutes;
+    uint32 public maxTimeDelay = 30 minutes;
+    uint160 public executionGasLimit = 1_000_000 wei;
 
     mapping(address => bool) public positionExecutors;
 
@@ -589,10 +589,10 @@ contract PositionRouter is IPositionRouter, Governable, ReentrancyGuard {
         uint128 _sizeDelta,
         uint160 _acceptableTradePriceX96
     ) external payable override nonReentrant returns (uint128 index) {
+        _side.requireValid();
         if (msg.value < minExecutionFee) revert InsufficientExecutionFee(msg.value, minExecutionFee);
 
         if (_marginDelta > 0) router.pluginTransfer(usd, msg.sender, address(this), _marginDelta);
-        _side = _side.normalize();
 
         index = increasePositionIndexNext++;
         increasePositionRequests[index] = IncreasePositionRequest({
@@ -705,9 +705,8 @@ contract PositionRouter is IPositionRouter, Governable, ReentrancyGuard {
         uint160 _acceptableTradePriceX96,
         address _receiver
     ) external payable override nonReentrant returns (uint128 index) {
+        _side.requireValid();
         if (msg.value < minExecutionFee) revert InsufficientExecutionFee(msg.value, minExecutionFee);
-
-        _side = _side.normalize();
 
         index = decreasePositionIndexNext++;
         decreasePositionRequests[index] = DecreasePositionRequest({

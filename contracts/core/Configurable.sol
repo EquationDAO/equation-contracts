@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.21;
+pragma solidity ^0.8.0;
 
 import "../libraries/Constants.sol";
 import "../libraries/ReentrancyGuard.sol";
@@ -38,7 +38,7 @@ abstract contract Configurable is IConfigurable, Governable, ReentrancyGuard {
     ) external override nonReentrant {
         _onlyGov();
 
-        if (tokenConfigs[_token].maxLeveragePerLiquidityPosition > 0) revert TokenAlreadyEnabled();
+        if (tokenConfigs[_token].maxLeveragePerLiquidityPosition > 0) revert TokenAlreadyEnabled(_token);
 
         _setTokenConfig(_token, _cfg, _feeRateCfg, _priceCfg);
     }
@@ -52,7 +52,7 @@ abstract contract Configurable is IConfigurable, Governable, ReentrancyGuard {
     ) external override nonReentrant {
         _onlyGov();
 
-        if (tokenConfigs[_token].maxLeveragePerLiquidityPosition == 0) revert TokenNotEnabled();
+        if (tokenConfigs[_token].maxLeveragePerLiquidityPosition == 0) revert TokenNotEnabled(_token);
 
         _setTokenConfig(_token, _newCfg, _newFeeRateCfg, _newPriceCfg);
     }
@@ -103,33 +103,40 @@ abstract contract Configurable is IConfigurable, Governable, ReentrancyGuard {
 
     function _validateTokenConfig(TokenConfig calldata _newCfg) private pure {
         if (_newCfg.maxRiskRatePerLiquidityPosition > Constants.BASIS_POINTS_DIVISOR)
-            revert InvalidMaxRiskRatePerLiquidityPosition();
+            revert InvalidMaxRiskRatePerLiquidityPosition(_newCfg.maxRiskRatePerLiquidityPosition);
 
-        if (_newCfg.maxLeveragePerLiquidityPosition == 0) revert InvalidMaxLeveragePerLiquidityPosition();
+        if (_newCfg.maxLeveragePerLiquidityPosition == 0)
+            revert InvalidMaxLeveragePerLiquidityPosition(_newCfg.maxLeveragePerLiquidityPosition);
 
-        if (_newCfg.maxLeveragePerPosition == 0) revert InvalidMaxLeveragePerPosition();
+        if (_newCfg.maxLeveragePerPosition == 0) revert InvalidMaxLeveragePerPosition(_newCfg.maxLeveragePerPosition);
 
         if (_newCfg.liquidationFeeRatePerPosition > Constants.BASIS_POINTS_DIVISOR)
-            revert InvalidLiquidationFeeRatePerPosition();
+            revert InvalidLiquidationFeeRatePerPosition(_newCfg.liquidationFeeRatePerPosition);
 
-        if (_newCfg.interestRate > Constants.BASIS_POINTS_DIVISOR) revert InvalidInterestRate();
+        if (_newCfg.interestRate > Constants.BASIS_POINTS_DIVISOR) revert InvalidInterestRate(_newCfg.interestRate);
 
-        if (_newCfg.maxFundingRate > Constants.BASIS_POINTS_DIVISOR) revert InvalidMaxFundingRate();
+        if (_newCfg.maxFundingRate > Constants.BASIS_POINTS_DIVISOR)
+            revert InvalidMaxFundingRate(_newCfg.maxFundingRate);
     }
 
     function _validateTokenFeeRateConfig(TokenFeeRateConfig calldata _newCfg) private pure {
-        if (_newCfg.tradingFeeRate > Constants.BASIS_POINTS_DIVISOR) revert InvalidTradingFeeRate();
+        if (_newCfg.tradingFeeRate > Constants.BASIS_POINTS_DIVISOR)
+            revert InvalidTradingFeeRate(_newCfg.tradingFeeRate);
 
-        if (_newCfg.liquidityFeeRate > Constants.BASIS_POINTS_DIVISOR) revert InvalidLiquidityFeeRate();
+        if (_newCfg.liquidityFeeRate > Constants.BASIS_POINTS_DIVISOR)
+            revert InvalidLiquidityFeeRate(_newCfg.liquidityFeeRate);
 
-        if (_newCfg.protocolFeeRate > Constants.BASIS_POINTS_DIVISOR) revert InvalidProtocolFeeRate();
+        if (_newCfg.protocolFeeRate > Constants.BASIS_POINTS_DIVISOR)
+            revert InvalidProtocolFeeRate(_newCfg.protocolFeeRate);
 
-        if (_newCfg.referralReturnFeeRate > Constants.BASIS_POINTS_DIVISOR) revert InvalidReferralReturnFeeRate();
+        if (_newCfg.referralReturnFeeRate > Constants.BASIS_POINTS_DIVISOR)
+            revert InvalidReferralReturnFeeRate(_newCfg.referralReturnFeeRate);
 
         if (_newCfg.referralParentReturnFeeRate > Constants.BASIS_POINTS_DIVISOR)
-            revert InvalidReferralParentReturnFeeRate();
+            revert InvalidReferralParentReturnFeeRate(_newCfg.referralParentReturnFeeRate);
 
-        if (_newCfg.referralDiscountRate > Constants.BASIS_POINTS_DIVISOR) revert InvalidReferralDiscountRate();
+        if (_newCfg.referralDiscountRate > Constants.BASIS_POINTS_DIVISOR)
+            revert InvalidReferralDiscountRate(_newCfg.referralDiscountRate);
 
         if (
             uint256(_newCfg.liquidityFeeRate) +
@@ -137,15 +144,24 @@ abstract contract Configurable is IConfigurable, Governable, ReentrancyGuard {
                 _newCfg.referralReturnFeeRate +
                 _newCfg.referralParentReturnFeeRate >
             Constants.BASIS_POINTS_DIVISOR
-        ) revert InvalidFeeRate();
+        )
+            revert InvalidFeeRate(
+                _newCfg.liquidityFeeRate,
+                _newCfg.protocolFeeRate,
+                _newCfg.referralReturnFeeRate,
+                _newCfg.referralParentReturnFeeRate
+            );
     }
 
     function _validatePriceConfig(TokenPriceConfig calldata _newCfg) private pure {
-        if (_newCfg.maxPriceImpactLiquidity == 0) revert InvalidMaxPriceImpactLiquidity();
+        if (_newCfg.maxPriceImpactLiquidity == 0)
+            revert InvalidMaxPriceImpactLiquidity(_newCfg.maxPriceImpactLiquidity);
 
-        if (_newCfg.vertices.length != Constants.VERTEX_NUM) revert InvalidVerticesLength();
+        if (_newCfg.vertices.length != Constants.VERTEX_NUM)
+            revert InvalidVerticesLength(_newCfg.vertices.length, Constants.VERTEX_NUM);
 
-        if (_newCfg.liquidationVertexIndex >= Constants.LATEST_VERTEX) revert InvalidLiquidationVertexIndex();
+        if (_newCfg.liquidationVertexIndex >= Constants.LATEST_VERTEX)
+            revert InvalidLiquidationVertexIndex(_newCfg.liquidationVertexIndex);
 
         unchecked {
             // first vertex must be (0, 0)
@@ -154,11 +170,13 @@ abstract contract Configurable is IConfigurable, Governable, ReentrancyGuard {
             for (uint8 i = 2; i < Constants.VERTEX_NUM; ++i) {
                 if (
                     _newCfg.vertices[i - 1].balanceRate > _newCfg.vertices[i].balanceRate ||
-                    _newCfg.vertices[i - 1].premiumRate > _newCfg.vertices[i].premiumRate ||
-                    _newCfg.vertices[i].balanceRate > Constants.BASIS_POINTS_DIVISOR ||
-                    _newCfg.vertices[i].premiumRate > Constants.BASIS_POINTS_DIVISOR
+                    _newCfg.vertices[i - 1].premiumRate > _newCfg.vertices[i].premiumRate
                 ) revert InvalidVertex(i);
             }
+            if (
+                _newCfg.vertices[Constants.LATEST_VERTEX].balanceRate > Constants.BASIS_POINTS_DIVISOR ||
+                _newCfg.vertices[Constants.LATEST_VERTEX].premiumRate > Constants.BASIS_POINTS_DIVISOR
+            ) revert InvalidVertex(Constants.LATEST_VERTEX);
         }
     }
 }

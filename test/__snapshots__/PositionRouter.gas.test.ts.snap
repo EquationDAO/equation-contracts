@@ -1,5 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`PositionRouter gas tests createIncreasePosition 1`] = `213148`;
+exports[`PositionRouter gas tests createIncreasePosition 1`] = `213450`;
 
-exports[`PositionRouter gas tests executeIncreasePosition 1`] = `87864`;
+exports[`PositionRouter gas tests executeIncreasePosition 1`] = `87900`;

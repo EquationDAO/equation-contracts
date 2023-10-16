@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.21;
+pragma solidity ^0.8.0;
 
 import "../../core/interfaces/IPool.sol";
 
@@ -11,7 +11,7 @@ interface IOrderBook {
     /// @notice Emitted when order executor updated
     /// @param account The account to update
     /// @param active Updated status
-    event OrderExecutorUpdated(address account, bool active);
+    event OrderExecutorUpdated(address indexed account, bool active);
 
     /// @notice Emitted when increase order created
     /// @param account Owner of the increase order
@@ -26,8 +26,8 @@ interface IOrderBook {
     /// @param executionFee Amount of fee for the executor to carry out the order
     /// @param orderIndex Index of the order
     event IncreaseOrderCreated(
-        address account,
-        IPool pool,
+        address indexed account,
+        IPool indexed pool,
         Side side,
         uint128 marginDelta,
         uint128 sizeDelta,
@@ -35,25 +35,29 @@ interface IOrderBook {
         bool triggerAbove,
         uint160 acceptableTradePriceX96,
         uint256 executionFee,
-        uint256 orderIndex
+        uint256 indexed orderIndex
     );
 
     /// @notice Emitted when increase order updated
     /// @param orderIndex Index of the updated order
     /// @param triggerMarketPriceX96 The new market price to trigger the order, as a Q64.96
     /// @param acceptableTradePriceX96 The new acceptable worst trade price of the order, as a Q64.96
-    event IncreaseOrderUpdated(uint256 orderIndex, uint160 triggerMarketPriceX96, uint160 acceptableTradePriceX96);
+    event IncreaseOrderUpdated(
+        uint256 indexed orderIndex,
+        uint160 triggerMarketPriceX96,
+        uint160 acceptableTradePriceX96
+    );
 
     /// @notice Emitted when increase order cancelled
     /// @param orderIndex Index of the cancelled order
     /// @param feeReceiver Receiver of the order execution fee
-    event IncreaseOrderCancelled(uint256 orderIndex, address payable feeReceiver);
+    event IncreaseOrderCancelled(uint256 indexed orderIndex, address payable feeReceiver);
 
     /// @notice Emitted when order executed
     /// @param orderIndex Index of the executed order
     /// @param marketPriceX96 Actual execution price, as a Q64.96
     /// @param feeReceiver Receiver of the order execution fee
-    event IncreaseOrderExecuted(uint256 orderIndex, uint160 marketPriceX96, address payable feeReceiver);
+    event IncreaseOrderExecuted(uint256 indexed orderIndex, uint160 marketPriceX96, address payable feeReceiver);
 
     /// @notice Emitted when decrease order created
     /// @param account Owner of the decrease order
@@ -71,8 +75,8 @@ interface IOrderBook {
     /// @param executionFee Amount of fee for the executor to carry out the order
     /// @param orderIndex Index of the order
     event DecreaseOrderCreated(
-        address account,
-        IPool pool,
+        address indexed account,
+        IPool indexed pool,
         Side side,
         uint128 marginDelta,
         uint128 sizeDelta,
@@ -81,25 +85,29 @@ interface IOrderBook {
         uint160 acceptableTradePriceX96,
         address receiver,
         uint256 executionFee,
-        uint256 orderIndex
+        uint256 indexed orderIndex
     );
 
     /// @notice Emitted when decrease order updated
     /// @param orderIndex Index of the decrease order
     /// @param triggerMarketPriceX96 The new market price to trigger the order, as a Q64.96
     /// @param acceptableTradePriceX96 The new acceptable worst trade price of the order, as a Q64.96
-    event DecreaseOrderUpdated(uint256 orderIndex, uint160 triggerMarketPriceX96, uint160 acceptableTradePriceX96);
+    event DecreaseOrderUpdated(
+        uint256 indexed orderIndex,
+        uint160 triggerMarketPriceX96,
+        uint160 acceptableTradePriceX96
+    );
 
     /// @notice Emitted when decrease order cancelled
     /// @param orderIndex Index of the cancelled order
     /// @param feeReceiver Receiver of the order execution fee
-    event DecreaseOrderCancelled(uint256 orderIndex, address feeReceiver);
+    event DecreaseOrderCancelled(uint256 indexed orderIndex, address feeReceiver);
 
     /// @notice Emitted when decrease order executed
     /// @param orderIndex Index of the executed order
     /// @param marketPriceX96 The market price when execution, as a Q64.96
     /// @param feeReceiver Receiver of the order execution fee
-    event DecreaseOrderExecuted(uint256 orderIndex, uint160 marketPriceX96, address payable feeReceiver);
+    event DecreaseOrderExecuted(uint256 indexed orderIndex, uint160 marketPriceX96, address payable feeReceiver);
 
     /// @notice Execution fee is insufficient
     /// @param available The available execution fee amount
@@ -246,6 +254,7 @@ interface IOrderBook {
     /// @param pool The pool address of position to create orders
     /// @param side The side of the position (Long or Short)
     /// @param marginDeltas The decreases in margin
+    /// @param sizeDeltas The decreases in size
     /// @param triggerMarketPriceX96s Market prices to trigger the order, as Q64.96s
     /// @param acceptableTradePriceX96s Acceptable worst trade prices of the orders, as Q64.96s
     /// @param receiver Margin recipient address

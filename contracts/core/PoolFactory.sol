@@ -78,9 +78,9 @@ contract PoolFactory is IPoolFactory, Configurable, AccessControl {
     function createPool(IERC20 _token) external override nonReentrant returns (IPool pool) {
         _onlyGov();
 
-        if (pools[_token] != IPool(address(0))) revert PoolAlreadyExists();
+        if (pools[_token] != IPool(address(0))) revert PoolAlreadyExists(pools[_token]);
 
-        if (!_isEnabledToken(_token)) revert TokenNotEnabled();
+        if (!_isEnabledToken(_token)) revert TokenNotEnabled(_token);
 
         pool = _deploy(_token);
         pools[_token] = pool;

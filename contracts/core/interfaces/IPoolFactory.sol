@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.21;
+pragma solidity ^0.8.0;
 
 import "./IConfigurable.sol";
 import "../../plugins/Router.sol";
@@ -14,13 +14,13 @@ interface IPoolFactory is IConfigurable, IAccessControl {
     /// @param pool The address of the created pool
     /// @param token The ERC20 token used in the pool
     /// @param usd The ERC20 token representing the USD stablecoin used in the pool
-    event PoolCreated(IPool indexed pool, IERC20 token, IERC20 usd);
+    event PoolCreated(IPool indexed pool, IERC20 indexed token, IERC20 indexed usd);
 
     /// @notice Pool factory is not initialized
     error NotInitialized();
 
     /// @notice Pool already exists
-    error PoolAlreadyExists();
+    error PoolAlreadyExists(IPool pool);
 
     /// @notice Get the address of the governor
     /// @return The address of the governor

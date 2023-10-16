@@ -11,6 +11,7 @@ async function main() {
 
     const MixedExecutor = await ethers.getContractFactory("MixedExecutor");
     const mixedExecutor = await MixedExecutor.deploy(
+        document.deployments.Liquidator,
         document.deployments.PositionRouter,
         document.deployments.PriceFeed,
         document.deployments.OrderBook

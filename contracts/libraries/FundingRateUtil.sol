@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.21;
+pragma solidity ^0.8.0;
 
 import "./PositionUtil.sol";
 
@@ -179,7 +179,7 @@ library FundingRateUtil {
 
         int256 premiumRateAvgX96 = cumulativePremiumRateX96 >= 0
             ? int256(Math.ceilDiv(uint256(int256(cumulativePremiumRateX96)), Constants.PREMIUM_RATE_AVG_DENOMINATOR))
-            : -int256(Math.ceilDiv(uint256(int256(-cumulativePremiumRateX96)), Constants.PREMIUM_RATE_AVG_DENOMINATOR));
+            : -int256(Math.ceilDiv(uint256(-int256(cumulativePremiumRateX96)), Constants.PREMIUM_RATE_AVG_DENOMINATOR));
 
         fundingRateDeltaX96 = premiumRateAvgX96 + _clamp(premiumRateAvgX96, _interestRate);
 

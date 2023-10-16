@@ -32,14 +32,14 @@ contract PriceFeedTest is Test {
         vm.warp(nowTs);
         uint256 _magnification = 10 ** refPriceDecimals;
         mockChainLink.setRoundData(100, 100 * _magnification.toInt256(), nowTs - 1, nowTs - 1, 100);
-        IERC20[] memory tokens = new IERC20[](1);
-        tokens[0] = IERC20(WETH);
-        uint160[] memory priceX96s = new uint160[](1);
-        priceX96s[0] = _toPriceX96(111, 18, 6);
+
+        IPriceFeed.TokenPrice[] memory tokenPrices = new IPriceFeed.TokenPrice[](1);
+        tokenPrices[0].token = IERC20(WETH);
+        tokenPrices[0].priceX96 = _toPriceX96(111, 18, 6);
         vm.prank(address(1));
         vm.expectEmit(true, false, false, true, address(priceFeed));
-        emit PriceUpdated(IERC20(WETH), priceX96s[0], _toPriceX96(100, 18, 6), priceX96s[0]);
-        priceFeed.setPriceX96s(tokens, priceX96s, nowTs.toUint64());
+        emit PriceUpdated(IERC20(WETH), tokenPrices[0].priceX96, _toPriceX96(100, 18, 6), tokenPrices[0].priceX96);
+        priceFeed.setPriceX96s(tokenPrices, nowTs.toUint64());
     }
 
     function testFuzz_SetPrices(uint128 currentPriceX96) public {
@@ -51,10 +51,10 @@ contract PriceFeedTest is Test {
         vm.warp(nowTs);
         uint256 _magnification = 10 ** refPriceDecimals;
         mockChainLink.setRoundData(100, 100 * _magnification.toInt256(), nowTs - 1, nowTs - 1, 100);
-        IERC20[] memory tokens = new IERC20[](1);
-        tokens[0] = IERC20(WETH);
-        uint160[] memory priceX96s = new uint160[](1);
-        priceX96s[0] = currentPriceX96;
+
+        IPriceFeed.TokenPrice[] memory tokenPrices = new IPriceFeed.TokenPrice[](1);
+        tokenPrices[0].token = IERC20(WETH);
+        tokenPrices[0].priceX96 = currentPriceX96;
 
         uint160 currentRefPrice = _toPriceX96(100, 18, 6);
         uint160 minPriceX96;
@@ -82,7 +82,7 @@ contract PriceFeedTest is Test {
         vm.prank(address(1));
         vm.expectEmit(true, false, false, true, address(priceFeed));
         emit PriceUpdated(IERC20(WETH), currentPriceX96, minPriceX96, maxPriceX96);
-        priceFeed.setPriceX96s(tokens, priceX96s, nowTs.toUint64());
+        priceFeed.setPriceX96s(tokenPrices, nowTs.toUint64());
     }
 
     function _toPriceX96(uint256 _price, uint8 _tokenDecimals, uint8 _usdDecimals) private pure returns (uint160) {

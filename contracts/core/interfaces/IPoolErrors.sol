@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.21;
+pragma solidity ^0.8.0;
 
 import {Side} from "../../types/Side.sol";
 
@@ -21,7 +21,7 @@ interface IPoolErrors {
     /// @notice Caller is not the liquidator
     error CallerNotLiquidator();
     /// @notice Insufficient balance
-    error InsufficientBalance(uint256 balance, uint256 requiredAmount);
+    error InsufficientBalance(uint128 balance, uint128 requiredAmount);
     /// @notice Leverage is too high
     error LeverageTooHigh(uint256 margin, uint128 liquidity, uint32 maxLeverage);
     /// @notice Insufficient global liquidity

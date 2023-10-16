@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.21;
+pragma solidity ^0.8.0;
 
 import "./PositionUtil.sol";
 
@@ -64,10 +64,9 @@ library LiquidityPositionUtil {
             } else {
                 unchecked {
                     // The liquidityDelta is at most -type(uint128).max, so -liquidityDelta will not overflow here
-                    _metrics.liquidity -= uint128(uint256(-_liquidityDelta));
-                    _metrics.liquidityTimesUnrealizedLoss -=
-                        _liquidityDeltaEntryUnrealizedLoss *
-                        uint256(-_liquidityDelta);
+                    uint256 liquidityDeltaCast = uint256(-_liquidityDelta);
+                    _metrics.liquidity -= uint128(liquidityDeltaCast);
+                    _metrics.liquidityTimesUnrealizedLoss -= _liquidityDeltaEntryUnrealizedLoss * liquidityDeltaCast;
                 }
             }
         }

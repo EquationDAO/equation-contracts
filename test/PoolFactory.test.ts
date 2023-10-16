@@ -453,10 +453,10 @@ describe("PoolFactory", () => {
                 const tokenFeeRateCfg = newTokenFeeRateConfig();
                 const tokenPriceCfg = newTokenPriceConfig();
                 await poolFactory.enableToken(router.address, tokenCfg, tokenFeeRateCfg, tokenPriceCfg);
-                tokenPriceCfg.vertices[4].balanceRate = 100_000_001n;
+                tokenPriceCfg.vertices[6].balanceRate = 100_000_001n;
                 await expect(poolFactory.updateTokenConfig(router.address, tokenCfg, tokenFeeRateCfg, tokenPriceCfg))
                     .to.revertedWithCustomError(poolFactory, "InvalidVertex")
-                    .withArgs(4n);
+                    .withArgs(6n);
             });
 
             it("should revert if the premium rate is greater than 100_000_000", async () => {
@@ -465,10 +465,10 @@ describe("PoolFactory", () => {
                 const tokenFeeRateCfg = newTokenFeeRateConfig();
                 const tokenPriceCfg = newTokenPriceConfig();
                 await poolFactory.enableToken(router.address, tokenCfg, tokenFeeRateCfg, tokenPriceCfg);
-                tokenPriceCfg.vertices[5].premiumRate = 100_000_001n;
+                tokenPriceCfg.vertices[6].premiumRate = 100_000_001n;
                 await expect(poolFactory.updateTokenConfig(router.address, tokenCfg, tokenFeeRateCfg, tokenPriceCfg))
                     .to.revertedWithCustomError(poolFactory, "InvalidVertex")
-                    .withArgs(5n);
+                    .withArgs(6n);
             });
 
             it("should emit event", async () => {

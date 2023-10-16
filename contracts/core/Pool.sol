@@ -432,11 +432,11 @@ contract Pool is IPool, ReentrancyGuard {
         uint128 _marginDelta,
         uint128 _sizeDelta
     ) external override nonReentrant returns (uint160 tradePriceX96) {
+        _side.requireValid();
         _onlyRouter();
 
         _sampleAndAdjustFundingRate();
 
-        _side = _side.normalize();
         Position memory positionCache = positions[_account][_side];
         if (positionCache.size == 0) {
             if (_sizeDelta == 0) revert PositionNotFound(_account, _side);
@@ -839,10 +839,10 @@ contract Pool is IPool, ReentrancyGuard {
         if (!poolFactory.hasRole(Constants.ROLE_POSITION_LIQUIDATOR, msg.sender)) revert CallerNotLiquidator();
     }
 
-    function _validateTransferInAndUpdateBalance(uint256 _amount) private {
+    function _validateTransferInAndUpdateBalance(uint128 _amount) private {
         uint128 balanceAfter = usd.balanceOf(address(this)).toUint128();
         if (balanceAfter - usdBalance < _amount) revert InsufficientBalance(usdBalance, _amount);
-        usdBalance = balanceAfter;
+        usdBalance += _amount;
     }
 
     function _transferOutAndUpdateBalance(address _to, uint256 _amount) private {
@@ -1141,7 +1141,8 @@ contract Pool is IPool, ReentrancyGuard {
         emit GlobalRiskBufferFundChanged(riskBufferFundAfter);
 
         uint256 realizedProfitGrowthAfterX64 = _positionCache.realizedProfitGrowthX64 +
-            Math.mulDiv(liquidityFee, Constants.Q64, _positionCache.liquidity);
+            (uint256(liquidityFee) << 64) /
+            _positionCache.liquidity;
         globalLiquidityPosition.realizedProfitGrowthX64 = realizedProfitGrowthAfterX64;
         emit GlobalLiquidityPositionRealizedProfitGrowthChanged(realizedProfitGrowthAfterX64);
     }

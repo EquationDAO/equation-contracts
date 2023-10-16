@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.21;
+pragma solidity ^0.8.0;
 
 import "../../core/interfaces/IPool.sol";
 import {Bitmap} from "../../types/Bitmap.sol";
@@ -114,7 +114,12 @@ interface IRewardFarm {
     /// @param referralTokens The IDs of the referral tokens
     /// @param receiver The address to receive the referral reward
     /// @param rewardDebt The amount of the referral reward received
-    event ReferralRewardCollected(IPool[] pools, uint256[] referralTokens, address receiver, uint256 rewardDebt);
+    event ReferralRewardCollected(
+        IPool[] pools,
+        uint256[] referralTokens,
+        address indexed receiver,
+        uint256 rewardDebt
+    );
 
     /// @notice Emitted when configuration is changed
     /// @param newConfig The new configuration
@@ -131,9 +136,11 @@ interface IRewardFarm {
     /// @notice Invalid pool
     error InvalidPool(IPool pool);
     /// @notice Invalid mint time
-    error InvalidMintTime();
+    /// @param mintTime The time of starting minting
+    error InvalidMintTime(uint64 mintTime);
     /// @notice Invalid mining rate
-    error InvalidMiningRate();
+    /// @param rate The rate of mining
+    error InvalidMiningRate(uint256 rate);
     /// @notice Too many pools
     error TooManyPools();
     /// @notice Invalid reward cap
@@ -162,40 +169,59 @@ interface IRewardFarm {
     }
 
     struct Reward {
+        /// @dev The liquidity of risk buffer fund position or LP position
         uint128 liquidity;
+        /// @dev The snapshot of `PoolReward.riskBufferFundRewardGrowthX64` or `PoolReward.liquidityRewardGrowthX64`
         uint128 rewardGrowthX64;
     }
 
     struct RewardWithPosition {
+        /// @dev The total liquidity of all referees
         uint128 liquidity;
+        /// @dev The snapshot of
+        /// `PoolReward.referralTokenRewardGrowthX64` or `PoolReward.referralParentTokenRewardGrowthX64`
         uint128 rewardGrowthX64;
+        /// @dev The total position value of all referees
         uint128 position;
+        /// @dev The snapshot of
+        /// `PoolReward.referralTokenPositionRewardGrowthX64` or `PoolReward.referralParentTokenPositionRewardGrowthX64`
         uint128 positionRewardGrowthX64;
     }
 
     struct ReferralReward {
+        /// @dev Unclaimed reward amount
         uint256 rewardDebt;
+        /// @dev Mapping of pool to referral reward
         mapping(IPool => RewardWithPosition) rewards;
     }
 
     struct RiskBufferFundReward {
+        /// @dev Unclaimed reward amount
         uint256 rewardDebt;
+        /// @dev Mapping of pool to risk buffer fund reward
         mapping(IPool => Reward) rewards;
     }
 
     struct LiquidityReward {
+        /// @dev The bitwise representation of the pool index with existing LP position
         Bitmap bitmap;
+        /// @dev Unclaimed reward amount
         uint256 rewardDebt;
+        /// @dev Mapping of pool to liquidity reward
         mapping(IPool => Reward) rewards;
     }
 
     struct SidePosition {
+        /// @dev Value of long position
         uint128 long;
+        /// @dev Value of short position
         uint128 short;
     }
 
     struct Position {
+        /// @dev The bitwise representation of the pool index with existing position
         Bitmap bitmap;
+        /// @dev Mapping of pool to position value
         mapping(IPool => SidePosition) sidePositions;
     }
 

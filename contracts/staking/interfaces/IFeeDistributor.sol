@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.21;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -7,18 +7,24 @@ interface IFeeDistributor {
     /// @notice Emitted when EQU tokens are staked
     /// @param sender The address to apply for staking
     /// @param account Which address to stake to
-    /// @param stakeID Index of EQU tokens staking information
+    /// @param id Index of EQU tokens staking information
     /// @param amount The amount of EQU tokens that already staked
     /// @param period Lockup period
-    event Staked(address indexed sender, address indexed account, uint256 stakeID, uint256 amount, uint16 period);
+    event Staked(address indexed sender, address indexed account, uint256 indexed id, uint256 amount, uint16 period);
 
     /// @notice Emitted when Uniswap V3 positions NFTs are staked
     /// @param sender The address to apply for staking
     /// @param account Which address to stake to
-    /// @param stakeID Index of Uniswap V3 positions NFTs staking information
+    /// @param id Index of Uniswap V3 positions NFTs staking information
     /// @param amount The amount of Uniswap V3 positions NFT converted into EQU tokens that already staked
     /// @param period Lockup period
-    event V3PosStaked(address indexed sender, address indexed account, uint256 stakeID, uint256 amount, uint16 period);
+    event V3PosStaked(
+        address indexed sender,
+        address indexed account,
+        uint256 indexed id,
+        uint256 amount,
+        uint16 period
+    );
 
     /// @notice Emitted when EQU tokens are unstaked
     /// @param owner The address to apply for unstaking
@@ -26,7 +32,13 @@ interface IFeeDistributor {
     /// @param id Index of EQU tokens staking information
     /// @param amount0 The amount of EQU tokens that already unstaked
     /// @param amount1 The amount of staking rewards received
-    event Unstaked(address indexed owner, address indexed receiver, uint256 id, uint256 amount0, uint256 amount1);
+    event Unstaked(
+        address indexed owner,
+        address indexed receiver,
+        uint256 indexed id,
+        uint256 amount0,
+        uint256 amount1
+    );
 
     /// @notice Emitted when Uniswap V3 positions NFTs are unstaked
     /// @param owner The address to apply for unstaking
@@ -34,27 +46,33 @@ interface IFeeDistributor {
     /// @param id Index of Uniswap V3 positions NFTs staking information
     /// @param amount0 The amount of Uniswap V3 positions NFT converted into EQU tokens that already unstaked
     /// @param amount1 The amount of staking rewards received
-    event V3PosUnstaked(address indexed owner, address indexed receiver, uint256 id, uint256 amount0, uint256 amount1);
+    event V3PosUnstaked(
+        address indexed owner,
+        address indexed receiver,
+        uint256 indexed id,
+        uint256 amount0,
+        uint256 amount1
+    );
 
     /// @notice Emitted when claiming stake rewards
     /// @param owner The address to apply for claiming staking rewards
     /// @param receiver The address used to receive staking rewards
     /// @param id Index of EQU tokens staking information
     /// @param amount The amount of staking rewards received
-    event Collected(address indexed owner, address indexed receiver, uint256 id, uint256 amount);
+    event Collected(address indexed owner, address indexed receiver, uint256 indexed id, uint256 amount);
 
     /// @notice Emitted when claiming stake rewards
     /// @param owner The address to apply for claiming staking rewards
     /// @param receiver The address used to receive staking rewards
     /// @param id Index of Uniswap V3 positions NFTs staking information
     /// @param amount The amount of staking rewards received
-    event V3PosCollected(address indexed owner, address indexed receiver, uint256 id, uint256 amount);
+    event V3PosCollected(address indexed owner, address indexed receiver, uint256 indexed id, uint256 amount);
 
     /// @notice Emitted when claiming Architect-type NFT rewards
     /// @param receiver The address used to receive rewards
     /// @param tokenID The ID of the Architect-type NFT
     /// @param amount The amount of rewards received
-    event ArchitectCollected(address indexed receiver, uint256 tokenID, uint256 amount);
+    event ArchitectCollected(address indexed receiver, uint256 indexed tokenID, uint256 amount);
 
     /// @notice Emitted when deposit staking reward tokens
     /// @param amount The amount of staking reward tokens deposited
@@ -70,13 +88,10 @@ interface IFeeDistributor {
         uint160 architectPerShareGrowthAfterX64
     );
 
-    /// @notice Emitted when the Architect-type NFT is minted
-    /// @param periods The list of lockup periods that have been set
-    /// @param multipliers The list of lockup reward multipliers that have been set
-    event LockupRewardMultipliersSet(uint16[] periods, uint16[] multipliers);
+    /// @notice Emitted when the lockup periods and lockup multipliers are set
+    /// @param lockupRewardMultiplierParameters The list of LockupRewardMultiplierParameter
+    event LockupRewardMultipliersSet(LockupRewardMultiplierParameter[] lockupRewardMultiplierParameters);
 
-    /// @notice The lengths of the parameters are not equal
-    error UnequalLengths();
     /// @notice The number of Architect-type NFT that has been mined is 0
     /// or the EQU tokens that Uniswap V3 positions NFTs converted into total staked amount is 0.
     error DepositConditionNotMet();
@@ -85,7 +100,7 @@ interface IFeeDistributor {
     /// @notice Invalid NFT owner
     error InvalidNFTOwner(address owner, uint256 tokenID);
     /// @notice Invalid lockup period
-    error InvalidLockupPeriod();
+    error InvalidLockupPeriod(uint16 period);
     /// @notice Invalid StakeID
     error InvalidStakeID(uint256 id);
     /// @notice Not yet reached the unlocking time
@@ -93,7 +108,7 @@ interface IFeeDistributor {
     /// @notice Deposit amount is greater than the transfer amount
     error DepositAmountIsGreaterThanTheTransfer(uint256 depositAmount, uint256 balance);
     /// @notice The NFT is not part of the EQU-WETH pool
-    error InvalidUniswapV3PositionNFT();
+    error InvalidUniswapV3PositionNFT(address token0, address token1);
     /// @notice The exchangeable amount of EQU is 0
     error ExchangeableEQUAmountIsZero();
 
@@ -103,6 +118,11 @@ interface IFeeDistributor {
         uint16 multiplier;
         uint16 period;
         uint160 perShareGrowthX64;
+    }
+
+    struct LockupRewardMultiplierParameter {
+        uint16 period;
+        uint16 multiplier;
     }
 
     /// @notice Get the fee token balance
@@ -176,9 +196,10 @@ interface IFeeDistributor {
     function architectPerShareGrowthX64s(uint256 tokenID) external view returns (uint160 perShareGrowthX64);
 
     /// @notice Set lockup reward multiplier
-    /// @param periods Lockup periods
-    /// @param multipliers Lockup reward multipliers
-    function setLockupRewardMultipliers(uint16[] calldata periods, uint16[] calldata multipliers) external;
+    /// @param lockupRewardMultiplierParameters The list of LockupRewardMultiplierParameter
+    function setLockupRewardMultipliers(
+        LockupRewardMultiplierParameter[] calldata lockupRewardMultiplierParameters
+    ) external;
 
     /// @notice Deposite staking reward tokens
     /// @param amount The amount of reward tokens deposited

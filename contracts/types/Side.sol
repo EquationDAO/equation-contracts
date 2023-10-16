@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.21;
+pragma solidity ^0.8.0;
 
 Side constant LONG = Side.wrap(1);
 Side constant SHORT = Side.wrap(2);
 
 type Side is uint8;
 
-using {normalize, isLong, isShort, flip, eq as ==} for Side global;
+error InvalidSide(Side side);
 
-function normalize(Side self) pure returns (Side) {
-    return Side.unwrap(self) == Side.unwrap(LONG) ? LONG : SHORT;
+using {requireValid, isLong, isShort, flip, eq as ==} for Side global;
+
+function requireValid(Side self) pure {
+    if (!isLong(self) && !isShort(self)) revert InvalidSide(self);
 }
 
 function isLong(Side self) pure returns (bool) {

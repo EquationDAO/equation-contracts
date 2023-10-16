@@ -27,7 +27,10 @@ contract RewardFarm is IRewardFarm, IRewardFarmCallback, Governable, ReentrancyG
     IPoolFactory public immutable poolFactory;
     IEFC public immutable EFC;
     Router public immutable router;
-    /// @dev The referral multiplier after binding the referralToken
+    /// @dev The referral multiplier after binding the referralToken.
+    /// When calculating liquidity reward, if a referral code is bound, the liquidity is multiplied by this value.
+    /// This value is calculated by multiplying the actual value with `Constants.BASIS_POINTS_DIVISOR`,
+    /// For example, 110000000 represents a multiplier of 1.1.
     uint32 public immutable referralMultiplier;
     uint64 public immutable mintTime;
 
@@ -41,10 +44,15 @@ contract RewardFarm is IRewardFarm, IRewardFarmCallback, Governable, ReentrancyG
     /// @inheritdoc IRewardFarm
     mapping(IPool => PoolReward) public override poolRewards;
 
+    /// @dev Mapping of referral token to referral reward information
     mapping(uint256 => ReferralReward) public referralRewards;
+    /// @dev Mapping of account to risk buffer fund reward information
     mapping(address => RiskBufferFundReward) public riskBufferFundRewards;
+    /// @dev Mapping of account to bound referral code
     mapping(address => bool) public alreadyBoundReferralTokens;
+    /// @dev Mapping of account to liquidity reward information
     mapping(address => LiquidityReward) public liquidityRewards;
+    /// @dev Mapping of account to position information
     mapping(address => Position) public positions;
 
     uint256 public poolIndexNext;
@@ -74,7 +82,7 @@ contract RewardFarm is IRewardFarm, IRewardFarmCallback, Governable, ReentrancyG
         uint64 _mintTime,
         uint32 _referralMultiplier
     ) {
-        if (_mintTime < block.timestamp) revert InvalidMintTime();
+        if (_mintTime < block.timestamp) revert InvalidMintTime(_mintTime);
         poolFactory = _poolFactory;
         router = _router;
         EFC = _EFC;
@@ -150,9 +158,9 @@ contract RewardFarm is IRewardFarm, IRewardFarmCallback, Governable, ReentrancyG
         // prettier-ignore
         unchecked { riskBufferFundReward.rewardDebt += rewardDebtDelta; } // overflow is desired
 
-        poolReward.riskBufferFundLiquidity = _liquidityAfter > liquidityBefore
-            ? poolReward.riskBufferFundLiquidity + (_liquidityAfter - liquidityBefore).toUint128()
-            : poolReward.riskBufferFundLiquidity - (liquidityBefore - _liquidityAfter).toUint128();
+        poolReward.riskBufferFundLiquidity = (
+            (uint256(poolReward.riskBufferFundLiquidity) + _liquidityAfter - liquidityBefore)
+        ).toUint128();
     }
 
     /// @inheritdoc IRewardFarmCallback
@@ -186,6 +194,7 @@ contract RewardFarm is IRewardFarm, IRewardFarmCallback, Governable, ReentrancyG
             sidePosition.short = positionAfter;
         }
 
+        // Using bitwise operations can efficiently check the exists of either long or short positions.
         if ((beforeMasked == 0 && afterMasked != 0) || (beforeMasked != 0 && afterMasked == 0))
             position.bitmap = position.bitmap.flip(_unmaskPoolIndex(_poolIndex)); // flip the bit
 
@@ -415,7 +424,7 @@ contract RewardFarm is IRewardFarm, IRewardFarmCallback, Governable, ReentrancyG
     }
 
     function _unmaskPoolIndex(uint256 _poolIndex) private pure returns (uint8) {
-        return uint8(_poolIndex & (~uint8(0)));
+        return uint8(_poolIndex);
     }
 
     /// @notice Calculate per share growth of liquidity
@@ -723,7 +732,7 @@ contract RewardFarm is IRewardFarm, IRewardFarmCallback, Governable, ReentrancyG
     function _validateConfig(Config memory _newCfg) private pure {
         uint256 totalRate = uint256(_newCfg.liquidityRate) + _newCfg.riskBufferFundLiquidityRate;
         totalRate += _newCfg.referralTokenRate + _newCfg.referralParentTokenRate;
-        if (totalRate != Constants.BASIS_POINTS_DIVISOR) revert InvalidMiningRate();
+        if (totalRate != Constants.BASIS_POINTS_DIVISOR) revert InvalidMiningRate(totalRate);
     }
 
     function _isReferralParentToken(uint256 _referralToken) private pure returns (bool) {

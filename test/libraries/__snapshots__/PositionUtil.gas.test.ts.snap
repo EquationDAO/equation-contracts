@@ -4,17 +4,17 @@ exports[`PositionUtil gas tests #calculateLiquidationPriceX96 side is long 1`] =
 
 exports[`PositionUtil gas tests #calculateLiquidationPriceX96 side is long 2`] = `5442`;
 
-exports[`PositionUtil gas tests #calculateLiquidationPriceX96 side is long 3`] = `8005`;
+exports[`PositionUtil gas tests #calculateLiquidationPriceX96 side is long 3`] = `7983`;
 
-exports[`PositionUtil gas tests #calculateLiquidationPriceX96 side is long 4`] = `9557`;
+exports[`PositionUtil gas tests #calculateLiquidationPriceX96 side is long 4`] = `9535`;
 
 exports[`PositionUtil gas tests #calculateLiquidationPriceX96 side is short 1`] = `5538`;
 
 exports[`PositionUtil gas tests #calculateLiquidationPriceX96 side is short 2`] = `5605`;
 
-exports[`PositionUtil gas tests #calculateLiquidationPriceX96 side is short 3`] = `8131`;
+exports[`PositionUtil gas tests #calculateLiquidationPriceX96 side is short 3`] = `8109`;
 
-exports[`PositionUtil gas tests #calculateLiquidationPriceX96 side is short 4`] = `9791`;
+exports[`PositionUtil gas tests #calculateLiquidationPriceX96 side is short 4`] = `9769`;
 
 exports[`PositionUtil gas tests #calculateMaintenanceMargin 1`] = `351`;
 

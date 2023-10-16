@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.21;
+pragma solidity ^0.8.0;
 
 library Constants {
     uint32 internal constant BASIS_POINTS_DIVISOR = 100_000_000;

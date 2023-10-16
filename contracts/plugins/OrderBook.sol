@@ -13,7 +13,7 @@ contract OrderBook is IOrderBook, Governable, ReentrancyGuard {
     Router public immutable router;
 
     uint256 public minExecutionFee;
-    uint256 public executionGasLimit = 1_000_000;
+    uint256 public executionGasLimit = 1_000_000 wei;
     mapping(address => bool) public orderExecutors;
 
     uint256 public increaseOrdersIndexNext;
@@ -60,9 +60,9 @@ contract OrderBook is IOrderBook, Governable, ReentrancyGuard {
         bool _triggerAbove,
         uint160 _acceptableTradePriceX96
     ) external payable override nonReentrant returns (uint256 index) {
+        _side.requireValid();
         if (msg.value < minExecutionFee) revert InsufficientExecutionFee(msg.value, minExecutionFee);
         if (_marginDelta > 0) router.pluginTransfer(usd, msg.sender, address(this), _marginDelta);
-        _side = _side.normalize();
 
         index = increaseOrdersIndexNext++;
         increaseOrders[index] = IncreaseOrder({
@@ -164,11 +164,12 @@ contract OrderBook is IOrderBook, Governable, ReentrancyGuard {
         uint160 _acceptableTradePriceX96,
         address _receiver
     ) external payable override nonReentrant returns (uint256 index) {
+        _side.requireValid();
         if (msg.value < minExecutionFee) revert InsufficientExecutionFee(msg.value, minExecutionFee);
         index = _createDecreaseOrder(
             msg.sender,
             _pool,
-            _side.normalize(),
+            _side,
             _marginDelta,
             _sizeDelta,
             _triggerMarketPriceX96,
@@ -257,10 +258,10 @@ contract OrderBook is IOrderBook, Governable, ReentrancyGuard {
         uint160[2] calldata _acceptableTradePriceX96s,
         address _receiver
     ) external payable override nonReentrant {
+        _side.requireValid();
         uint256 fee0 = msg.value >> 1;
         if (fee0 < minExecutionFee) revert InsufficientExecutionFee(fee0, minExecutionFee);
 
-        _side = _side.normalize();
         _createDecreaseOrder(
             msg.sender,
             _pool,
