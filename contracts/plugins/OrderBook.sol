@@ -13,7 +13,7 @@ contract OrderBook is IOrderBook, Governable, ReentrancyGuard {
     Router public immutable router;
 
     uint256 public minExecutionFee;
-    uint256 public executionGasLimit = 1_000_000;
+    uint256 public executionGasLimit = 1_000_000 wei;
     mapping(address => bool) public orderExecutors;
 
     uint256 public increaseOrdersIndexNext;
