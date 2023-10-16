@@ -224,7 +224,20 @@ async function main() {
     console.log("Initialize price feed finished");
 
     // initialize fee distributor
-    await feeDistributor.setLockupRewardMultipliers([30, 60, 90], [1, 2, 3]);
+    await feeDistributor.setLockupRewardMultipliers([
+        {
+            period: 30,
+            multiplier: 1,
+        },
+        {
+            period: 60,
+            multiplier: 2,
+        },
+        {
+            period: 90,
+            multiplier: 3,
+        },
+    ]);
 
     // initialize pool factory
     await concatPoolCreationCode(poolFactory);

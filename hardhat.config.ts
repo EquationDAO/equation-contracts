@@ -47,7 +47,7 @@ const config: HardhatUserConfig = {
     },
     networks: {
         hardhat: {
-            allowUnlimitedContractSize: true,
+            allowUnlimitedContractSize: false,
         },
         "avalanche-fuji": {
             url: "https://api.avax-test.network/ext/bc/C/rpc",
