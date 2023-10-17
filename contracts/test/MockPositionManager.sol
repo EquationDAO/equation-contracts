@@ -11,6 +11,7 @@ contract MockPositionManager is IPositionManagerMinimum, ERC721 {
     address public EQU;
     address public WETH;
     Counters.Counter private _tokenIds;
+    uint24 public fee = 3000;
 
     constructor(address _EQU, address _WETH) ERC721("MockV3PositionNFT", "V3-POS-NFT") {
         EQU = _EQU;
@@ -27,7 +28,7 @@ contract MockPositionManager is IPositionManagerMinimum, ERC721 {
             address operator,
             address token0,
             address token1,
-            uint24 fee,
+            uint24 _fee,
             int24 tickLower,
             int24 tickUpper,
             uint128 liquidity,
@@ -42,7 +43,7 @@ contract MockPositionManager is IPositionManagerMinimum, ERC721 {
             0x0000000000000000000000000000000000000000,
             EQU,
             WETH,
-            3000,
+            fee,
             -887220,
             887220,
             9999504443656554,
@@ -57,5 +58,9 @@ contract MockPositionManager is IPositionManagerMinimum, ERC721 {
         _tokenIds.increment();
         id = _tokenIds.current();
         _mint(_recipient, id);
+    }
+
+    function setFee(uint24 _fee) external {
+        fee = _fee;
     }
 }

@@ -23,6 +23,10 @@ interface IPositionManagerMinimum {
         );
 }
 
+interface IUniswapV3PoolFactoryMinimum {
+    function feeAmountTickSpacing(uint24 fee) external view returns (int24);
+}
+
 interface IUniswapV3PoolMinimum {
     function slot0()
         external

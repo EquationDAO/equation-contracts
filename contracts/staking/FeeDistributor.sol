@@ -27,7 +27,7 @@ contract FeeDistributor is IFeeDistributor, IFeeDistributorCallback, ReentrancyG
     IERC20 private immutable WETH;
     IERC20 private immutable veEQU;
     Router private immutable router;
-    address private immutable v3PoolFactory;
+    IUniswapV3PoolFactoryMinimum private immutable v3PoolFactory;
     IPositionManagerMinimum private immutable v3PositionManager;
     /// @dev Indicates whether the EQU token is token0 or token1 in the Uniswap V3 Pool
     bool private immutable isToken0;
@@ -74,7 +74,7 @@ contract FeeDistributor is IFeeDistributor, IFeeDistributorCallback, ReentrancyG
         IERC20 _veEQU,
         IERC20 _feeToken,
         Router _router,
-        address _v3PoolFactory,
+        IUniswapV3PoolFactoryMinimum _v3PoolFactory,
         IPositionManagerMinimum _v3PositionManager,
         uint16 _withdrawalPeriod
     ) {
@@ -417,6 +417,11 @@ contract FeeDistributor is IFeeDistributor, IFeeDistributorCallback, ReentrancyG
         if (isToken0) _validateTokenPair(token0, token1);
         else _validateTokenPair(token1, token0);
 
+        int24 tickSpacing = v3PoolFactory.feeAmountTickSpacing(fee);
+        if (tickSpacing == 0) revert InvalidUniswapV3Fee(fee);
+
+        _validateTicks(tickLower, tickUpper, tickSpacing);
+
         address pool = _computeV3PoolAddress(token0, token1, fee);
         (uint160 sqrtPriceX96, int24 tick, , , , , ) = IUniswapV3PoolMinimum(pool).slot0();
 
@@ -458,6 +463,18 @@ contract FeeDistributor is IFeeDistributor, IFeeDistributorCallback, ReentrancyG
         address _token1,
         uint24 _fee
     ) internal view virtual returns (address pool) {
-        pool = Create2.computeAddress(keccak256(abi.encode(_token0, _token1, _fee)), V3_POOL_INIT_HASH, v3PoolFactory);
+        pool = Create2.computeAddress(
+            keccak256(abi.encode(_token0, _token1, _fee)),
+            V3_POOL_INIT_HASH,
+            address(v3PoolFactory)
+        );
+    }
+
+    function _validateTicks(int24 tickLower, int24 tickUpper, int24 tickSpacing) private pure {
+        unchecked {
+            int24 maxTick = TickMath.MAX_TICK - (TickMath.MAX_TICK % tickSpacing);
+            if (tickUpper < maxTick || tickLower > -maxTick)
+                revert RequireFullRangePosition(tickLower, tickUpper, tickSpacing);
+        }
     }
 }
