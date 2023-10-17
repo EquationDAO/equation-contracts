@@ -7,7 +7,7 @@ import "../tokens/interfaces/IEFC.sol";
 import "../staking/interfaces/IUniswapV3Minimum.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract FeeDistributorHarness is FeeDistributor {
+contract FeeDistributorTestHelper is FeeDistributor {
     address public v3PoolAddress;
 
     constructor(
@@ -17,7 +17,7 @@ contract FeeDistributorHarness is FeeDistributor {
         IERC20 _veEQU,
         IERC20 _feeToken,
         Router _router,
-        address _v3PoolFactory,
+        IUniswapV3PoolFactoryMinimum _v3PoolFactory,
         IPositionManagerMinimum _v3PositionManager,
         uint16 _withdrawalPeriod,
         address _v3PoolAddress

@@ -10,10 +10,11 @@ import {MockRewardFarmCallback} from "../../contracts/test/MockRewardFarmCallbac
 import {MockFeeDistributorCallback} from "../../contracts/test/MockFeeDistributorCallback.sol";
 import {MockUniswapV3Pool} from "../../contracts/test/MockUniswapV3Pool.sol";
 import {MockPositionManager} from "../../contracts/test/MockPositionManager.sol";
-import {FeeDistributorHarness} from "../../contracts/test/FeeDistributorHarness.sol";
+import {MockUniswapV3PoolFactory} from "../../contracts/test/MockUniswapV3PoolFactory.sol";
+import {FeeDistributorTestHelper} from "../../contracts/test/FeeDistributorTestHelper.sol";
 import {EQU} from "../../contracts/tokens/EQU.sol";
 import {IEFC, EFC} from "../../contracts/tokens/EFC.sol";
-import {IFeeDistributor, FeeDistributor, IPositionManagerMinimum, IERC721, Constants, Math, Address} from "../../contracts/staking/FeeDistributor.sol";
+import {IFeeDistributor, FeeDistributor, IPositionManagerMinimum, IUniswapV3PoolFactoryMinimum, IERC721, Constants, Math, Address} from "../../contracts/staking/FeeDistributor.sol";
 import {Governable} from "../../contracts/governance/Governable.sol";
 import {Router} from "../../contracts/plugins/Router.sol";
 import {veEQU} from "../../contracts/tokens/veEQU.sol";
@@ -46,8 +47,9 @@ contract FeeDistributorTest is Test {
     ERC20Test EQU;
     ERC20Test WETH;
     MockUniswapV3Pool v3PoolAddress;
+    MockUniswapV3PoolFactory v3PoolFactory;
     MockPositionManager v3PositionManager;
-    FeeDistributorHarness feeDistributor;
+    FeeDistributorTestHelper feeDistributor;
 
     // ==================== variables ====================
 
@@ -125,14 +127,15 @@ contract FeeDistributorTest is Test {
         // Initialize uniswap v3 position manager.
         v3PositionManager = new MockPositionManager(address(EQU), address(WETH));
 
-        feeDistributor = new FeeDistributorHarness(
+        v3PoolFactory = new MockUniswapV3PoolFactory();
+        feeDistributor = new FeeDistributorTestHelper(
             IEFC(address(EFCToken)),
             IERC20(address(EQU)),
             IERC20(address(WETH)),
             IERC20(address(veEQUToken)),
             IERC20(address(USDC)),
             Router(ROUTER_ADDRESS),
-            address(0),
+            v3PoolFactory,
             IPositionManagerMinimum(address(v3PositionManager)),
             WITHDRAWAL_PERIOD,
             address(v3PoolAddress)
@@ -432,6 +435,28 @@ contract FeeDistributorTest is Test {
     }
 
     /// ====== Test cases for the stakeV3Pos function ======
+
+    function test_RevertIf_InvalidUniswapV3Fee() public {
+        _mintArchitect(1);
+        _tokenApprove(EQU, ALICE, address(feeDistributor), 1e18);
+        (uint256 tokenId1, , , ) = _mintV3PosAndApprove(ALICE);
+        v3PositionManager.setFee(0);
+        vm.startPrank(ALICE);
+        vm.expectRevert(abi.encodeWithSelector(IFeeDistributor.InvalidUniswapV3Fee.selector, 0));
+        feeDistributor.stakeV3Pos(tokenId1, ALICE, 30);
+        vm.stopPrank();
+    }
+
+    function test_RevertIf_InvalidUniswapV3PositionNFT() public {
+        _mintArchitect(1);
+        _tokenApprove(EQU, ALICE, address(feeDistributor), 1e18);
+        (uint256 tokenId1, , , ) = _mintV3PosAndApprove(ALICE);
+        v3PositionManager.setFee(1000);
+        vm.startPrank(ALICE);
+        vm.expectRevert(abi.encodeWithSelector(IFeeDistributor.RequireFullRangePosition.selector, -887220, 887220, 30));
+        feeDistributor.stakeV3Pos(tokenId1, ALICE, 30);
+        vm.stopPrank();
+    }
 
     function test_SingleUserStakeV3Pos() public {
         _mintArchitect(1);

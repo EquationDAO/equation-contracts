@@ -111,6 +111,10 @@ interface IFeeDistributor {
     error InvalidUniswapV3PositionNFT(address token0, address token1);
     /// @notice The exchangeable amount of EQU is 0
     error ExchangeableEQUAmountIsZero();
+    /// @notice Invalid Uniswap V3 fee
+    error InvalidUniswapV3Fee(uint24 fee);
+    /// @notice The price range of the Uniswap V3 position is not full range
+    error RequireFullRangePosition(int24 tickLower, int24 tickUpper, int24 tickSpacing);
 
     struct StakeInfo {
         uint256 amount;
