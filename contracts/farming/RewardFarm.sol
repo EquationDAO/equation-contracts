@@ -397,6 +397,63 @@ contract RewardFarm is IRewardFarm, IRewardFarmCallback, Governable, ReentrancyG
         emit RewardCapChanged(_rewardCap);
     }
 
+    /// @notice Get the referral reward information associated with a pool
+    /// @param _referralToken The ID of the referral token
+    /// @param _pool The address of the pool
+    /// @return liquidity The total liquidity of all referees
+    /// @return rewardGrowthX64 The snapshot of
+    /// `PoolReward.referralTokenRewardGrowthX64` or `PoolReward.referralParentTokenRewardGrowthX64`
+    /// @return position The total position value of all referees
+    /// @return positionRewardGrowthX64 The snapshot of
+    /// `PoolReward.referralTokenPositionRewardGrowthX64` or `PoolReward.referralParentTokenPositionRewardGrowthX64`
+    function referralRewardsWithPool(
+        uint256 _referralToken,
+        IPool _pool
+    )
+        external
+        view
+        returns (uint128 liquidity, uint128 rewardGrowthX64, uint128 position, uint128 positionRewardGrowthX64)
+    {
+        RewardWithPosition memory reward = referralRewards[_referralToken].rewards[_pool];
+        return (reward.liquidity, reward.rewardGrowthX64, reward.position, reward.positionRewardGrowthX64);
+    }
+
+    /// @notice Get the reward information of the risk buffer fund associated with a pool
+    /// @param _account The owner of the risk buffer fund reward
+    /// @param _pool The address of the pool
+    /// @return liquidity The liquidity of risk buffer fund position
+    /// @return rewardGrowthX64 The snapshot of `PoolReward.riskBufferFundRewardGrowthX64`
+    function riskBufferFundRewardsWithPool(
+        address _account,
+        IPool _pool
+    ) external view returns (uint128 liquidity, uint128 rewardGrowthX64) {
+        Reward memory reward = riskBufferFundRewards[_account].rewards[_pool];
+        return (reward.liquidity, reward.rewardGrowthX64);
+    }
+
+    /// @notice Get the liquidity reward information associated with a pool
+    /// @param _account The owner of the liquidity reward
+    /// @param _pool The address of the pool
+    /// @return liquidity The liquidity of LP position
+    /// @return rewardGrowthX64 The snapshot of `PoolReward.liquidityRewardGrowthX64`
+    function liquidityRewardsWithPool(
+        address _account,
+        IPool _pool
+    ) external view returns (uint128 liquidity, uint128 rewardGrowthX64) {
+        Reward memory reward = liquidityRewards[_account].rewards[_pool];
+        return (reward.liquidity, reward.rewardGrowthX64);
+    }
+
+    /// @notice Get the position information associated with a pool
+    /// @param _account The owner of the position
+    /// @param _pool The address of the pool
+    /// @return long The position value of a long position
+    /// @return short The position value of a short position
+    function positionsWithPool(address _account, IPool _pool) external view returns (uint128 long, uint128 short) {
+        SidePosition memory position = positions[_account].sidePositions[_pool];
+        return (position.long, position.short);
+    }
+
     function _updateAllPoolReward() private {
         for (uint256 i; i < poolIndexNext; ++i) {
             IPool pool = indexPools[_maskPoolIndex(i)];
