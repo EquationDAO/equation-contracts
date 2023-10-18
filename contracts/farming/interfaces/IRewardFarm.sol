@@ -226,13 +226,13 @@ interface IRewardFarm {
     }
 
     /// @notice Get mining rate configuration
-    /// @param liquidityRate The liquidity rate as a percentage of mining,
+    /// @return liquidityRate The liquidity rate as a percentage of mining,
     /// denominated in ten thousandths of a bip (i.e. 1e-8)
-    /// @param riskBufferFundLiquidityRate The risk buffer fund liquidity rate as a percentage of mining,
+    /// @return riskBufferFundLiquidityRate The risk buffer fund liquidity rate as a percentage of mining,
     /// denominated in ten thousandths of a bip (i.e. 1e-8)
-    /// @param referralTokenRate The referral token rate as a percentage of mining,
+    /// @return referralTokenRate The referral token rate as a percentage of mining,
     /// denominated in ten thousandths of a bip (i.e. 1e-8)
-    /// @param referralParentTokenRate The referral parent token rate as a percentage of mining,
+    /// @return referralParentTokenRate The referral parent token rate as a percentage of mining,
     /// denominated in ten thousandths of a bip (i.e. 1e-8)
     function config()
         external
