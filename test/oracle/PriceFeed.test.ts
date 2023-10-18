@@ -48,7 +48,7 @@ describe("PriceFeed", () => {
         await sequencerUptimeFeed.deployed();
 
         const mockStableTokenPriceFeedFactory = await ethers.getContractFactory("MockChainLinkPriceFeed");
-        const mockStableTokenPriceFeed = await mockRefPriceFeedFactory.deploy();
+        const mockStableTokenPriceFeed = await mockStableTokenPriceFeedFactory.deploy();
         await mockStableTokenPriceFeed.deployed();
         const latestBlockTimestamp = await time.latest();
         await mockStableTokenPriceFeed.setRoundData(
@@ -828,7 +828,7 @@ describe("PriceFeed", () => {
             );
             await priceFeed.setRefPriceFeed(weth.address, mockRefPriceFeed.address);
             const latestBlockTimestamp = await time.latest();
-            // stable token price = $1.1
+            // stableToken / usd = 1.1
             await mockStableTokenPriceFeed.setRoundData(
                 100,
                 (1n * 10n ** refPriceDecimals * 11n) / 10n,
@@ -836,15 +836,16 @@ describe("PriceFeed", () => {
                 latestBlockTimestamp,
                 100
             );
-            // token/stableToken = 100
+            // token / usd = 110
             await mockRefPriceFeed.setRoundData(
                 100,
-                100n * 10n ** refPriceDecimals,
+                110n * 10n ** refPriceDecimals,
                 latestBlockTimestamp,
                 latestBlockTimestamp,
                 100
             );
-            // refTokenPrice = 100*1.1 = $110
+
+            // token / stableToken = 110/1.1 = $100
             await expect(
                 priceFeed.setPriceX96s(
                     [
@@ -861,25 +862,25 @@ describe("PriceFeed", () => {
                     weth.address,
                     toPriceX96("80", tokenDecimals, usdDecimals, refPriceDecimals),
                     toPriceX96("80", tokenDecimals, usdDecimals, refPriceDecimals),
-                    toPriceX96("110", tokenDecimals, usdDecimals, refPriceDecimals)
+                    toPriceX96("100", tokenDecimals, usdDecimals, refPriceDecimals)
                 );
             await expect(await priceFeed.getMinPriceX96(weth.address)).to.be.eq(
                 toPriceX96("80", tokenDecimals, usdDecimals, refPriceDecimals)
             );
             await expect(await priceFeed.getMaxPriceX96(weth.address)).to.be.eq(
-                toPriceX96("110", tokenDecimals, usdDecimals, refPriceDecimals)
+                toPriceX96("100", tokenDecimals, usdDecimals, refPriceDecimals)
             );
 
-            // stable token price = $0.99
+            // stableToken / usd = 0.99
             await mockStableTokenPriceFeed.setRoundData(
                 100,
-                (1n * 10n ** refPriceDecimals * 99n) / 100n,
+                (1n * 10n ** refPriceDecimals * 50n) / 100n,
                 latestBlockTimestamp,
                 latestBlockTimestamp,
                 100
             );
 
-            // refTokenPrice = 100*0.99 = $99
+            // token / stableToken = 110/0.5 = 220
             await expect(
                 priceFeed.setPriceX96s(
                     [
@@ -896,13 +897,48 @@ describe("PriceFeed", () => {
                     weth.address,
                     toPriceX96("80", tokenDecimals, usdDecimals, refPriceDecimals),
                     toPriceX96("80", tokenDecimals, usdDecimals, refPriceDecimals),
-                    toPriceX96("99", tokenDecimals, usdDecimals, refPriceDecimals)
+                    toPriceX96("220", tokenDecimals, usdDecimals, refPriceDecimals)
                 );
             await expect(await priceFeed.getMinPriceX96(weth.address)).to.be.eq(
                 toPriceX96("80", tokenDecimals, usdDecimals, refPriceDecimals)
             );
             await expect(await priceFeed.getMaxPriceX96(weth.address)).to.be.eq(
-                toPriceX96("99", tokenDecimals, usdDecimals, refPriceDecimals)
+                toPriceX96("220", tokenDecimals, usdDecimals, refPriceDecimals)
+            );
+
+            await priceFeed.setRefPriceExtraSample(1);
+
+            await mockRefPriceFeed.setRoundData(
+                99,
+                30n * 10n ** refPriceDecimals,
+                latestBlockTimestamp,
+                latestBlockTimestamp,
+                99
+            );
+
+            await expect(
+                priceFeed.setPriceX96s(
+                    [
+                        {
+                            token: weth.address,
+                            priceX96: toPriceX96("80", tokenDecimals, usdDecimals, refPriceDecimals),
+                        },
+                    ],
+                    latestBlockTimestamp + 1
+                )
+            )
+                .emit(priceFeed, "PriceUpdated")
+                .withArgs(
+                    weth.address,
+                    toPriceX96("80", tokenDecimals, usdDecimals, refPriceDecimals),
+                    toPriceX96("60", tokenDecimals, usdDecimals, refPriceDecimals),
+                    toPriceX96("220", tokenDecimals, usdDecimals, refPriceDecimals)
+                );
+            await expect(await priceFeed.getMinPriceX96(weth.address)).to.be.eq(
+                toPriceX96("60", tokenDecimals, usdDecimals, refPriceDecimals)
+            );
+            await expect(await priceFeed.getMaxPriceX96(weth.address)).to.be.eq(
+                toPriceX96("220", tokenDecimals, usdDecimals, refPriceDecimals)
             );
         });
     });

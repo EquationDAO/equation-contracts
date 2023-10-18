@@ -245,28 +245,36 @@ contract PriceFeed is IPriceFeed, Governable {
         if (refUSDPrice <= 0) revert InvalidReferencePrice(refUSDPrice);
         if (_refHeartbeatDuration != 0 && block.timestamp - timestamp > _refHeartbeatDuration)
             revert ReferencePriceTimeout(block.timestamp - timestamp);
-
-        int256 refPrice = int256(
-            Math.mulDiv(uint256(refUSDPrice), uint256(_stableTokenPrice), 10 ** uint256(_stableTokenPriceDecimals))
-        );
+        uint256 priceDecimalsMagnification = 10 ** uint256(_stableTokenPriceDecimals);
+        uint256 refPrice = Math.mulDiv(uint256(refUSDPrice), priceDecimalsMagnification, uint256(_stableTokenPrice));
         uint256 magnification = 10 ** uint256(_aggregator.decimals());
-        _latestRefPriceX96 = _toPriceX96(refPrice.toUint256(), magnification);
+        _latestRefPriceX96 = _toPriceX96(refPrice, magnification);
         if (slot.refPriceExtraSample == 0) return (_latestRefPriceX96, _latestRefPriceX96, _latestRefPriceX96);
 
-        (int256 minRefPrice, int256 maxRefPrice) = (refPrice, refPrice);
+        (int256 minRefUSDPrice, int256 maxRefUSDPrice) = (refUSDPrice, refUSDPrice);
         for (uint256 i = 1; i <= slot.refPriceExtraSample; ) {
             (, int256 price, , , ) = _aggregator.getRoundData(uint80(roundID - i));
-            if (price > maxRefPrice) maxRefPrice = price;
+            if (price > maxRefUSDPrice) maxRefUSDPrice = price;
 
-            if (price < minRefPrice) minRefPrice = price;
+            if (price < minRefUSDPrice) minRefUSDPrice = price;
 
             // prettier-ignore
             unchecked { ++i; }
         }
-        if (minRefPrice <= 0) revert InvalidReferencePrice(refPrice);
+        if (minRefUSDPrice <= 0) revert InvalidReferencePrice(minRefUSDPrice);
 
-        _minRefPriceX96 = _toPriceX96(minRefPrice.toUint256(), magnification);
-        _maxRefPriceX96 = _toPriceX96(maxRefPrice.toUint256(), magnification);
+        uint256 minRefPrice = Math.mulDiv(
+            uint256(minRefUSDPrice),
+            priceDecimalsMagnification,
+            uint256(_stableTokenPrice)
+        );
+        uint256 maxRefPrice = Math.mulDiv(
+            uint256(maxRefUSDPrice),
+            priceDecimalsMagnification,
+            uint256(_stableTokenPrice)
+        );
+        _minRefPriceX96 = _toPriceX96(minRefPrice, magnification);
+        _maxRefPriceX96 = _toPriceX96(maxRefPrice, magnification);
     }
 
     function _toPriceX96(uint256 _price, uint256 _magnification) private pure returns (uint160) {
