@@ -210,8 +210,11 @@ async function main() {
     if (network.sequencerUpTimeFeed != undefined) {
         await priceFeed.setSequencerUptimeFeed(network.sequencerUpTimeFeed);
     }
+    if (network.usdChainLinkPriceFeed != undefined) {
+        await priceFeed.setStableTokenPriceFeed(network.usd, network.usdChainLinkPriceFeed);
+    }
     for (let item of network.tokens) {
-        await priceFeed.setRefPriceFeeds(item.address, item.chainLinkPriceFeed);
+        await priceFeed.setRefPriceFeed(item.address, item.chainLinkPriceFeed);
         await priceFeed.setMaxCumulativeDeltaDiffs(item.address, item.maxCumulativeDeltaDiff);
     }
     // await priceFeed.setPriceX96s(
