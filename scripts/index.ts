@@ -119,7 +119,7 @@ async function main() {
 
     // deploy price feed
     const PriceFeed = await ethers.getContractFactory("PriceFeed");
-    const priceFeed = await PriceFeed.deploy();
+    const priceFeed = await PriceFeed.deploy(network.usdChainLinkPriceFeed, 0);
     await priceFeed.deployed();
     expectAddr(priceFeed.address, priceFeedAddr);
     console.log(`PriceFeed deployed to: ${priceFeed.address}`);
@@ -211,7 +211,7 @@ async function main() {
         await priceFeed.setSequencerUptimeFeed(network.sequencerUpTimeFeed);
     }
     for (let item of network.tokens) {
-        await priceFeed.setRefPriceFeeds(item.address, item.chainLinkPriceFeed);
+        await priceFeed.setRefPriceFeed(item.address, item.chainLinkPriceFeed);
         await priceFeed.setMaxCumulativeDeltaDiffs(item.address, item.maxCumulativeDeltaDiff);
     }
     // await priceFeed.setPriceX96s(

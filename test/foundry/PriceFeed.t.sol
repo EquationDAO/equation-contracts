@@ -13,18 +13,29 @@ contract PriceFeedTest is Test {
     using SafeCast for *;
 
     event PriceUpdated(IERC20 indexed token, uint160 priceX96, uint160 minPriceX96, uint160 maxPriceX96);
-    address constant WETH = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
+    address constant WETH = address(0);
+    address constant stableToken = address(1);
     uint8 constant refPriceDecimals = 8;
 
     PriceFeed priceFeed;
     MockChainLinkPriceFeed mockChainLink;
+    MockChainLinkPriceFeed mockStableTokenChainLink;
 
     function setUp() public {
-        priceFeed = new PriceFeed();
+        mockStableTokenChainLink = new MockChainLinkPriceFeed();
+        mockStableTokenChainLink.setRoundData(
+            100,
+            int256(10 ** refPriceDecimals),
+            block.timestamp,
+            block.timestamp,
+            100
+        );
+        priceFeed = new PriceFeed(IChainLinkAggregator(address(mockStableTokenChainLink)), 0);
         priceFeed.setUpdater(address(1), true);
         priceFeed.setMaxCumulativeDeltaDiffs(IERC20(WETH), 100 * 1000);
         mockChainLink = new MockChainLinkPriceFeed();
-        priceFeed.setRefPriceFeeds(IERC20(WETH), IChainLinkAggregator(address(mockChainLink)));
+
+        priceFeed.setRefPriceFeed(IERC20(WETH), IChainLinkAggregator(address(mockChainLink)));
     }
 
     function test_SetPrices() public {

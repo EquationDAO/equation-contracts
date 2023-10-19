@@ -40,6 +40,14 @@ interface IPriceFeed {
     /// @param elapsed The time elapsed since the last price update.
     error ReferencePriceTimeout(uint256 elapsed);
 
+    /// @notice Stable token price timeout
+    /// @param elapsed The time elapsed since the last price update.
+    error StableTokenPriceTimeout(uint256 elapsed);
+
+    /// @notice Invalid stable token price
+    /// @param stableTokenPrice Stable token price
+    error InvalidStableTokenPrice(int256 stableTokenPrice);
+
     /// @notice Invalid update timestamp
     /// @param timestamp Update timestamp
     error InvalidUpdateTimestamp(uint64 timestamp);
@@ -81,6 +89,14 @@ interface IPriceFeed {
         IERC20 token;
         uint160 priceX96;
     }
+
+    /// @notice Get the address of stable token price feed
+    /// @return priceFeed The address of stable token price feed
+    function stableTokenPriceFeed() external view returns (IChainLinkAggregator priceFeed);
+
+    /// @notice Get the expected update interval of stable token price
+    /// @return duration The expected update interval of stable token price
+    function stableTokenPriceFeedHeartBeatDuration() external view returns (uint32 duration);
 
     /// @notice The 0th storage slot in the price feed stores many values, which helps reduce gas
     /// costs when interacting with the price feed.
@@ -133,11 +149,11 @@ interface IPriceFeed {
     ///
     /// The price of ETH is $2000, and ETH has 18 decimals, so the price of one unit of ETH is $`2000 / (10 ^ 18)`.
     ///
-    /// The price of USDC is $1, and USDC has 6 decimals, so the price of one unit of USDC is $`1 / (10 ^ 6)`.
+    /// The price of USD is $1, and USD has 6 decimals, so the price of one unit of USD is $`1 / (10 ^ 6)`.
     ///
-    /// Then the price of ETH/USDC pair is 2000 / (10 ^ 18) * (10 ^ 6)
+    /// Then the price of ETH/USD pair is 2000 / (10 ^ 18) * (10 ^ 6)
     ///
-    /// Finally convert the price to Q64.96, ETH/USDC priceX96 = 2000 / (10 ^ 18) * (10 ^ 6) * (2 ^ 96)
+    /// Finally convert the price to Q64.96, ETH/USD priceX96 = 2000 / (10 ^ 18) * (10 ^ 6) * (2 ^ 96)
     /// @param tokenPrices Array of token addresses and prices to update for
     /// @param timestamp The timestamp of price update
     function setPriceX96s(TokenPrice[] calldata tokenPrices, uint64 timestamp) external;
@@ -171,7 +187,7 @@ interface IPriceFeed {
     /// @notice Set ChainLink contract address for corresponding token.
     /// @param token The token address to set
     /// @param priceFeed ChainLink contract address
-    function setRefPriceFeeds(IERC20 token, IChainLinkAggregator priceFeed) external;
+    function setRefPriceFeed(IERC20 token, IChainLinkAggregator priceFeed) external;
 
     /// @notice Set SequencerUptimeFeed contract address.
     /// @param sequencerUptimeFeed SequencerUptimeFeed contract address
@@ -209,4 +225,12 @@ interface IPriceFeed {
     /// @notice Set the timeout for price update transactions.
     /// @param updateTxTimeout The timeout for price update transactions
     function setUpdateTxTimeout(uint32 updateTxTimeout) external;
+
+    /// @notice Set ChainLink contract address and heart beat duration config for stable token.
+    /// @param stableTokenPriceFeed The stable token address to set
+    /// @param stableTokenPriceFeedHeartBeatDuration The expected update interval of stable token price
+    function setStableTokenPriceFeed(
+        IChainLinkAggregator stableTokenPriceFeed,
+        uint32 stableTokenPriceFeedHeartBeatDuration
+    ) external;
 }
