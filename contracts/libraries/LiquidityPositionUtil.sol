@@ -32,7 +32,10 @@ library LiquidityPositionUtil {
     ) internal pure returns (uint256 unrealizedLoss) {
         int256 unrealizedPnL = PositionUtil.calculateUnrealizedPnL(_side, _netSize, _entryPriceX96, _indexPriceX96);
         unrealizedPnL += _riskBufferFund;
-        return unrealizedPnL >= 0 ? 0 : uint256(-unrealizedPnL);
+        // Even if `unrealizedPnL` is `type(int256).min`, the unsafe type conversion
+        // will still produce the correct result
+        // prettier-ignore
+        unchecked { return unrealizedPnL >= 0 ? 0 : uint256(-unrealizedPnL); }
     }
 
     /// @notice Update the global unrealized loss metrics

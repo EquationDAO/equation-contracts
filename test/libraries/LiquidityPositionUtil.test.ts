@@ -98,6 +98,19 @@ describe("LiquidityPositionUtil", () => {
                 );
                 expect(unrealizedLoss).to.eq(0n);
             });
+
+            it("risk buffer fund is equal to type(int256).min", async () => {
+                const {liquidityPositionUtil} = await loadFixture(deployFixture);
+                expect(
+                    await liquidityPositionUtil.calculateUnrealizedLoss(
+                        SIDE_LONG,
+                        0n,
+                        0n,
+                        0n,
+                        -57896044618658097711785492504343953926634992332820282019728792003956564819968n
+                    )
+                ).to.eq(57896044618658097711785492504343953926634992332820282019728792003956564819968n);
+            });
         });
 
         describe("side is short", () => {
