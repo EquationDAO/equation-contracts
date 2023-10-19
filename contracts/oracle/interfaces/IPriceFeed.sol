@@ -32,9 +32,6 @@ interface IPriceFeed {
     /// @notice Reference price feed not set
     error ReferencePriceFeedNotSet();
 
-    /// @notice Stable token price feed not set
-    error StableTokenPriceFeedNotSet();
-
     /// @notice Invalid reference price
     /// @param referencePrice Reference price
     error InvalidReferencePrice(int256 referencePrice);
@@ -46,10 +43,6 @@ interface IPriceFeed {
     /// @notice Invalid stable token price
     /// @param stableTokenPrice Stable token price
     error InvalidStableTokenPrice(int256 stableTokenPrice);
-
-    /// @notice Stable token price timeout
-    /// @param elapsed The time elapsed since the last price update.
-    error StableTokenPriceTimeout(uint256 elapsed);
 
     /// @notice Invalid update timestamp
     /// @param timestamp Update timestamp
@@ -183,11 +176,6 @@ interface IPriceFeed {
     /// @param token The token address to set
     /// @param priceFeed ChainLink contract address
     function setRefPriceFeed(IERC20 token, IChainLinkAggregator priceFeed) external;
-
-    /// @notice Set ChainLink contract address for stable token.
-    /// @param stableToken The stable token address to set
-    /// @param priceFeed ChainLink contract address
-    function setStableTokenPriceFeed(IERC20 stableToken, IChainLinkAggregator priceFeed) external;
 
     /// @notice Set SequencerUptimeFeed contract address.
     /// @param sequencerUptimeFeed SequencerUptimeFeed contract address

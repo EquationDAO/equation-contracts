@@ -34,19 +34,6 @@ describe("PriceFeed", () => {
         const weth = (await ERC20.deploy("WETH", "WETH", tokenDecimals, 100000000000000000000000n)) as ERC20Test;
         await weth.deployed();
 
-        const priceFeedFactory = await ethers.getContractFactory("PriceFeed");
-        const priceFeed = await priceFeedFactory.deploy();
-        await priceFeed.deployed();
-        await priceFeed.setUpdater(owner.address, true);
-        await priceFeed.setMaxCumulativeDeltaDiffs(weth.address, 100 * 1000);
-
-        const mockRefPriceFeedFactory = await ethers.getContractFactory("MockChainLinkPriceFeed");
-        const mockRefPriceFeed = await mockRefPriceFeedFactory.deploy();
-        await mockRefPriceFeed.deployed();
-
-        const sequencerUptimeFeed = await mockRefPriceFeedFactory.deploy();
-        await sequencerUptimeFeed.deployed();
-
         const mockStableTokenPriceFeedFactory = await ethers.getContractFactory("MockChainLinkPriceFeed");
         const mockStableTokenPriceFeed = await mockStableTokenPriceFeedFactory.deploy();
         await mockStableTokenPriceFeed.deployed();
@@ -58,11 +45,19 @@ describe("PriceFeed", () => {
             latestBlockTimestamp,
             99
         );
-        await priceFeed.setStableTokenPriceFeed(
-            "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
-            mockStableTokenPriceFeed.address
-        );
 
+        const priceFeedFactory = await ethers.getContractFactory("PriceFeed");
+        const priceFeed = await priceFeedFactory.deploy(mockStableTokenPriceFeed.address);
+        await priceFeed.deployed();
+        await priceFeed.setUpdater(owner.address, true);
+        await priceFeed.setMaxCumulativeDeltaDiffs(weth.address, 100 * 1000);
+
+        const mockRefPriceFeedFactory = await ethers.getContractFactory("MockChainLinkPriceFeed");
+        const mockRefPriceFeed = await mockRefPriceFeedFactory.deploy();
+        await mockRefPriceFeed.deployed();
+
+        const sequencerUptimeFeed = await mockRefPriceFeedFactory.deploy();
+        await sequencerUptimeFeed.deployed();
         return {priceFeed, mockRefPriceFeed, usdc, weth, sequencerUptimeFeed, mockStableTokenPriceFeed};
     }
 

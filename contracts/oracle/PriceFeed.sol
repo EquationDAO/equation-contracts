@@ -19,7 +19,7 @@ contract PriceFeed is IPriceFeed, Governable {
     uint8 public constant USD_DECIMALS = 6;
     uint8 public constant TOKEN_DECIMALS = 18;
 
-    IERC20 public stableToken;
+    IChainLinkAggregator public immutable stableTokenPriceFeed;
     /// @inheritdoc IPriceFeed
     Slot public override slot;
     mapping(address => bool) private updaters;
@@ -37,8 +37,9 @@ contract PriceFeed is IPriceFeed, Governable {
         _;
     }
 
-    constructor() {
+    constructor(IChainLinkAggregator _stableTokenPriceFeed) {
         (slot.maxDeviationRatio, slot.cumulativeRoundDuration, slot.updateTxTimeout) = (100e3, 1 minutes, 1 minutes);
+        stableTokenPriceFeed = _stableTokenPriceFeed;
     }
 
     /// @inheritdoc IPriceFeed
@@ -49,7 +50,7 @@ contract PriceFeed is IPriceFeed, Governable {
 
         minPriceX96s = new uint160[](priceX96sLength);
         maxPriceX96s = new uint160[](priceX96sLength);
-        (int256 stableTokenPrice, uint8 stableTokenDecimals) = _getStableTokenPrice();
+        (uint256 stableTokenPrice, uint8 stableTokenDecimals) = _getStableTokenPrice();
         for (uint256 i; i < priceX96sLength; ) {
             uint160 priceX96 = _tokenPrices[i].priceX96;
             IERC20 token = _tokenPrices[i].token;
@@ -87,7 +88,7 @@ contract PriceFeed is IPriceFeed, Governable {
     function setPriceX96s(TokenPrice[] calldata _tokenPrices, uint64 _timestamp) external override onlyUpdater {
         uint256 tokenPricesLength = _tokenPrices.length;
         _checkSequencerUp();
-        (int256 stableTokenPrice, uint8 stableTokenDecimals) = _getStableTokenPrice();
+        (uint256 stableTokenPrice, uint8 stableTokenDecimals) = _getStableTokenPrice();
         for (uint256 i; i < tokenPricesLength; ++i) {
             uint160 priceX96 = _tokenPrices[i].priceX96;
             IERC20 token = _tokenPrices[i].token;
@@ -157,12 +158,6 @@ contract PriceFeed is IPriceFeed, Governable {
     /// @inheritdoc IPriceFeed
     function setRefPriceFeed(IERC20 _token, IChainLinkAggregator _priceFeed) external override onlyGov {
         tokenConfigs[_token].refPriceFeed = _priceFeed;
-    }
-
-    /// @inheritdoc IPriceFeed
-    function setStableTokenPriceFeed(IERC20 _stableToken, IChainLinkAggregator _priceFeed) external override onlyGov {
-        stableToken = _stableToken;
-        tokenConfigs[_stableToken].refPriceFeed = _priceFeed;
     }
 
     /// @inheritdoc IPriceFeed
@@ -238,7 +233,7 @@ contract PriceFeed is IPriceFeed, Governable {
     function _getReferencePriceX96(
         IChainLinkAggregator _aggregator,
         uint32 _refHeartbeatDuration,
-        int256 _stableTokenPrice,
+        uint256 _stableTokenPrice,
         uint8 _stableTokenPriceDecimals
     ) private view returns (uint160 _latestRefPriceX96, uint160 _minRefPriceX96, uint160 _maxRefPriceX96) {
         (uint80 roundID, int256 refUSDPrice, , uint256 timestamp, ) = _aggregator.latestRoundData();
@@ -246,7 +241,7 @@ contract PriceFeed is IPriceFeed, Governable {
         if (_refHeartbeatDuration != 0 && block.timestamp - timestamp > _refHeartbeatDuration)
             revert ReferencePriceTimeout(block.timestamp - timestamp);
         uint256 priceDecimalsMagnification = 10 ** uint256(_stableTokenPriceDecimals);
-        uint256 refPrice = Math.mulDiv(uint256(refUSDPrice), priceDecimalsMagnification, uint256(_stableTokenPrice));
+        uint256 refPrice = Math.mulDiv(uint256(refUSDPrice), priceDecimalsMagnification, _stableTokenPrice);
         uint256 magnification = 10 ** uint256(_aggregator.decimals());
         _latestRefPriceX96 = _toPriceX96(refPrice, magnification);
         if (slot.refPriceExtraSample == 0) return (_latestRefPriceX96, _latestRefPriceX96, _latestRefPriceX96);
@@ -263,16 +258,8 @@ contract PriceFeed is IPriceFeed, Governable {
         }
         if (minRefUSDPrice <= 0) revert InvalidReferencePrice(minRefUSDPrice);
 
-        uint256 minRefPrice = Math.mulDiv(
-            uint256(minRefUSDPrice),
-            priceDecimalsMagnification,
-            uint256(_stableTokenPrice)
-        );
-        uint256 maxRefPrice = Math.mulDiv(
-            uint256(maxRefUSDPrice),
-            priceDecimalsMagnification,
-            uint256(_stableTokenPrice)
-        );
+        uint256 minRefPrice = Math.mulDiv(uint256(minRefUSDPrice), priceDecimalsMagnification, _stableTokenPrice);
+        uint256 maxRefPrice = Math.mulDiv(uint256(maxRefUSDPrice), priceDecimalsMagnification, _stableTokenPrice);
         _minRefPriceX96 = _toPriceX96(minRefPrice, magnification);
         _maxRefPriceX96 = _toPriceX96(maxRefPrice, magnification);
     }
@@ -337,15 +324,10 @@ contract PriceFeed is IPriceFeed, Governable {
         if (block.timestamp - startedAt <= GRACE_PERIOD_TIME) revert GracePeriodNotOver(startedAt);
     }
 
-    function _getStableTokenPrice() private view returns (int256, uint8) {
-        TokenConfig memory stableTokenConfig = tokenConfigs[stableToken];
-        if (address(stableTokenConfig.refPriceFeed) == address(0)) revert StableTokenPriceFeedNotSet();
-        (, int256 stableTokenPrice, , uint256 timestamp, ) = stableTokenConfig.refPriceFeed.latestRoundData();
+    function _getStableTokenPrice() private view returns (uint256, uint8) {
+        IChainLinkAggregator priceFeed = stableTokenPriceFeed;
+        (, int256 stableTokenPrice, , , ) = priceFeed.latestRoundData();
         if (stableTokenPrice <= 0) revert InvalidStableTokenPrice(stableTokenPrice);
-        if (
-            stableTokenConfig.refHeartbeatDuration != 0 &&
-            block.timestamp - timestamp > stableTokenConfig.refHeartbeatDuration
-        ) revert StableTokenPriceTimeout(block.timestamp - timestamp);
-        return (stableTokenPrice, stableTokenConfig.refPriceFeed.decimals());
+        return (uint256(stableTokenPrice), priceFeed.decimals());
     }
 }

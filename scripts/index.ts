@@ -119,7 +119,7 @@ async function main() {
 
     // deploy price feed
     const PriceFeed = await ethers.getContractFactory("PriceFeed");
-    const priceFeed = await PriceFeed.deploy();
+    const priceFeed = await PriceFeed.deploy(network.usdChainLinkPriceFeed);
     await priceFeed.deployed();
     expectAddr(priceFeed.address, priceFeedAddr);
     console.log(`PriceFeed deployed to: ${priceFeed.address}`);
@@ -209,9 +209,6 @@ async function main() {
     await priceFeed.setUpdater(deployer.address, true);
     if (network.sequencerUpTimeFeed != undefined) {
         await priceFeed.setSequencerUptimeFeed(network.sequencerUpTimeFeed);
-    }
-    if (network.usdChainLinkPriceFeed != undefined) {
-        await priceFeed.setStableTokenPriceFeed(network.usd, network.usdChainLinkPriceFeed);
     }
     for (let item of network.tokens) {
         await priceFeed.setRefPriceFeed(item.address, item.chainLinkPriceFeed);

@@ -22,10 +22,6 @@ contract PriceFeedTest is Test {
     MockChainLinkPriceFeed mockStableTokenChainLink;
 
     function setUp() public {
-        priceFeed = new PriceFeed();
-        priceFeed.setUpdater(address(1), true);
-        priceFeed.setMaxCumulativeDeltaDiffs(IERC20(WETH), 100 * 1000);
-        mockChainLink = new MockChainLinkPriceFeed();
         mockStableTokenChainLink = new MockChainLinkPriceFeed();
         mockStableTokenChainLink.setRoundData(
             100,
@@ -34,8 +30,12 @@ contract PriceFeedTest is Test {
             block.timestamp,
             100
         );
+        priceFeed = new PriceFeed(IChainLinkAggregator(address(mockStableTokenChainLink)));
+        priceFeed.setUpdater(address(1), true);
+        priceFeed.setMaxCumulativeDeltaDiffs(IERC20(WETH), 100 * 1000);
+        mockChainLink = new MockChainLinkPriceFeed();
+
         priceFeed.setRefPriceFeed(IERC20(WETH), IChainLinkAggregator(address(mockChainLink)));
-        priceFeed.setStableTokenPriceFeed(IERC20(stableToken), IChainLinkAggregator(address(mockStableTokenChainLink)));
     }
 
     function test_SetPrices() public {
