@@ -1,85 +1,85 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Pool gas tests #adjustLiquidityPositionMargin decreasing the margin do not adjust funding rate 1`] = `119402`;
+exports[`Pool gas tests #adjustLiquidityPositionMargin decreasing the margin do not adjust funding rate 1`] = `119407`;
 
-exports[`Pool gas tests #adjustLiquidityPositionMargin decreasing the margin with adjusting funding rate 1`] = `163677`;
+exports[`Pool gas tests #adjustLiquidityPositionMargin decreasing the margin with adjusting funding rate 1`] = `163682`;
 
-exports[`Pool gas tests #adjustLiquidityPositionMargin increasing the margin do not adjust funding rate 1`] = `103471`;
+exports[`Pool gas tests #adjustLiquidityPositionMargin increasing the margin do not adjust funding rate 1`] = `103477`;
 
-exports[`Pool gas tests #adjustLiquidityPositionMargin increasing the margin with adjusting funding rate 1`] = `147722`;
+exports[`Pool gas tests #adjustLiquidityPositionMargin increasing the margin with adjusting funding rate 1`] = `147727`;
 
-exports[`Pool gas tests #closeLiquidityPosition closing the liquidity position do not adjust funding rate 1`] = `212528`;
+exports[`Pool gas tests #closeLiquidityPosition closing the liquidity position do not adjust funding rate 1`] = `212533`;
 
-exports[`Pool gas tests #closeLiquidityPosition closing the liquidity position with adjusting funding rate 1`] = `254903`;
+exports[`Pool gas tests #closeLiquidityPosition closing the liquidity position with adjusting funding rate 1`] = `254908`;
 
-exports[`Pool gas tests #decreasePosition closing the position do not adjust funding rate 1`] = `192293`;
+exports[`Pool gas tests #decreasePosition closing the position do not adjust funding rate 1`] = `192299`;
 
-exports[`Pool gas tests #decreasePosition closing the position with adjusting funding rate 1`] = `232679`;
+exports[`Pool gas tests #decreasePosition closing the position with adjusting funding rate 1`] = `232684`;
 
-exports[`Pool gas tests #decreasePosition decreasing the margin do not adjust funding rate 1`] = `141260`;
+exports[`Pool gas tests #decreasePosition decreasing the margin do not adjust funding rate 1`] = `141265`;
 
-exports[`Pool gas tests #decreasePosition decreasing the margin with adjust funding rate 1`] = `186700`;
+exports[`Pool gas tests #decreasePosition decreasing the margin with adjust funding rate 1`] = `186705`;
 
-exports[`Pool gas tests #decreasePosition decreasing the size and the margin do not adjust funding rate 1`] = `186384`;
+exports[`Pool gas tests #decreasePosition decreasing the size and the margin do not adjust funding rate 1`] = `186389`;
 
-exports[`Pool gas tests #decreasePosition decreasing the size and the margin with adjusting funding rate 1`] = `229074`;
+exports[`Pool gas tests #decreasePosition decreasing the size and the margin with adjusting funding rate 1`] = `229079`;
 
-exports[`Pool gas tests #decreasePosition decreasing the size do not adjust funding rate 1`] = `161377`;
+exports[`Pool gas tests #decreasePosition decreasing the size do not adjust funding rate 1`] = `161382`;
 
-exports[`Pool gas tests #decreasePosition decreasing the size with adjusting funding rate 1`] = `204430`;
+exports[`Pool gas tests #decreasePosition decreasing the size with adjusting funding rate 1`] = `204435`;
 
-exports[`Pool gas tests #decreaseRiskBufferFundPosition decrease risk buffer fund position do not adjust funding rate 1`] = `197409`;
+exports[`Pool gas tests #decreaseRiskBufferFundPosition decrease risk buffer fund position do not adjust funding rate 1`] = `197415`;
 
-exports[`Pool gas tests #decreaseRiskBufferFundPosition decrease risk buffer fund position do not adjust funding rate 2`] = `194533`;
+exports[`Pool gas tests #decreaseRiskBufferFundPosition decrease risk buffer fund position do not adjust funding rate 2`] = `194538`;
 
-exports[`Pool gas tests #decreaseRiskBufferFundPosition decrease risk buffer fund position with adjusting funding rate 1`] = `197409`;
+exports[`Pool gas tests #decreaseRiskBufferFundPosition decrease risk buffer fund position with adjusting funding rate 1`] = `197415`;
 
-exports[`Pool gas tests #decreaseRiskBufferFundPosition decrease risk buffer fund position with adjusting funding rate 2`] = `194533`;
+exports[`Pool gas tests #decreaseRiskBufferFundPosition decrease risk buffer fund position with adjusting funding rate 2`] = `194538`;
 
-exports[`Pool gas tests #increasePosition increasing the margin do not adjust funding rate 1`] = `125862`;
+exports[`Pool gas tests #increasePosition increasing the margin do not adjust funding rate 1`] = `125867`;
 
-exports[`Pool gas tests #increasePosition increasing the margin with adjusting funding rate 1`] = `170486`;
+exports[`Pool gas tests #increasePosition increasing the margin with adjusting funding rate 1`] = `170491`;
 
-exports[`Pool gas tests #increasePosition increasing the size and the margin do not adjust funding rate 1`] = `180828`;
+exports[`Pool gas tests #increasePosition increasing the size and the margin do not adjust funding rate 1`] = `180833`;
 
-exports[`Pool gas tests #increasePosition increasing the size and the margin with adjusting funding rate 1`] = `221514`;
+exports[`Pool gas tests #increasePosition increasing the size and the margin with adjusting funding rate 1`] = `221519`;
 
-exports[`Pool gas tests #increasePosition increasing the size do not adjust funding rate 1`] = `171586`;
+exports[`Pool gas tests #increasePosition increasing the size do not adjust funding rate 1`] = `171591`;
 
-exports[`Pool gas tests #increasePosition increasing the size with adjusting funding rate 1`] = `213152`;
+exports[`Pool gas tests #increasePosition increasing the size with adjusting funding rate 1`] = `213157`;
 
-exports[`Pool gas tests #increasePosition opening the position do not adjust funding rate 1`] = `339656`;
+exports[`Pool gas tests #increasePosition opening the position do not adjust funding rate 1`] = `339661`;
 
-exports[`Pool gas tests #increasePosition opening the position do not adjust funding rate 2`] = `339656`;
+exports[`Pool gas tests #increasePosition opening the position do not adjust funding rate 2`] = `339661`;
 
-exports[`Pool gas tests #increasePosition opening the position with adjusting funding rate 1`] = `377566`;
+exports[`Pool gas tests #increasePosition opening the position with adjusting funding rate 1`] = `377572`;
 
-exports[`Pool gas tests #increasePosition opening the position with adjusting funding rate 2`] = `377587`;
+exports[`Pool gas tests #increasePosition opening the position with adjusting funding rate 2`] = `377592`;
 
-exports[`Pool gas tests #increaseRiskBufferFundPosition increase risk buffer fund position 1`] = `279045`;
+exports[`Pool gas tests #increaseRiskBufferFundPosition increase risk buffer fund position 1`] = `279050`;
 
-exports[`Pool gas tests #increaseRiskBufferFundPosition increase risk buffer fund position 2`] = `279045`;
+exports[`Pool gas tests #increaseRiskBufferFundPosition increase risk buffer fund position 2`] = `279050`;
 
-exports[`Pool gas tests #increaseRiskBufferFundPosition increase risk buffer fund position 3`] = `279045`;
+exports[`Pool gas tests #increaseRiskBufferFundPosition increase risk buffer fund position 3`] = `279050`;
 
-exports[`Pool gas tests #increaseRiskBufferFundPosition increase risk buffer fund position 4`] = `279045`;
+exports[`Pool gas tests #increaseRiskBufferFundPosition increase risk buffer fund position 4`] = `279050`;
 
-exports[`Pool gas tests #liquidateLiquidityPosition remaining margin is not less than liquidation execution fee 1`] = `211099`;
+exports[`Pool gas tests #liquidateLiquidityPosition remaining margin is not less than liquidation execution fee 1`] = `211037`;
 
-exports[`Pool gas tests #liquidatePosition funding fee is adjusted opposite size is positive 1`] = `365569`;
+exports[`Pool gas tests #liquidatePosition funding fee is adjusted opposite size is positive 1`] = `365574`;
 
-exports[`Pool gas tests #liquidatePosition funding fee is adjusted opposite size is zero 1`] = `312285`;
+exports[`Pool gas tests #liquidatePosition funding fee is adjusted opposite size is zero 1`] = `312290`;
 
-exports[`Pool gas tests #liquidatePosition funding fee is not adjusted 1`] = `247625`;
+exports[`Pool gas tests #liquidatePosition funding fee is not adjusted 1`] = `247630`;
 
-exports[`Pool gas tests #openLiquidityPosition opening the liquidity position for the first time do not adjust funding rate 1`] = `467370`;
+exports[`Pool gas tests #openLiquidityPosition opening the liquidity position for the first time do not adjust funding rate 1`] = `467375`;
 
-exports[`Pool gas tests #openLiquidityPosition opening the liquidity position for the first time with adjusting funding rate 1`] = `467370`;
+exports[`Pool gas tests #openLiquidityPosition opening the liquidity position for the first time with adjusting funding rate 1`] = `467375`;
 
-exports[`Pool gas tests #openLiquidityPosition opening the liquidity position with realized PnL and unrealized loss do not adjust funding rate 1`] = `230541`;
+exports[`Pool gas tests #openLiquidityPosition opening the liquidity position with realized PnL and unrealized loss do not adjust funding rate 1`] = `230546`;
 
-exports[`Pool gas tests #openLiquidityPosition opening the liquidity position with realized PnL and unrealized loss with adjusting funding rate 1`] = `272546`;
+exports[`Pool gas tests #openLiquidityPosition opening the liquidity position with realized PnL and unrealized loss with adjusting funding rate 1`] = `272552`;
 
-exports[`Pool gas tests #openLiquidityPosition opening the liquidity position with realized PnL do not adjust funding rate 1`] = `230541`;
+exports[`Pool gas tests #openLiquidityPosition opening the liquidity position with realized PnL do not adjust funding rate 1`] = `230546`;
 
-exports[`Pool gas tests #openLiquidityPosition opening the liquidity position with realized PnL with adjusting funding rate 1`] = `272546`;
+exports[`Pool gas tests #openLiquidityPosition opening the liquidity position with realized PnL with adjusting funding rate 1`] = `272552`;
