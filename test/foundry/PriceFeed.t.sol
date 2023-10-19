@@ -30,7 +30,7 @@ contract PriceFeedTest is Test {
             block.timestamp,
             100
         );
-        priceFeed = new PriceFeed(IChainLinkAggregator(address(mockStableTokenChainLink)));
+        priceFeed = new PriceFeed(IChainLinkAggregator(address(mockStableTokenChainLink)), 0);
         priceFeed.setUpdater(address(1), true);
         priceFeed.setMaxCumulativeDeltaDiffs(IERC20(WETH), 100 * 1000);
         mockChainLink = new MockChainLinkPriceFeed();

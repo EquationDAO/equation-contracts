@@ -47,7 +47,7 @@ describe("PriceFeed", () => {
         );
 
         const priceFeedFactory = await ethers.getContractFactory("PriceFeed");
-        const priceFeed = await priceFeedFactory.deploy(mockStableTokenPriceFeed.address);
+        const priceFeed = await priceFeedFactory.deploy(mockStableTokenPriceFeed.address, 0);
         await priceFeed.deployed();
         await priceFeed.setUpdater(owner.address, true);
         await priceFeed.setMaxCumulativeDeltaDiffs(weth.address, 100 * 1000);

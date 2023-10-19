@@ -40,6 +40,10 @@ interface IPriceFeed {
     /// @param elapsed The time elapsed since the last price update.
     error ReferencePriceTimeout(uint256 elapsed);
 
+    /// @notice Stable token price timeout
+    /// @param elapsed The time elapsed since the last price update.
+    error StableTokenPriceTimeout(uint256 elapsed);
+
     /// @notice Invalid stable token price
     /// @param stableTokenPrice Stable token price
     error InvalidStableTokenPrice(int256 stableTokenPrice);
@@ -85,6 +89,14 @@ interface IPriceFeed {
         IERC20 token;
         uint160 priceX96;
     }
+
+    /// @notice Get the address of stable token price feed
+    /// @return priceFeed The address of stable token price feed
+    function stableTokenPriceFeed() external view returns (IChainLinkAggregator priceFeed);
+
+    /// @notice Get the expected update interval of stable token price
+    /// @return duration The expected update interval of stable token price
+    function stableTokenPriceFeedHeartBeatDuration() external view returns (uint32 duration);
 
     /// @notice The 0th storage slot in the price feed stores many values, which helps reduce gas
     /// costs when interacting with the price feed.
@@ -213,4 +225,12 @@ interface IPriceFeed {
     /// @notice Set the timeout for price update transactions.
     /// @param updateTxTimeout The timeout for price update transactions
     function setUpdateTxTimeout(uint32 updateTxTimeout) external;
+
+    /// @notice Set ChainLink contract address and heart beat duration config for stable token.
+    /// @param stableTokenPriceFeed The stable token address to set
+    /// @param stableTokenPriceFeedHeartBeatDuration The expected update interval of stable token price
+    function setStableTokenPriceFeed(
+        IChainLinkAggregator stableTokenPriceFeed,
+        uint32 stableTokenPriceFeedHeartBeatDuration
+    ) external;
 }

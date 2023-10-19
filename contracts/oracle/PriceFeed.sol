@@ -19,7 +19,11 @@ contract PriceFeed is IPriceFeed, Governable {
     uint8 public constant USD_DECIMALS = 6;
     uint8 public constant TOKEN_DECIMALS = 18;
 
-    IChainLinkAggregator public immutable stableTokenPriceFeed;
+    /// @inheritdoc IPriceFeed
+    IChainLinkAggregator public override stableTokenPriceFeed;
+    /// @inheritdoc IPriceFeed
+    uint32 public override stableTokenPriceFeedHeartBeatDuration;
+
     /// @inheritdoc IPriceFeed
     Slot public override slot;
     mapping(address => bool) private updaters;
@@ -37,9 +41,10 @@ contract PriceFeed is IPriceFeed, Governable {
         _;
     }
 
-    constructor(IChainLinkAggregator _stableTokenPriceFeed) {
+    constructor(IChainLinkAggregator _stableTokenPriceFeed, uint32 _stableTokenPriceFeedHeartBeatDuration) {
         (slot.maxDeviationRatio, slot.cumulativeRoundDuration, slot.updateTxTimeout) = (100e3, 1 minutes, 1 minutes);
         stableTokenPriceFeed = _stableTokenPriceFeed;
+        stableTokenPriceFeedHeartBeatDuration = _stableTokenPriceFeedHeartBeatDuration;
     }
 
     /// @inheritdoc IPriceFeed
@@ -195,6 +200,17 @@ contract PriceFeed is IPriceFeed, Governable {
         slot.updateTxTimeout = _updateTxTimeout;
     }
 
+    /// @inheritdoc IPriceFeed
+    function setStableTokenPriceFeed(
+        IChainLinkAggregator _stableTokenPriceFeed,
+        uint32 _stableTokenPriceFeedHeartBeatDuration
+    ) external override onlyGov {
+        (stableTokenPriceFeed, stableTokenPriceFeedHeartBeatDuration) = (
+            _stableTokenPriceFeed,
+            _stableTokenPriceFeedHeartBeatDuration
+        );
+    }
+
     function _calculateNewPriceDataItem(
         IERC20 _token,
         uint160 _priceX96,
@@ -326,7 +342,12 @@ contract PriceFeed is IPriceFeed, Governable {
 
     function _getStableTokenPrice() private view returns (uint256, uint8) {
         IChainLinkAggregator priceFeed = stableTokenPriceFeed;
-        (, int256 stableTokenPrice, , , ) = priceFeed.latestRoundData();
+        uint32 heartbeatDuration = stableTokenPriceFeedHeartBeatDuration;
+
+        (, int256 stableTokenPrice, , uint256 timestamp, ) = priceFeed.latestRoundData();
+        if (heartbeatDuration != 0 && block.timestamp - timestamp > heartbeatDuration)
+            revert StableTokenPriceTimeout(block.timestamp - timestamp);
+
         if (stableTokenPrice <= 0) revert InvalidStableTokenPrice(stableTokenPrice);
         return (uint256(stableTokenPrice), priceFeed.decimals());
     }

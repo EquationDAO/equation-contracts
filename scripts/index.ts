@@ -119,7 +119,7 @@ async function main() {
 
     // deploy price feed
     const PriceFeed = await ethers.getContractFactory("PriceFeed");
-    const priceFeed = await PriceFeed.deploy(network.usdChainLinkPriceFeed);
+    const priceFeed = await PriceFeed.deploy(network.usdChainLinkPriceFeed, 0);
     await priceFeed.deployed();
     expectAddr(priceFeed.address, priceFeedAddr);
     console.log(`PriceFeed deployed to: ${priceFeed.address}`);
