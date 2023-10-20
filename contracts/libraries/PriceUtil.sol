@@ -17,7 +17,6 @@ library PriceUtil {
     }
 
     struct PriceStateCache {
-        uint128 maxPriceImpactLiquidity;
         uint128 premiumRateX96;
         uint8 pendingVertexIndex;
         uint8 liquidationVertexIndex;
@@ -56,7 +55,6 @@ library PriceUtil {
         if (_sizeDelta == 0) revert ZeroSizeDelta();
         IPool.GlobalLiquidityPosition memory globalPositionCache = _globalPosition;
         PriceStateCache memory priceStateCache = PriceStateCache({
-            maxPriceImpactLiquidity: _priceState.maxPriceImpactLiquidity,
             premiumRateX96: _priceState.premiumRateX96,
             pendingVertexIndex: _priceState.pendingVertexIndex,
             liquidationVertexIndex: _priceState.liquidationVertexIndex,
