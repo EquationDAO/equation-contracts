@@ -106,13 +106,13 @@ async function main() {
     console.log(`RewardCollector deployed to: ${rewardCollector.address}`);
 
     const OrderBook = await ethers.getContractFactory("OrderBook");
-    const orderBook = await OrderBook.deploy(network.usd, routerAddr, network.minExecutionFee);
+    const orderBook = await OrderBook.deploy(network.usd, routerAddr, network.minOrderBookExecutionFee);
     await orderBook.deployed();
     expectAddr(orderBook.address, orderBookAddr);
     console.log(`OrderBook deployed to: ${orderBook.address}`);
 
     const PositionRouter = await ethers.getContractFactory("PositionRouter");
-    const positionRouter = await PositionRouter.deploy(network.usd, routerAddr, network.minExecutionFee);
+    const positionRouter = await PositionRouter.deploy(network.usd, routerAddr, network.minPositionRouterExecutionFee);
     await positionRouter.deployed();
     expectAddr(positionRouter.address, positionRouterAddr);
     console.log(`PositionRouter deployed to: ${positionRouter.address}`);

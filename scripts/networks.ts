@@ -9,7 +9,7 @@ const defaultTokenCfg = {
     minMarginPerPosition: 10n * 10n ** 6n,
     maxLeveragePerPosition: 200,
     liquidationFeeRatePerPosition: parsePercent("0.2%"),
-    liquidationExecutionFee: 400_000n, // 0.4 USD
+    liquidationExecutionFee: 500_000n, // 0.5 USD
     interestRate: parsePercent("0.00125%"),
     maxFundingRate: parsePercent("0.25%"),
 };
@@ -61,15 +61,15 @@ const defaultTokenPriceCfg = {
 };
 
 const defaultMaxCumulativeDeltaDiff = 100n * 1000n; // 10%
-const defaultMinExecutionFee = ethers.utils.parseUnits("0.00021", "ether");
 
 export const networks = {
     "arbitrum-goerli": {
         usd: "0x58e7F6b126eCC1A694B19062317b60Cf474E3D17",
         usdChainLinkPriceFeed: "0x0a023a3423D9b27A0BE48c768CCF2dD7877fEf5E",
         weth: "0xe39Ab88f8A4777030A534146A9Ca3B52bd5D43A3",
-        minExecutionFee: defaultMinExecutionFee,
-        farmMintTime: Math.floor(new Date().getTime() / 1000) + 12 * 60 * 60, // FIXME
+        minPositionRouterExecutionFee: ethers.utils.parseUnits("0.00021", "ether"),
+        minOrderBookExecutionFee: ethers.utils.parseUnits("0.0003", "ether"),
+        farmMintTime: Math.floor(new Date().getTime() / 1000) + 1 * 60 * 60,
         uniswapV3Factory: "0x4893376342d5d7b3e31d4184c08b265e5ab2a3f6",
         uniswapV3PositionManager: "0x622e4726a167799826d1E1D150b076A7725f5D81",
         sequencerUpTimeFeed: "0x4da69F028a5790fCCAfe81a75C0D24f46ceCDd69",
@@ -138,7 +138,8 @@ export const networks = {
         usd: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
         usdChainLinkPriceFeed: "0x3f3f5dF88dC9F13eac63DF89EC16ef6e7E25DdE7",
         weth: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
-        minExecutionFee: ethers.utils.parseUnits("0.00021", "ether"),
+        minPositionRouterExecutionFee: ethers.utils.parseUnits("0.00021", "ether"),
+        minOrderBookExecutionFee: ethers.utils.parseUnits("0.0003", "ether"),
         farmMintTime: Math.floor(new Date("2023-10-28T00:00:00.000Z").getTime() / 1000),
         uniswapV3Factory: "0x1F98431c8aD98523631AE4a59f267346ea31F984",
         uniswapV3PositionManager: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
