@@ -1,53 +1,56 @@
+import {ethers} from "hardhat";
+import {parsePercent} from "./util";
+
 const defaultTokenCfg = {
     minMarginPerLiquidityPosition: 10n * 10n ** 6n,
-    maxRiskRatePerLiquidityPosition: 99_500_000n, // 99.5%
+    maxRiskRatePerLiquidityPosition: parsePercent("99.5%"),
     maxLeveragePerLiquidityPosition: 200,
 
     minMarginPerPosition: 10n * 10n ** 6n,
     maxLeveragePerPosition: 200,
-    liquidationFeeRatePerPosition: 200_000n, // 0.2%
-    liquidationExecutionFee: 600_000n, // 0.6 USDC
-    interestRate: 1250, // 0.00125%
-    maxFundingRate: 150_000n, // 0.15%
+    liquidationFeeRatePerPosition: parsePercent("0.2%"),
+    liquidationExecutionFee: 400_000n, // 0.4 USD
+    interestRate: parsePercent("0.00125%"),
+    maxFundingRate: parsePercent("0.25%"),
 };
 
 const defaultTokenFeeCfg = {
-    tradingFeeRate: 50_000n, // 0.05%
-    liquidityFeeRate: 50_000_000n, // 50%
-    protocolFeeRate: 30_000_000n, // 30%
-    referralReturnFeeRate: 10_000_000n, // 10%
-    referralParentReturnFeeRate: 1_000_000n, // 1%
-    referralDiscountRate: 90_000_000n, // 90%
+    tradingFeeRate: parsePercent("0.05%"),
+    liquidityFeeRate: parsePercent("16%"),
+    protocolFeeRate: parsePercent("50%"),
+    referralReturnFeeRate: parsePercent("10%"),
+    referralParentReturnFeeRate: parsePercent("1%"),
+    referralDiscountRate: parsePercent("90%"),
 };
 
 const defaultVertices = [
     {
-        balanceRate: 0n, // 0%
-        premiumRate: 0n, // 0%
+        balanceRate: parsePercent("0%"),
+        premiumRate: parsePercent("0%"),
     },
     {
-        balanceRate: 4000000n, // 4%
-        premiumRate: 50000n, // 0.05%
+        balanceRate: parsePercent("4%"),
+        premiumRate: parsePercent("0.05%"),
     },
     {
-        balanceRate: 8000000n, // 8%
-        premiumRate: 100000n, // 0.1%
+        balanceRate: parsePercent("8%"),
+        premiumRate: parsePercent("0.1%"),
     },
     {
-        balanceRate: 10000000n, // 10%
-        premiumRate: 150000n, // 0.15%
+        balanceRate: parsePercent("10%"),
+        premiumRate: parsePercent("0.15%"),
     },
     {
-        balanceRate: 12000000n, // 12%
-        premiumRate: 200000n, // 0.2%
+        balanceRate: parsePercent("12%"),
+        premiumRate: parsePercent("0.2%"),
     },
     {
-        balanceRate: 20000000n, // 20%
-        premiumRate: 600000n, // 0.6%
+        balanceRate: parsePercent("20%"),
+        premiumRate: parsePercent("0.6%"),
     },
     {
-        balanceRate: 100000000n, // 100%
-        premiumRate: 10000000n, // 10%
+        balanceRate: parsePercent("100%"),
+        premiumRate: parsePercent("10%"),
     },
 ];
 
@@ -58,7 +61,7 @@ const defaultTokenPriceCfg = {
 };
 
 const defaultMaxCumulativeDeltaDiff = 100n * 1000n; // 10%
-const defaultMinExecutionFee = 300_000_000_000_000n; // 0.0003 ETH
+const defaultMinExecutionFee = ethers.utils.parseUnits("0.00021", "ether");
 
 export const networks = {
     "arbitrum-goerli": {
@@ -70,8 +73,7 @@ export const networks = {
         uniswapV3Factory: "0x4893376342d5d7b3e31d4184c08b265e5ab2a3f6",
         uniswapV3PositionManager: "0x622e4726a167799826d1E1D150b076A7725f5D81",
         sequencerUpTimeFeed: "0x4da69F028a5790fCCAfe81a75C0D24f46ceCDd69",
-        efcBaseURL: "https://nftstorage.link/ipfs/bafybeiasc336sq3os7ioif44tqefi6crh3pk2j7fknwc7tnnzbqf5bi274/",
-        efcMemberBaseURL: "https://nftstorage.link/ipfs/bafybeiasc336sq3os7ioif44tqefi6crh3pk2j7fknwc7tnnzbqf5bi274",
+        efcBaseURL: "https://raw.githubusercontent.com/EquationDAO/nft-metadatas/main/EFC/",
         tokens: [
             {
                 name: "ETH",
@@ -131,5 +133,130 @@ export const networks = {
             },
         ],
         mixedExecutors: ["0x748b44dA671C256b9f1F1c2098FA9e477F84B141", "0x866D7d4C811Eb0845D7952F40934dC1F3F2B3Bc0"],
+    },
+    "arbitrum-mainnet": {
+        usd: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+        usdChainLinkPriceFeed: "0x3f3f5dF88dC9F13eac63DF89EC16ef6e7E25DdE7",
+        weth: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+        minExecutionFee: ethers.utils.parseUnits("0.00021", "ether"),
+        farmMintTime: Math.floor(new Date("2023-10-28T00:00:00.000Z").getTime() / 1000),
+        uniswapV3Factory: "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+        uniswapV3PositionManager: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
+        sequencerUpTimeFeed: "0xFdB631F5EE196F0ed6FAa767959853A9F217697D",
+        efcBaseURL: "https://raw.githubusercontent.com/EquationDAO/nft-metadatas/main/EFC/",
+        tokens: [
+            {
+                name: "ETH",
+                address: undefined,
+                chainLinkPriceFeed: "0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612",
+                maxCumulativeDeltaDiff: defaultMaxCumulativeDeltaDiff,
+                rewardsPerSecond: 37037037037037037n,
+                tokenCfg: defaultTokenCfg,
+                tokenFeeCfg: defaultTokenFeeCfg,
+                tokenPriceCfg: {
+                    maxPriceImpactLiquidity: 60_000_000n * 10n ** 6n,
+                    liquidationVertexIndex: 4,
+                    vertices: defaultVertices,
+                },
+            },
+            {
+                name: "BTC",
+                address: undefined,
+                chainLinkPriceFeed: "0x6ce185860a4963106506C203335A2910413708e9",
+                maxCumulativeDeltaDiff: defaultMaxCumulativeDeltaDiff,
+                rewardsPerSecond: 61728395061728395n,
+                tokenCfg: defaultTokenCfg,
+                tokenFeeCfg: defaultTokenFeeCfg,
+                tokenPriceCfg: {
+                    maxPriceImpactLiquidity: 100_000_000n * 10n ** 6n,
+                    liquidationVertexIndex: 4,
+                    vertices: defaultVertices,
+                },
+            },
+            {
+                name: "SOL",
+                address: undefined,
+                chainLinkPriceFeed: "0x24ceA4b8ce57cdA5058b924B9B9987992450590c",
+                maxCumulativeDeltaDiff: defaultMaxCumulativeDeltaDiff,
+                rewardsPerSecond: 4629629629629629n,
+                tokenCfg: defaultTokenCfg,
+                tokenFeeCfg: defaultTokenFeeCfg,
+                tokenPriceCfg: {
+                    maxPriceImpactLiquidity: 7_500_000n * 10n ** 6n,
+                    liquidationVertexIndex: 4,
+                    vertices: defaultVertices,
+                },
+            },
+            {
+                name: "ARB",
+                address: undefined,
+                chainLinkPriceFeed: "0xb2A824043730FE05F3DA2efaFa1CBbe83fa548D6",
+                maxCumulativeDeltaDiff: defaultMaxCumulativeDeltaDiff,
+                rewardsPerSecond: 2469135802469135n,
+                tokenCfg: defaultTokenCfg,
+                tokenFeeCfg: defaultTokenFeeCfg,
+                tokenPriceCfg: {
+                    maxPriceImpactLiquidity: 4_000_000n * 10n ** 6n,
+                    liquidationVertexIndex: 4,
+                    vertices: defaultVertices,
+                },
+            },
+            {
+                name: "OP",
+                address: undefined,
+                chainLinkPriceFeed: "0x205aaD468a11fd5D34fA7211bC6Bad5b3deB9b98",
+                maxCumulativeDeltaDiff: defaultMaxCumulativeDeltaDiff,
+                rewardsPerSecond: 2469135802469135n,
+                tokenCfg: defaultTokenCfg,
+                tokenFeeCfg: defaultTokenFeeCfg,
+                tokenPriceCfg: {
+                    maxPriceImpactLiquidity: 4_000_000n * 10n ** 6n,
+                    liquidationVertexIndex: 4,
+                    vertices: defaultVertices,
+                },
+            },
+            {
+                name: "MATIC",
+                address: undefined,
+                chainLinkPriceFeed: "0x52099D4523531f678Dfc568a7B1e5038aadcE1d6",
+                maxCumulativeDeltaDiff: defaultMaxCumulativeDeltaDiff,
+                rewardsPerSecond: 2469135802469135n,
+                tokenCfg: defaultTokenCfg,
+                tokenFeeCfg: defaultTokenFeeCfg,
+                tokenPriceCfg: {
+                    maxPriceImpactLiquidity: 4_000_000n * 10n ** 6n,
+                    liquidationVertexIndex: 4,
+                    vertices: defaultVertices,
+                },
+            },
+            {
+                name: "AVAX",
+                address: undefined,
+                chainLinkPriceFeed: "0x8bf61728eeDCE2F32c456454d87B5d6eD6150208",
+                maxCumulativeDeltaDiff: defaultMaxCumulativeDeltaDiff,
+                rewardsPerSecond: 2469135802469135n,
+                tokenCfg: defaultTokenCfg,
+                tokenFeeCfg: defaultTokenFeeCfg,
+                tokenPriceCfg: {
+                    maxPriceImpactLiquidity: 4_000_000n * 10n ** 6n,
+                    liquidationVertexIndex: 4,
+                    vertices: defaultVertices,
+                },
+            },
+            {
+                name: "LINK",
+                address: undefined,
+                chainLinkPriceFeed: "0x86E53CF1B870786351Da77A57575e79CB55812CB",
+                maxCumulativeDeltaDiff: defaultMaxCumulativeDeltaDiff,
+                rewardsPerSecond: 2469135802469135n,
+                tokenCfg: defaultTokenCfg,
+                tokenFeeCfg: defaultTokenFeeCfg,
+                tokenPriceCfg: {
+                    maxPriceImpactLiquidity: 4_000_000n * 10n ** 6n,
+                    liquidationVertexIndex: 4,
+                    vertices: defaultVertices,
+                },
+            },
+        ],
     },
 };

@@ -193,6 +193,7 @@ async function main() {
     // initialize tokens
     await equ.setMinter(rewardFarmAddr, true);
     await (veEQU as MultiMinter).setMinter(feeDistributor.address, true);
+    await efc.setBaseURI(network.efcBaseURL);
     console.log("Initialize tokens finished");
 
     // initialize plugins
