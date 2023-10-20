@@ -7,12 +7,9 @@ import "../libraries/ReentrancyGuard.sol";
 import "../governance/Governable.sol";
 import "../farming/interfaces/IRewardFarmCallback.sol";
 import "../staking/interfaces/IFeeDistributorCallback.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/governance/utils/Votes.sol";
 
 contract EFC is IEFC, ERC721WeightedVotes, Governable, ReentrancyGuard {
-    using Strings for uint256;
-
     uint256 private constant ARCHITECT_START_ID = 1;
     uint256 private constant CONNECTOR_START_ID = 1000;
     uint256 private constant MEMBER_START_ID = 10000;
@@ -64,16 +61,13 @@ contract EFC is IEFC, ERC721WeightedVotes, Governable, ReentrancyGuard {
     }
 
     /// @inheritdoc IEFC
-    function setBaseURI(string calldata _baseURI) external override onlyGov {
-        baseURI = _baseURI;
+    function setBaseURI(string calldata _URI) external override onlyGov {
+        baseURI = _URI;
     }
 
     /// @inheritdoc ERC721
-    function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-        _requireMinted(_tokenId);
-
-        string memory _baseURI = baseURI;
-        return bytes(_baseURI).length > 0 ? string(abi.encodePacked(_baseURI, _tokenId.toString())) : "";
+    function _baseURI() internal view override returns (string memory) {
+        return baseURI;
     }
 
     function batchMintArchitect(address[] calldata _to) external onlyGov nonReentrant {
