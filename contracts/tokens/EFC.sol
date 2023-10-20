@@ -38,10 +38,8 @@ contract EFC is IEFC, ERC721WeightedVotes, Governable, ReentrancyGuard {
     /// @dev Store number of member tokens that a connector minted
     mapping(uint256 => uint256) public memberMintedCounter;
 
-    /// @notice Base URI for NFTs of type Architect and Connector
+    /// @notice Base URI for NFTs
     string public baseURI;
-    /// @notice Base URI for NFTs of type Member
-    string public memberBaseURI;
 
     modifier onlyConnectorOwner(uint256 connectorTokenId) {
         if (!_isConnector(connectorTokenId)) revert NotConnectorToken(connectorTokenId);
@@ -66,15 +64,13 @@ contract EFC is IEFC, ERC721WeightedVotes, Governable, ReentrancyGuard {
     }
 
     /// @inheritdoc IEFC
-    function setBaseURI(string calldata _baseURI, string calldata _memberBaseURI) external override onlyGov {
-        (baseURI, memberBaseURI) = (_baseURI, _memberBaseURI);
+    function setBaseURI(string calldata _baseURI) external override onlyGov {
+        baseURI = _baseURI;
     }
 
     /// @inheritdoc ERC721
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         _requireMinted(_tokenId);
-
-        if (_isMember(_tokenId)) return memberBaseURI;
 
         string memory _baseURI = baseURI;
         return bytes(_baseURI).length > 0 ? string(abi.encodePacked(_baseURI, _tokenId.toString())) : "";
