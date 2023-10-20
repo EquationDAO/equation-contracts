@@ -259,5 +259,17 @@ export const networks = {
                 },
             },
         ],
+        mixedExecutors: [
+            "0x50C66c2299964882bd0E81112D305A970Eb08d02",
+            "0x3b75Dd318Dd0f3E1Faa50128f1B3B0d67Cf5eF50",
+            "0x587C4526d4134cad229E8beA5007ACf30Dc7e8Dd",
+            "0xE6d7Ccc73e0F7E1063E2204ffFA7742CC25E3B38",
+            "0x095A52eccB642AC82FF5Cb9059A82D5c4d2272df",
+            "0x71324d35F7bCA2Db7D5afe3824531101C3e0Bf33",
+            "0x70186F7e49FD47EEacDc842C51BDB3598614a162",
+            "0xba0D0DdC2f2D479A53154db77002A3deC5f6e0b9",
+            "0xc7BDeC4B5FE52BD0DF67929B42DD7db86397783e",
+            "0x79b4194C0dA918bd73737B97977A5999329f8764",
+        ],
     },
 };
