@@ -1,5 +1,6 @@
 import {ethers, hardhatArguments} from "hardhat";
 import {networks} from "./networks";
+import {parsePercent} from "./util";
 
 async function main() {
     const network = networks[hardhatArguments.network as keyof typeof networks];
@@ -11,10 +12,10 @@ async function main() {
 
     const RewardFarm = await ethers.getContractAt("RewardFarm", document.deployments.RewardFarm);
     await RewardFarm.setConfig({
-        liquidityRate: 28_000_000n, // 28%
-        riskBufferFundLiquidityRate: 50_000_000n, // 50%
-        referralTokenRate: 20_000_000n, // 20%
-        referralParentTokenRate: 2_000_000n, // 2%
+        liquidityRate: parsePercent("16%"),
+        riskBufferFundLiquidityRate: parsePercent("40%"),
+        referralTokenRate: parsePercent("40%"),
+        referralParentTokenRate: parsePercent("4%"),
     });
 
     await RewardFarm.setPoolsReward(
