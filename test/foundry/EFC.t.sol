@@ -157,10 +157,10 @@ contract EFCTest is Test {
         assertEq(efc.tokenURI(1000), "");
         assertEq(efc.tokenURI(10000), "");
 
-        efc.setBaseURI("ipfs://type1/", "ipfs://type2");
+        efc.setBaseURI("ipfs://type1/");
 
         assertEq(efc.tokenURI(1), "ipfs://type1/1");
         assertEq(efc.tokenURI(1000), "ipfs://type1/1000");
-        assertEq(efc.tokenURI(10000), "ipfs://type2");
+        assertEq(efc.tokenURI(10000), "ipfs://type1/10000");
     }
 }

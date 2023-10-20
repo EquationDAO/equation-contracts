@@ -51,10 +51,9 @@ interface IEFC is IERC721 {
     /// @param code The code
     error CodeNotRegistered(string code);
 
-    /// @notice Set the base uri of nft assets
-    /// @param baseURI Base URI for NFTs of type Architect and Connector
-    /// @param memberBaseURI Base URI for NFTs of type Member
-    function setBaseURI(string calldata baseURI, string calldata memberBaseURI) external;
+    /// @notice Set the base URI of nft assets
+    /// @param baseURI Base URI for NFTs
+    function setBaseURI(string calldata baseURI) external;
 
     /// @notice Get the token for a code
     /// @param code The code to get the token for
