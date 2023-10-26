@@ -64,6 +64,16 @@ const config: HardhatUserConfig = {
             chainId: 421613,
             accounts: [`${process.env.PRIVATE_KEY}`],
         },
+        "arbitrum-mainnet": {
+            url: "https://rpc.arb1.arbitrum.gateway.fm",
+            chainId: 42161,
+            accounts: [`${process.env.PRIVATE_KEY}`],
+        },
+    },
+    etherscan: {
+        apiKey: {
+            arbitrumOne: `${process.env.ARBISCAN_API_KEY}`,
+        },
     },
 };
 

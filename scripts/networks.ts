@@ -148,7 +148,7 @@ export const networks = {
         tokens: [
             {
                 name: "ETH",
-                address: undefined,
+                address: "0x23EEF5f7A8b37b2310e9aC9611E35fa999143810",
                 chainLinkPriceFeed: "0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612",
                 maxCumulativeDeltaDiff: defaultMaxCumulativeDeltaDiff,
                 rewardsPerSecond: 37037037037037037n,
@@ -162,7 +162,7 @@ export const networks = {
             },
             {
                 name: "BTC",
-                address: undefined,
+                address: "0x1885aAD80817a0baF196dEb62b08695E64936332",
                 chainLinkPriceFeed: "0x6ce185860a4963106506C203335A2910413708e9",
                 maxCumulativeDeltaDiff: defaultMaxCumulativeDeltaDiff,
                 rewardsPerSecond: 61728395061728395n,
@@ -176,7 +176,7 @@ export const networks = {
             },
             {
                 name: "SOL",
-                address: undefined,
+                address: "0x1281b9dAFA2b11C43e1E41bb4aDCdd3bdBc2b2a6",
                 chainLinkPriceFeed: "0x24ceA4b8ce57cdA5058b924B9B9987992450590c",
                 maxCumulativeDeltaDiff: defaultMaxCumulativeDeltaDiff,
                 rewardsPerSecond: 4629629629629629n,
@@ -190,7 +190,7 @@ export const networks = {
             },
             {
                 name: "ARB",
-                address: undefined,
+                address: "0x96A0D2D2D4378bCb35013f964d95224fE4FEd8FE",
                 chainLinkPriceFeed: "0xb2A824043730FE05F3DA2efaFa1CBbe83fa548D6",
                 maxCumulativeDeltaDiff: defaultMaxCumulativeDeltaDiff,
                 rewardsPerSecond: 2469135802469135n,
@@ -204,7 +204,7 @@ export const networks = {
             },
             {
                 name: "OP",
-                address: undefined,
+                address: "0xA67cB8b1880E2573907f5f52121e8C49B141bD66",
                 chainLinkPriceFeed: "0x205aaD468a11fd5D34fA7211bC6Bad5b3deB9b98",
                 maxCumulativeDeltaDiff: defaultMaxCumulativeDeltaDiff,
                 rewardsPerSecond: 2469135802469135n,
@@ -218,7 +218,7 @@ export const networks = {
             },
             {
                 name: "MATIC",
-                address: undefined,
+                address: "0xA7c1181043e489E720Fb72e33168298675EDCdF8",
                 chainLinkPriceFeed: "0x52099D4523531f678Dfc568a7B1e5038aadcE1d6",
                 maxCumulativeDeltaDiff: defaultMaxCumulativeDeltaDiff,
                 rewardsPerSecond: 2469135802469135n,
@@ -232,7 +232,7 @@ export const networks = {
             },
             {
                 name: "AVAX",
-                address: undefined,
+                address: "0xB42E185016C53B38C2c61409F1D6DA3CcFB02C9f",
                 chainLinkPriceFeed: "0x8bf61728eeDCE2F32c456454d87B5d6eD6150208",
                 maxCumulativeDeltaDiff: defaultMaxCumulativeDeltaDiff,
                 rewardsPerSecond: 2469135802469135n,
@@ -246,7 +246,7 @@ export const networks = {
             },
             {
                 name: "LINK",
-                address: undefined,
+                address: "0xEE4b6FC76B9F44420D646BFCf8a1F5c4c399B54F",
                 chainLinkPriceFeed: "0x86E53CF1B870786351Da77A57575e79CB55812CB",
                 maxCumulativeDeltaDiff: defaultMaxCumulativeDeltaDiff,
                 rewardsPerSecond: 2469135802469135n,
