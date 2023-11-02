@@ -30,6 +30,7 @@ contract RewardDistributor is Ownable2Step {
     event Claimed(address indexed receiver, address indexed account, uint16 indexed nonce, uint256 amount);
 
     /// @notice Error thrown when the caller is not authorized
+    /// @param caller The caller address
     error CallerUnauthorized(address caller);
     /// @notice Error thrown when a zero address is provided
     error ZeroAddress();
