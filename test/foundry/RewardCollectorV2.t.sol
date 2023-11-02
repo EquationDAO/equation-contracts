@@ -17,7 +17,7 @@ contract RewardCollectorV2Test is Test {
     RewardCollectorV2 private rewardCollectorV2;
 
     event Transfer(address indexed from, address indexed to, uint256 value);
-    event Claimed(address indexed receiver, address indexed account, uint16 indexed nonce, uint256 amount);
+    event Claimed(address indexed receiver, address indexed account, uint32 indexed nonce, uint224 amount);
 
     function setUp() public {
         token = new EQU();
@@ -29,13 +29,13 @@ contract RewardCollectorV2Test is Test {
 
     function testMulticall() public {
         address account = address(1);
-        uint16 nonce = 1;
-        uint256 totalReward = 100;
+        uint32 nonce = 1;
+        uint224 totalReward = 100;
         bytes32 hash = keccak256(abi.encode(account, nonce, totalReward)).toEthSignedMessageHash();
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(SIGNER_PRIVATE_KEY, hash);
         bytes memory signature = abi.encodePacked(r, s, v);
         bytes[] memory data = new bytes[](2);
-        data[0] = abi.encodeWithSignature("claim(uint16,uint256,bytes)", nonce, totalReward, signature);
+        data[0] = abi.encodeWithSignature("claim(uint32,uint224,bytes)", nonce, totalReward, signature);
         data[1] = abi.encodeWithSignature("sweepToken(address,uint256,address)", address(token), 0, account);
         vm.prank(account);
         vm.expectEmit(true, true, true, true);
@@ -46,7 +46,7 @@ contract RewardCollectorV2Test is Test {
         emit Transfer(address(rewardCollectorV2), account, totalReward);
         bytes[] memory results = rewardCollectorV2.multicall(data);
         assertEq(results[0], bytes(""));
-        assertEq(abi.decode(results[1], (uint256)), totalReward);
+        assertEq(abi.decode(results[1], (uint224)), totalReward);
         assertEq(token.balanceOf(account), totalReward);
     }
 }

@@ -11,23 +11,29 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 contract RewardDistributor is Ownable2Step {
     using ECDSA for bytes32;
 
+    /// @notice Struct to store claimed info for an account
+    struct ClaimedInfo {
+        /// @notice The claimed count of the account
+        uint32 nonce;
+        /// @notice The claimed reward of the account
+        uint224 claimedReward;
+    }
+
     /// @notice The address of the signer
     address public immutable signer;
     /// @notice The address of the token
     IERC20 public immutable token;
     /// @notice The collectors
     mapping(address => bool) public collectors;
-    /// @notice Nonces for each account
-    mapping(address => uint16) public nonces;
-    /// @notice The claimed amount for each account
-    mapping(address => uint256) public claimedRewards;
+    /// @notice The claimed info for each account
+    mapping(address => ClaimedInfo) public claimedInfos;
 
     /// @dev Event emitted when a claim is made
     /// @param receiver The address that received the reward
     /// @param account The account that claimed the reward for
     /// @param nonce The nonce of the claim
     /// @param amount The amount of the reward claimed
-    event Claimed(address indexed receiver, address indexed account, uint16 indexed nonce, uint256 amount);
+    event Claimed(address indexed receiver, address indexed account, uint32 indexed nonce, uint224 amount);
 
     /// @notice Error thrown when the caller is not authorized
     /// @param caller The caller address
@@ -36,7 +42,7 @@ contract RewardDistributor is Ownable2Step {
     error ZeroAddress();
     /// @notice Error thrown when the nonce is invalid
     /// @param nonce The invalid nonce
-    error InvalidNonce(uint16 nonce);
+    error InvalidNonce(uint32 nonce);
     /// @notice Error thrown when the signature is invalid
     error InvalidSignature();
 
@@ -68,7 +74,7 @@ contract RewardDistributor is Ownable2Step {
     /// @param _totalReward The total reward amount of the sender
     /// @param _signature The signature of the signer to verify
     /// @param _receiver The receiver of the claim
-    function claim(uint16 _nonce, uint256 _totalReward, bytes memory _signature, address _receiver) external {
+    function claim(uint32 _nonce, uint224 _totalReward, bytes memory _signature, address _receiver) external {
         if (_receiver == address(0)) _receiver = msg.sender;
         _claim(msg.sender, _nonce, _totalReward, _signature, _receiver);
     }
@@ -81,8 +87,8 @@ contract RewardDistributor is Ownable2Step {
     /// @param _receiver The receiver of the claim
     function claim(
         address _account,
-        uint16 _nonce,
-        uint256 _totalReward,
+        uint32 _nonce,
+        uint224 _totalReward,
         bytes memory _signature,
         address _receiver
     ) external onlyCollector {
@@ -92,20 +98,21 @@ contract RewardDistributor is Ownable2Step {
 
     function _claim(
         address _account,
-        uint16 _nonce,
-        uint256 _totalReward,
+        uint32 _nonce,
+        uint224 _totalReward,
         bytes memory _signature,
         address _receiver
     ) private {
-        if (_nonce != nonces[_account] + 1) revert InvalidNonce(_nonce);
+        ClaimedInfo storage claimedInfo = claimedInfos[_account];
+        if (_nonce != claimedInfo.nonce + 1) revert InvalidNonce(_nonce);
         address _signer = keccak256(abi.encode(_account, _nonce, _totalReward)).toEthSignedMessageHash().recover(
             _signature
         );
         if (_signer != signer) revert InvalidSignature();
-        uint256 claimableReward = _totalReward - claimedRewards[_account];
+        uint224 claimableReward = _totalReward - claimedInfo.claimedReward;
         emit Claimed(_receiver, _account, _nonce, claimableReward);
-        nonces[_account] = _nonce;
-        claimedRewards[_account] += claimableReward;
+        claimedInfo.nonce = _nonce;
+        claimedInfo.claimedReward += claimableReward;
         Address.functionCall(
             address(token),
             abi.encodeWithSignature("mint(address,uint256)", _receiver, claimableReward)
