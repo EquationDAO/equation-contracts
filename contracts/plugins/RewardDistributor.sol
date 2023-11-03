@@ -11,12 +11,12 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 contract RewardDistributor is Ownable2Step {
     using ECDSA for bytes32;
 
-    /// @notice Struct to store claimed info for an account
-    struct ClaimedInfo {
-        /// @notice The claimed count of the account
-        uint32 nonce;
-        /// @notice The claimed reward of the account
-        uint224 claimedReward;
+    /// @notice Struct to store the pool total reward for an account
+    struct PoolTotalReward {
+        /// @notice The address of the pool
+        address pool;
+        /// @notice The total reward amount of the account in the pool
+        uint256 totalReward;
     }
 
     /// @notice The address of the signer
@@ -25,15 +25,25 @@ contract RewardDistributor is Ownable2Step {
     IERC20 public immutable token;
     /// @notice The collectors
     mapping(address => bool) public collectors;
-    /// @notice The claimed info for each account
-    mapping(address => ClaimedInfo) public claimedInfos;
+    /// @notice The nonces for each account
+    mapping(address => uint32) public nonces;
+    /// @notice Mapping of pool accounts to their claimed rewards
+    /// pool => account => claimedReward
+    mapping(address => mapping(address => uint256)) public claimedRewards;
 
     /// @dev Event emitted when a claim is made
-    /// @param receiver The address that received the reward
+    /// @param pool The pool from which to claim the reward
     /// @param account The account that claimed the reward for
-    /// @param nonce The nonce of the claim
+    /// @param nonce The nonce of the sender for the claim
+    /// @param receiver The address that received the reward
     /// @param amount The amount of the reward claimed
-    event Claimed(address indexed receiver, address indexed account, uint32 indexed nonce, uint224 amount);
+    event Claimed(
+        address indexed pool,
+        address indexed account,
+        uint32 indexed nonce,
+        address receiver,
+        uint256 amount
+    );
 
     /// @notice Error thrown when the caller is not authorized
     /// @param caller The caller address
@@ -69,53 +79,63 @@ contract RewardDistributor is Ownable2Step {
     }
 
     /// @notice Allows a user to claim their reward by providing a valid signature
-    /// @dev The account and the receiver are the sender
-    /// @param _nonce The nonce for the claim
-    /// @param _totalReward The total reward amount of the sender
+    /// @param _nonce The nonce of the sender for the claim
+    /// @param _poolTotalRewards The pool total reward amount of the account
     /// @param _signature The signature of the signer to verify
     /// @param _receiver The receiver of the claim
-    function claim(uint32 _nonce, uint224 _totalReward, bytes memory _signature, address _receiver) external {
+    function claim(
+        uint32 _nonce,
+        PoolTotalReward[] calldata _poolTotalRewards,
+        bytes memory _signature,
+        address _receiver
+    ) external {
         if (_receiver == address(0)) _receiver = msg.sender;
-        _claim(msg.sender, _nonce, _totalReward, _signature, _receiver);
+        _claim(msg.sender, _nonce, _poolTotalRewards, _signature, _receiver);
     }
 
     /// @notice Claims a reward for a specific account
     /// @param _account The account to claim for
-    /// @param _nonce The nonce for the claim
-    /// @param _totalReward The total reward amount of the account
+    /// @param _nonce The nonce of the sender for the claim
+    /// @param _poolTotalRewards The pool total reward amount of the account
     /// @param _signature The signature for the claim
     /// @param _receiver The receiver of the claim
-    function claim(
+    function claimByCollector(
         address _account,
         uint32 _nonce,
-        uint224 _totalReward,
+        PoolTotalReward[] calldata _poolTotalRewards,
         bytes memory _signature,
         address _receiver
     ) external onlyCollector {
         if (_receiver == address(0)) _receiver = msg.sender;
-        _claim(_account, _nonce, _totalReward, _signature, _receiver);
+        _claim(_account, _nonce, _poolTotalRewards, _signature, _receiver);
     }
 
     function _claim(
         address _account,
         uint32 _nonce,
-        uint224 _totalReward,
+        PoolTotalReward[] calldata _poolTotalRewards,
         bytes memory _signature,
         address _receiver
     ) private {
-        ClaimedInfo storage claimedInfo = claimedInfos[_account];
-        if (_nonce != claimedInfo.nonce + 1) revert InvalidNonce(_nonce);
-        address _signer = keccak256(abi.encode(_account, _nonce, _totalReward)).toEthSignedMessageHash().recover(
+        if (_nonce != nonces[_account] + 1) revert InvalidNonce(_nonce);
+        address _signer = keccak256(abi.encode(_account, _nonce, _poolTotalRewards)).toEthSignedMessageHash().recover(
             _signature
         );
         if (_signer != signer) revert InvalidSignature();
-        uint224 claimableReward = _totalReward - claimedInfo.claimedReward;
-        emit Claimed(_receiver, _account, _nonce, claimableReward);
-        claimedInfo.nonce = _nonce;
-        claimedInfo.claimedReward += claimableReward;
-        Address.functionCall(
-            address(token),
-            abi.encodeWithSignature("mint(address,uint256)", _receiver, claimableReward)
-        );
+
+        uint256 amount = 0;
+        uint256 len = _poolTotalRewards.length;
+        for (uint256 i = 0; i < len; ) {
+            (address pool, uint256 totalReward) = (_poolTotalRewards[i].pool, _poolTotalRewards[i].totalReward);
+            uint256 claimableReward = totalReward - claimedRewards[pool][_account];
+            emit Claimed(pool, _account, _nonce, _receiver, claimableReward);
+            claimedRewards[pool][_account] = totalReward;
+            amount += claimableReward;
+            unchecked {
+                ++i;
+            }
+        }
+        nonces[_account] = _nonce;
+        Address.functionCall(address(token), abi.encodeWithSignature("mint(address,uint256)", _receiver, amount));
     }
 }
