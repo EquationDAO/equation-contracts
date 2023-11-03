@@ -129,7 +129,7 @@ contract RewardDistributor is Ownable2Step {
             (address pool, uint256 totalReward) = (_poolTotalRewards[i].pool, _poolTotalRewards[i].totalReward);
             uint256 claimableReward = totalReward - claimedRewards[pool][_account];
             emit Claimed(pool, _account, _nonce, _receiver, claimableReward);
-            claimedRewards[pool][_account] += claimableReward;
+            claimedRewards[pool][_account] = totalReward;
             amount += claimableReward;
             unchecked {
                 ++i;
