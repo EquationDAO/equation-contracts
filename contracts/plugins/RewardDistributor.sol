@@ -124,12 +124,16 @@ contract RewardDistributor is Ownable2Step {
         if (_signer != signer) revert InvalidSignature();
 
         uint256 amount = 0;
-        for (uint i = 0; i < _poolTotalRewards.length; i++) {
+        uint256 len = _poolTotalRewards.length;
+        for (uint i = 0; i < len; ) {
             (address pool, uint256 totalReward) = (_poolTotalRewards[i].pool, _poolTotalRewards[i].totalReward);
             uint256 claimableReward = totalReward - claimedRewards[pool][_account];
             emit Claimed(pool, _account, _nonce, _receiver, claimableReward);
             claimedRewards[pool][_account] += claimableReward;
             amount += claimableReward;
+            unchecked {
+                ++i;
+            }
         }
         nonces[_account] = _nonce;
         Address.functionCall(address(token), abi.encodeWithSignature("mint(address,uint256)", _receiver, amount));
