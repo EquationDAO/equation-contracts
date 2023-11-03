@@ -25,10 +25,11 @@ contract RewardCollectorV2 is RewardCollector {
     }
 
     /// @notice Allows a user to claim rewards from the distributor
-    /// @param _nonce The nonce for the claim
-    /// @param _totalReward The total reward amount of the sender
+    /// @param _pool The pool from which the reward is claimed
+    /// @param _nonce The nonce of the sender for the claim
+    /// @param _totalReward The total reward amount of the sender in the pool
     /// @param _signature The signature for the claim
-    function claim(uint32 _nonce, uint224 _totalReward, bytes memory _signature) external {
-        distributor.claim(msg.sender, _nonce, _totalReward, _signature, address(this));
+    function claim(address _pool, uint32 _nonce, uint256 _totalReward, bytes memory _signature) external {
+        distributor.claim(_pool, msg.sender, _nonce, _totalReward, _signature, address(this));
     }
 }
