@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
+import "../governance/Governable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
-/// @title RewardDistributor
-/// @dev The contract allows users to claim rewards from the distributor
-contract RewardDistributor is Ownable2Step {
+/// @title PositionFarmRewardDistributor
+/// @dev The contract allows users to collect position farm rewards
+contract PositionFarmRewardDistributor is Governable {
     using ECDSA for bytes32;
 
     /// @notice Struct to store the pool total reward for an account
@@ -27,17 +27,17 @@ contract RewardDistributor is Ownable2Step {
     mapping(address => bool) public collectors;
     /// @notice The nonces for each account
     mapping(address => uint32) public nonces;
-    /// @notice Mapping of pool accounts to their claimed rewards
-    /// pool => account => claimedReward
-    mapping(address => mapping(address => uint256)) public claimedRewards;
+    /// @notice Mapping of pool accounts to their collected rewards
+    /// pool => account => collectedReward
+    mapping(address => mapping(address => uint256)) public collectedRewards;
 
-    /// @dev Event emitted when a claim is made
-    /// @param pool The pool from which to claim the reward
-    /// @param account The account that claimed the reward for
-    /// @param nonce The nonce of the sender for the claim
+    /// @dev Event emitted when the position farm reward is collected
+    /// @param pool The pool from which to collect the reward
+    /// @param account The account that collect the reward for
+    /// @param nonce The nonce of the sender
     /// @param receiver The address that received the reward
-    /// @param amount The amount of the reward claimed
-    event Claimed(
+    /// @param amount The amount of the reward collected
+    event PositionFarmRewardCollected(
         address indexed pool,
         address indexed account,
         uint32 indexed nonce,
@@ -62,7 +62,7 @@ contract RewardDistributor is Ownable2Step {
         _;
     }
 
-    /// @notice Constructs a new RewardDistributor contract
+    /// @notice Constructs a new PositionFarmRewardDistributor contract
     /// @param _signer The address of the signer
     /// @param _token The address of the token
     constructor(address _signer, IERC20 _token) {
@@ -71,35 +71,35 @@ contract RewardDistributor is Ownable2Step {
         token = _token;
     }
 
-    /// @notice Sets the address of the reward collector and enables or disables it
+    /// @notice Sets the address of the reward collector enabled or disabled
     /// @param _collector The address of the reward collector
     /// @param _enabled A boolean indicating whether the reward collector is enabled or disabled
-    function setCollector(address _collector, bool _enabled) external onlyOwner {
+    function setCollector(address _collector, bool _enabled) external onlyGov {
         collectors[_collector] = _enabled;
     }
 
-    /// @notice Allows a user to claim their reward by providing a valid signature
-    /// @param _nonce The nonce of the sender for the claim
+    /// @notice Collect position farm reward by the sender
+    /// @param _nonce The nonce of the account
     /// @param _poolTotalRewards The pool total reward amount of the account
     /// @param _signature The signature of the signer to verify
-    /// @param _receiver The receiver of the claim
-    function claim(
+    /// @param _receiver The address that received the reward
+    function collectPositionFarmRewardBatch(
         uint32 _nonce,
         PoolTotalReward[] calldata _poolTotalRewards,
         bytes memory _signature,
         address _receiver
     ) external {
         if (_receiver == address(0)) _receiver = msg.sender;
-        _claim(msg.sender, _nonce, _poolTotalRewards, _signature, _receiver);
+        _collectPositionFarmRewardBatch(msg.sender, _nonce, _poolTotalRewards, _signature, _receiver);
     }
 
-    /// @notice Claims a reward for a specific account
-    /// @param _account The account to claim for
-    /// @param _nonce The nonce of the sender for the claim
+    /// @notice Collect position farm reward for a specific account by the collector
+    /// @param _account The account to collect the reward for
+    /// @param _nonce The nonce of the account
     /// @param _poolTotalRewards The pool total reward amount of the account
-    /// @param _signature The signature for the claim
-    /// @param _receiver The receiver of the claim
-    function claimByCollector(
+    /// @param _signature The signature of the signer to verify
+    /// @param _receiver The address that received the reward
+    function collectPositionFarmRewardBatchByCollector(
         address _account,
         uint32 _nonce,
         PoolTotalReward[] calldata _poolTotalRewards,
@@ -107,10 +107,10 @@ contract RewardDistributor is Ownable2Step {
         address _receiver
     ) external onlyCollector {
         if (_receiver == address(0)) _receiver = msg.sender;
-        _claim(_account, _nonce, _poolTotalRewards, _signature, _receiver);
+        _collectPositionFarmRewardBatch(_account, _nonce, _poolTotalRewards, _signature, _receiver);
     }
 
-    function _claim(
+    function _collectPositionFarmRewardBatch(
         address _account,
         uint32 _nonce,
         PoolTotalReward[] calldata _poolTotalRewards,
@@ -127,10 +127,10 @@ contract RewardDistributor is Ownable2Step {
         uint256 len = _poolTotalRewards.length;
         for (uint256 i = 0; i < len; ) {
             (address pool, uint256 totalReward) = (_poolTotalRewards[i].pool, _poolTotalRewards[i].totalReward);
-            uint256 claimableReward = totalReward - claimedRewards[pool][_account];
-            emit Claimed(pool, _account, _nonce, _receiver, claimableReward);
-            claimedRewards[pool][_account] = totalReward;
-            amount += claimableReward;
+            uint256 collectableReward = totalReward - collectedRewards[pool][_account];
+            emit PositionFarmRewardCollected(pool, _account, _nonce, _receiver, collectableReward);
+            collectedRewards[pool][_account] = totalReward;
+            amount += collectableReward;
             unchecked {
                 ++i;
             }
