@@ -24,11 +24,11 @@ contract RewardCollectorV2 is RewardCollector {
         distributor = _distributor;
     }
 
-    /// @notice Allows a user to claim rewards from the distributor
+    /// @notice Allows a user to claim position farm rewards from the distributor
     /// @param _nonce The nonce of the sender for the claim
     /// @param _poolTotalRewards The pool total reward amount of the account
     /// @param _signature The signature for the claim
-    function claim(
+    function collectPositionFarmRewardBatch(
         uint32 _nonce,
         RewardDistributor.PoolTotalReward[] calldata _poolTotalRewards,
         bytes memory _signature

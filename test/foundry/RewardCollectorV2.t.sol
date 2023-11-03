@@ -48,7 +48,7 @@ contract RewardCollectorV2Test is Test {
         bytes memory signature = abi.encodePacked(r, s, v);
         bytes[] memory data = new bytes[](2);
         data[0] = abi.encodeWithSignature(
-            "claim(uint32,(address,uint256)[],bytes)",
+            "collectPositionFarmRewardBatch(uint32,(address,uint256)[],bytes)",
             nonce,
             poolTotalRewards,
             signature
