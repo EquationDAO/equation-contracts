@@ -11,6 +11,14 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 contract RewardDistributor is Ownable2Step {
     using ECDSA for bytes32;
 
+    /// @notice Struct to store the pool total reward for an account
+    struct PoolTotalReward {
+        /// @notice The address of the pool
+        address pool;
+        /// @notice The total reward amount of the account in the pool
+        uint256 totalReward;
+    }
+
     /// @notice The address of the signer
     address public immutable signer;
     /// @notice The address of the token
@@ -71,62 +79,59 @@ contract RewardDistributor is Ownable2Step {
     }
 
     /// @notice Allows a user to claim their reward by providing a valid signature
-    /// @dev The account and the receiver are the sender
-    /// @param _pool The pool from which to claim the reward
     /// @param _nonce The nonce of the sender for the claim
-    /// @param _totalReward The total reward amount of the sender in the pool
+    /// @param _poolTotalRewards The pool total reward amount of the account
     /// @param _signature The signature of the signer to verify
     /// @param _receiver The receiver of the claim
     function claim(
-        address _pool,
         uint32 _nonce,
-        uint256 _totalReward,
+        PoolTotalReward[] calldata _poolTotalRewards,
         bytes memory _signature,
         address _receiver
     ) external {
         if (_receiver == address(0)) _receiver = msg.sender;
-        _claim(_pool, msg.sender, _nonce, _totalReward, _signature, _receiver);
+        _claim(msg.sender, _nonce, _poolTotalRewards, _signature, _receiver);
     }
 
     /// @notice Claims a reward for a specific account
-    /// @param _pool The pool from which to claim the reward
     /// @param _account The account to claim for
     /// @param _nonce The nonce of the sender for the claim
-    /// @param _totalReward The total reward amount of the account in pool
+    /// @param _poolTotalRewards The pool total reward amount of the account
     /// @param _signature The signature for the claim
     /// @param _receiver The receiver of the claim
-    function claim(
-        address _pool,
+    function claimByCollector(
         address _account,
         uint32 _nonce,
-        uint256 _totalReward,
+        PoolTotalReward[] calldata _poolTotalRewards,
         bytes memory _signature,
         address _receiver
     ) external onlyCollector {
         if (_receiver == address(0)) _receiver = msg.sender;
-        _claim(_pool, _account, _nonce, _totalReward, _signature, _receiver);
+        _claim(_account, _nonce, _poolTotalRewards, _signature, _receiver);
     }
 
     function _claim(
-        address _pool,
         address _account,
         uint32 _nonce,
-        uint256 _totalReward,
+        PoolTotalReward[] calldata _poolTotalRewards,
         bytes memory _signature,
         address _receiver
     ) private {
         if (_nonce != nonces[_account] + 1) revert InvalidNonce(_nonce);
-        address _signer = keccak256(abi.encode(_pool, _account, _nonce, _totalReward)).toEthSignedMessageHash().recover(
+        address _signer = keccak256(abi.encode(_account, _nonce, _poolTotalRewards)).toEthSignedMessageHash().recover(
             _signature
         );
         if (_signer != signer) revert InvalidSignature();
-        uint256 claimableReward = _totalReward - claimedRewards[_pool][_account];
-        emit Claimed(_pool, _account, _nonce, _receiver, claimableReward);
+
+        uint256 amount = 0;
+        for (uint i = 0; i < _poolTotalRewards.length; i++) {
+            (address pool, uint256 totalReward) = (_poolTotalRewards[i].pool, _poolTotalRewards[i].totalReward);
+            uint256 claimableReward = totalReward - claimedRewards[pool][_account];
+            emit Claimed(pool, _account, _nonce, _receiver, claimableReward);
+            claimedRewards[pool][_account] += claimableReward;
+            amount += claimableReward;
+        }
         nonces[_account] = _nonce;
-        claimedRewards[_pool][_account] += claimableReward;
-        Address.functionCall(
-            address(token),
-            abi.encodeWithSignature("mint(address,uint256)", _receiver, claimableReward)
-        );
+        Address.functionCall(address(token), abi.encodeWithSignature("mint(address,uint256)", _receiver, amount));
     }
 }
