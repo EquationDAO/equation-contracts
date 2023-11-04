@@ -2,37 +2,43 @@
 pragma solidity =0.8.21;
 
 import "./RewardCollector.sol";
-import "./RewardDistributor.sol";
+import "./PositionFarmRewardDistributor.sol";
 
 /// @title RewardCollectorV2
 /// @notice The contract extends the RewardCollector contract and implements additional functionality
-/// It allows users to claim rewards from the distributor
+/// It allows users to collect position farm rewards from the distributor
 contract RewardCollectorV2 is RewardCollector {
-    RewardDistributor public immutable distributor;
+    PositionFarmRewardDistributor public immutable distributor;
 
     /// @notice Constructs a new RewardCollectorV2 contract
     /// @param _router The address of the router
     /// @param _EQU The address of the EQU token
     /// @param _EFC The address of the EFC token
-    /// @param _distributor The address of the reward distributor from which rewards are claimed
+    /// @param _distributor The address of the position farm reward distributor
     constructor(
         Router _router,
         IERC20 _EQU,
         IEFC _EFC,
-        RewardDistributor _distributor
+        PositionFarmRewardDistributor _distributor
     ) RewardCollector(_router, _EQU, _EFC) {
         distributor = _distributor;
     }
 
-    /// @notice Allows a user to claim rewards from the distributor
-    /// @param _nonce The nonce of the sender for the claim
+    /// @notice Allows a user to collect position farm rewards from the distributor
+    /// @param _nonce The nonce of the sender
     /// @param _poolTotalRewards The pool total reward amount of the account
-    /// @param _signature The signature for the claim
-    function claim(
+    /// @param _signature The signature to use for collecting the reward
+    function collectPositionFarmRewardBatch(
         uint32 _nonce,
-        RewardDistributor.PoolTotalReward[] calldata _poolTotalRewards,
+        PositionFarmRewardDistributor.PoolTotalReward[] calldata _poolTotalRewards,
         bytes memory _signature
     ) external {
-        distributor.claimByCollector(msg.sender, _nonce, _poolTotalRewards, _signature, address(this));
+        distributor.collectPositionFarmRewardBatchByCollector(
+            msg.sender,
+            _nonce,
+            _poolTotalRewards,
+            _signature,
+            address(this)
+        );
     }
 }
