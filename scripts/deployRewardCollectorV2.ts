@@ -23,6 +23,17 @@ async function main() {
 
     const fs = require("fs");
     fs.writeFileSync(`deployments/${chainId}.json`, JSON.stringify(document));
+
+    // Register collector
+    const distributor = await ethers.getContractAt(
+        "PositionFarmRewardDistributor",
+        document.deployments.PositionFarmRewardDistributor
+    );
+    await distributor.setCollector(rewardCollectorV2.address, true);
+
+    // Register plugin
+    const router = await ethers.getContractAt("Router", document.deployments.Router);
+    await router.registerPlugin(rewardCollectorV2.address);
 }
 
 main()

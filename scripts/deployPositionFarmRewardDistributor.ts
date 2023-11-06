@@ -21,6 +21,10 @@ async function main() {
 
     const fs = require("fs");
     fs.writeFileSync(`deployments/${chainId}.json`, JSON.stringify(document));
+
+    // Set distributor as minter
+    const EQU = await ethers.getContractAt("MultiMinter", document.deployments.EQU);
+    await EQU.setMinter(distributor.address, true);
 }
 
 main()
