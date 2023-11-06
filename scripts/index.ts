@@ -277,6 +277,14 @@ async function main() {
     const chainId = (await poolUtil.provider.getNetwork()).chainId;
     fs.writeFileSync(`deployments/${chainId}.json`, JSON.stringify(deploymentsOutput));
     console.log(`deployments output to deployments/${chainId}.json`);
+
+    console.log(`
+    The following scripts need to be executed:
+        1. Register Pools - registerPools.ts
+        2. Update Reward Farm - updateRewardFarm.ts
+        3. Deploy Position Farm Reward Distributor - deployPositionFarmRewardDistributor.ts
+        4. Deploy Reward Collector V2 - deployRewardCollectorV2.ts
+    `);
 }
 
 function expectAddr(actual: string, expected: string) {
