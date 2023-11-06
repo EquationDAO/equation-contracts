@@ -67,6 +67,7 @@ export const networks = {
         usd: "0x58e7F6b126eCC1A694B19062317b60Cf474E3D17",
         usdChainLinkPriceFeed: "0x0a023a3423D9b27A0BE48c768CCF2dD7877fEf5E",
         weth: "0xe39Ab88f8A4777030A534146A9Ca3B52bd5D43A3",
+        distributorSigner: undefined,
         minPositionRouterExecutionFee: ethers.utils.parseUnits("0.00021", "ether"),
         minOrderBookExecutionFee: ethers.utils.parseUnits("0.0003", "ether"),
         farmMintTime: Math.floor(new Date().getTime() / 1000) + 1 * 60 * 60,
@@ -138,6 +139,7 @@ export const networks = {
         usd: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
         usdChainLinkPriceFeed: "0x3f3f5dF88dC9F13eac63DF89EC16ef6e7E25DdE7",
         weth: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+        distributorSigner: "0x2288A79e5EFA061719EDaF8C69968c6e166ce322",
         minPositionRouterExecutionFee: ethers.utils.parseUnits("0.00021", "ether"),
         minOrderBookExecutionFee: ethers.utils.parseUnits("0.0003", "ether"),
         farmMintTime: Math.floor(new Date("2023-10-28T00:00:00.000Z").getTime() / 1000),
@@ -151,7 +153,7 @@ export const networks = {
                 address: "0x23EEF5f7A8b37b2310e9aC9611E35fa999143810",
                 chainLinkPriceFeed: "0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612",
                 maxCumulativeDeltaDiff: defaultMaxCumulativeDeltaDiff,
-                rewardsPerSecond: 37037037037037037n,
+                rewardsPerSecond: 18518518518518518n,
                 tokenCfg: defaultTokenCfg,
                 tokenFeeCfg: defaultTokenFeeCfg,
                 tokenPriceCfg: {
@@ -165,7 +167,7 @@ export const networks = {
                 address: "0x1885aAD80817a0baF196dEb62b08695E64936332",
                 chainLinkPriceFeed: "0x6ce185860a4963106506C203335A2910413708e9",
                 maxCumulativeDeltaDiff: defaultMaxCumulativeDeltaDiff,
-                rewardsPerSecond: 61728395061728395n,
+                rewardsPerSecond: 30864197530864197n,
                 tokenCfg: defaultTokenCfg,
                 tokenFeeCfg: defaultTokenFeeCfg,
                 tokenPriceCfg: {
@@ -179,7 +181,7 @@ export const networks = {
                 address: "0x1281b9dAFA2b11C43e1E41bb4aDCdd3bdBc2b2a6",
                 chainLinkPriceFeed: "0x24ceA4b8ce57cdA5058b924B9B9987992450590c",
                 maxCumulativeDeltaDiff: defaultMaxCumulativeDeltaDiff,
-                rewardsPerSecond: 4629629629629629n,
+                rewardsPerSecond: 2314814814814814n,
                 tokenCfg: defaultTokenCfg,
                 tokenFeeCfg: defaultTokenFeeCfg,
                 tokenPriceCfg: {
@@ -193,7 +195,7 @@ export const networks = {
                 address: "0x96A0D2D2D4378bCb35013f964d95224fE4FEd8FE",
                 chainLinkPriceFeed: "0xb2A824043730FE05F3DA2efaFa1CBbe83fa548D6",
                 maxCumulativeDeltaDiff: defaultMaxCumulativeDeltaDiff,
-                rewardsPerSecond: 2469135802469135n,
+                rewardsPerSecond: 1234567901234567n,
                 tokenCfg: defaultTokenCfg,
                 tokenFeeCfg: defaultTokenFeeCfg,
                 tokenPriceCfg: {
@@ -207,7 +209,7 @@ export const networks = {
                 address: "0xA67cB8b1880E2573907f5f52121e8C49B141bD66",
                 chainLinkPriceFeed: "0x205aaD468a11fd5D34fA7211bC6Bad5b3deB9b98",
                 maxCumulativeDeltaDiff: defaultMaxCumulativeDeltaDiff,
-                rewardsPerSecond: 2469135802469135n,
+                rewardsPerSecond: 1234567901234567n,
                 tokenCfg: defaultTokenCfg,
                 tokenFeeCfg: defaultTokenFeeCfg,
                 tokenPriceCfg: {
@@ -221,7 +223,7 @@ export const networks = {
                 address: "0xA7c1181043e489E720Fb72e33168298675EDCdF8",
                 chainLinkPriceFeed: "0x52099D4523531f678Dfc568a7B1e5038aadcE1d6",
                 maxCumulativeDeltaDiff: defaultMaxCumulativeDeltaDiff,
-                rewardsPerSecond: 2469135802469135n,
+                rewardsPerSecond: 1234567901234567n,
                 tokenCfg: defaultTokenCfg,
                 tokenFeeCfg: defaultTokenFeeCfg,
                 tokenPriceCfg: {
@@ -235,7 +237,7 @@ export const networks = {
                 address: "0xB42E185016C53B38C2c61409F1D6DA3CcFB02C9f",
                 chainLinkPriceFeed: "0x8bf61728eeDCE2F32c456454d87B5d6eD6150208",
                 maxCumulativeDeltaDiff: defaultMaxCumulativeDeltaDiff,
-                rewardsPerSecond: 2469135802469135n,
+                rewardsPerSecond: 1234567901234567n,
                 tokenCfg: defaultTokenCfg,
                 tokenFeeCfg: defaultTokenFeeCfg,
                 tokenPriceCfg: {
@@ -249,7 +251,7 @@ export const networks = {
                 address: "0xEE4b6FC76B9F44420D646BFCf8a1F5c4c399B54F",
                 chainLinkPriceFeed: "0x86E53CF1B870786351Da77A57575e79CB55812CB",
                 maxCumulativeDeltaDiff: defaultMaxCumulativeDeltaDiff,
-                rewardsPerSecond: 2469135802469135n,
+                rewardsPerSecond: 1234567901234567n,
                 tokenCfg: defaultTokenCfg,
                 tokenFeeCfg: defaultTokenFeeCfg,
                 tokenPriceCfg: {
