@@ -6,18 +6,21 @@ import "../core/interfaces/IPool.sol";
 import "../governance/Governable.sol";
 import "../types/PackedValue.sol";
 import "../libraries/SafeCast.sol";
+import "../libraries/SafeERC20.sol";
 import "../libraries/Constants.sol";
+import "../libraries/ReentrancyGuard.sol";
 import "./PositionFarmRewardDistributor.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
-contract FarmRewardDistributorV2 is Governable {
+contract FarmRewardDistributorV2 is Governable, ReentrancyGuard {
     using SafeCast for *;
+    using SafeERC20 for IERC20;
     using ECDSA for bytes32;
 
     struct LockupFreeRateParameter {
-        /// @notice The lockup period
+        /// @notice The lockup period, 0 means no lockup
         uint16 period;
         /// @notice The lockup free rate, denominated in ten thousandths of a bip (i.e. 1e-8)
         uint32 lockupFreeRate;
@@ -59,7 +62,7 @@ contract FarmRewardDistributorV2 is Governable {
     /// @param enabled Whether the collector is enabled or disabled
     event CollectorUpdated(address indexed collector, bool enabled);
     /// @notice Event emitted when the lockup free rate is set
-    /// @param period The lockup period
+    /// @param period The lockup period, 0 means no lockup
     /// @param lockupFreeRate The lockup free rate, denominated in ten thousandths of a bip (i.e. 1e-8)
     event LockupFreeRateSet(uint16 indexed period, uint32 lockupFreeRate);
     /// @notice Event emitted when the reward is collected
@@ -76,6 +79,19 @@ contract FarmRewardDistributorV2 is Governable {
         uint32 nonce,
         address receiver,
         uint216 amount
+    );
+    /// @notice Event emitted when the reward is locked and burned
+    /// @param account The account that collect the reward for
+    /// @param period The lockup period, 0 means no lockup
+    /// @param receiver The address that received the unlocked reward or the locked reward
+    /// @param lockedOrUnlockedAmount The amount of the unlocked reward or the locked reward
+    /// @param burnedAmount The amount of the burned reward
+    event RewardLockedAndBurned(
+        address indexed account,
+        uint16 indexed period,
+        address indexed receiver,
+        uint256 lockedOrUnlockedAmount,
+        uint256 burnedAmount
     );
 
     /// @notice Error thrown when the reward type is invalid
@@ -99,6 +115,8 @@ contract FarmRewardDistributorV2 is Governable {
         token = _distributorV1.token();
         feeDistributor = _feeDistributor;
         poolIndexer = _poolIndexer;
+
+        token.approve(address(_feeDistributor), type(uint256).max); // approve unlimited
 
         _setRewardType(REWARD_TYPE_POSITION, "Position");
         _setRewardType(REWARD_TYPE_LIQUIDITY, "Liquidity");
@@ -150,7 +168,7 @@ contract FarmRewardDistributorV2 is Governable {
         PackedValue[] calldata _packedPoolRewardValues,
         bytes calldata _signature,
         address _receiver
-    ) external virtual onlyCollector {
+    ) external virtual nonReentrant onlyCollector {
         if (_receiver == address(0)) _receiver = msg.sender;
 
         // check nonce
@@ -192,12 +210,8 @@ contract FarmRewardDistributorV2 is Governable {
         }
 
         nonces[_account] = nonce;
-        Address.functionCall(
-            address(token),
-            abi.encodeWithSignature("mint(address,uint256)", address(this), totalCollectableReward)
-        );
 
-        // TODO: burn the token after the reward is distributed
+        _lockupAndBurnToken(_account, lockupPeriod, lockupFreeRate, totalCollectableReward, _receiver);
     }
 
     function _nonceFor(address _account) internal view virtual returns (uint32 nonce) {
@@ -232,5 +246,30 @@ contract FarmRewardDistributorV2 is Governable {
 
         lockupFreeRates[_parameter.period] = _parameter.lockupFreeRate;
         emit LockupFreeRateSet(_parameter.period, _parameter.lockupFreeRate);
+    }
+
+    function _lockupAndBurnToken(
+        address _account,
+        uint16 _lockupPeriod,
+        uint32 _lockupFreeRate,
+        uint256 _totalCollectableReward,
+        address _receiver
+    ) internal virtual {
+        Address.functionCall(
+            address(token),
+            abi.encodeWithSignature("mint(address,uint256)", address(this), _totalCollectableReward)
+        );
+
+        uint256 lockedOrUnlockedAmount = (_totalCollectableReward * _lockupFreeRate) / Constants.BASIS_POINTS_DIVISOR;
+        uint256 burnedAmount = _totalCollectableReward - lockedOrUnlockedAmount;
+
+        // first burn the token
+        if (burnedAmount > 0) token.safeTransfer(address(0x1), burnedAmount);
+
+        // then lockup or transfer the token
+        if (_lockupPeriod == 0) token.safeTransfer(_receiver, lockedOrUnlockedAmount);
+        else feeDistributor.stake(lockedOrUnlockedAmount, _receiver, _lockupPeriod);
+
+        emit RewardLockedAndBurned(_account, _lockupPeriod, _receiver, lockedOrUnlockedAmount, burnedAmount);
     }
 }
