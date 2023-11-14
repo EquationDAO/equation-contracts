@@ -5,6 +5,7 @@ import "./interfaces/IPoolFactory.sol";
 
 /// @notice The contract is used for assigning pool and token indexes.
 /// Using an index instead of an address can effectively reduce the gas cost of the transaction.
+/// @custom:since v0.0.3
 contract PoolIndexer {
     IPoolFactory public immutable poolFactory;
 

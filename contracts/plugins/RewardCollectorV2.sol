@@ -2,7 +2,7 @@
 pragma solidity =0.8.21;
 
 import "./RewardCollector.sol";
-import "./PositionFarmRewardDistributor.sol";
+import "../farming/PositionFarmRewardDistributor.sol";
 
 /// @title RewardCollectorV2
 /// @notice The contract extends the RewardCollector contract and implements additional functionality
