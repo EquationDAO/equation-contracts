@@ -16,6 +16,7 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 /// @notice The contract allows users to collect farm rewards and lockup and
 /// burn the rewards based on the lockup period
+/// @custom:since v0.0.3
 contract FarmRewardDistributorV2 is Governable, ReentrancyGuard {
     using SafeCast for *;
     using SafeERC20 for IERC20;
