@@ -284,6 +284,7 @@ async function main() {
         2. Update Reward Farm - updateRewardFarm.ts
         3. Deploy Position Farm Reward Distributor - deployPositionFarmRewardDistributor.ts
         4. Deploy Reward Collector V2 - deployRewardCollectorV2.ts
+        5. Deploy Pool Indexer - deployPoolIndexer.ts
     `);
 }
 

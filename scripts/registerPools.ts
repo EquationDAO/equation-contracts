@@ -11,16 +11,21 @@ export async function registerPools(chainId: number) {
     setBytecodeHash(document.poolBytecodeHash);
 
     const poolFactory = await ethers.getContractAt("PoolFactory", document.deployments.PoolFactory);
+    const poolIndexer = await ethers.getContractAt("PoolIndexer", document.deployments.PoolIndexer);
     for (let item of network.tokens) {
+        const poolAddr = computePoolAddress(poolFactory.address, item.address, network.usd);
         const enabled = await poolFactory.isEnabledToken(item.address);
         if (enabled) {
+            if ((await poolIndexer.tokenIndexes(item.address)) === 0) {
+                await poolIndexer.assignPoolIndex(poolAddr);
+            }
             continue;
         }
 
-        const poolAddr = computePoolAddress(poolFactory.address, item.address, network.usd);
         console.log(`registering ${item.name} (${item.address}) at ${poolAddr}`);
         await poolFactory.enableToken(item.address, item.tokenCfg, item.tokenFeeCfg, item.tokenPriceCfg);
         await poolFactory.createPool(item.address);
+        await poolIndexer.assignPoolIndex(poolAddr);
         if (document.deployments.registerPools == undefined) {
             document.deployments.registerPools = [];
         }
