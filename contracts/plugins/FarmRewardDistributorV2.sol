@@ -161,7 +161,7 @@ contract FarmRewardDistributorV2 is Governable {
     ) internal view returns (uint216 collectedReward) {
         collectedReward = collectedRewards[_account][_pool][_rewardType];
         if (collectedReward == 0 && _rewardType == REWARD_TYPE_POSITION)
-            collectedReward = distributorV1.collectedRewards(_account, address(_pool)).toUint216();
+            collectedReward = distributorV1.collectedRewards(address(_pool), _account).toUint216();
     }
 
     function _setRewardType(uint16 _rewardType, string memory _description) internal virtual {
