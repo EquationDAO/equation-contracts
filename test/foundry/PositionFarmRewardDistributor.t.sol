@@ -4,7 +4,7 @@ pragma solidity ^0.8.21;
 import "./Token.sol";
 import "forge-std/Test.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "../../contracts/plugins/PositionFarmRewardDistributor.sol";
+import "../../contracts/farming/PositionFarmRewardDistributor.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract PositionFarmRewardDistributorTest is Test {

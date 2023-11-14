@@ -3,7 +3,7 @@ pragma solidity =0.8.21;
 
 import "./Router.sol";
 import "./RewardCollector.sol";
-import "./FarmRewardDistributorV2.sol";
+import "../farming/FarmRewardDistributorV2.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
