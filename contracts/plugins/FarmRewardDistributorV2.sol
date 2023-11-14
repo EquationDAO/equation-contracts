@@ -15,6 +15,10 @@ contract FarmRewardDistributorV2 is Governable {
     using SafeCast for *;
     using ECDSA for bytes32;
 
+    uint16 public constant REWARD_TYPE_POSITION = 1;
+    uint16 public constant REWARD_TYPE_LIQUIDITY = 2;
+    uint16 public constant REWARD_TYPE_RISK_BUFFER_FUND = 3;
+
     /// @notice The address of the signer
     address public immutable signer;
     /// @notice The address of the token to be distributed
@@ -29,7 +33,7 @@ contract FarmRewardDistributorV2 is Governable {
     /// @notice The nonces for each account
     mapping(address => uint32) public nonces;
     /// @notice Mapping of reward types to their description.
-    /// e.g. 1 => "Position Farm Reward", 2 => "Liquidity Farm Reward", 3 => "RBF Farm Reward"
+    /// e.g. 1 => "Position", 2 => "Liquidity", 3 => "RiskBufferFund"
     mapping(uint16 => string) public rewardTypesDescriptions;
     /// @notice Mapping of accounts to their collected rewards for corresponding pools and reward types
     mapping(address => mapping(IPool => mapping(uint16 => uint216))) public collectedRewards;
@@ -70,9 +74,9 @@ contract FarmRewardDistributorV2 is Governable {
         token = _distributorV1.token();
         poolIndexer = _poolIndexer;
 
-        _setRewardType(1, "Position Farm Reward");
-        _setRewardType(2, "Liquidity Farm Reward");
-        _setRewardType(3, "RBF Farm Reward");
+        _setRewardType(REWARD_TYPE_POSITION, "Position");
+        _setRewardType(REWARD_TYPE_LIQUIDITY, "Liquidity");
+        _setRewardType(REWARD_TYPE_RISK_BUFFER_FUND, "RiskBufferFund");
     }
 
     /// @notice Set whether the address of the reward collector is enabled or disabled
@@ -156,7 +160,7 @@ contract FarmRewardDistributorV2 is Governable {
         uint16 _rewardType
     ) internal view returns (uint216 collectedReward) {
         collectedReward = collectedRewards[_account][_pool][_rewardType];
-        if (collectedReward == 0)
+        if (collectedReward == 0 && _rewardType == REWARD_TYPE_POSITION)
             collectedReward = distributorV1.collectedRewards(_account, address(_pool)).toUint216();
     }
 
