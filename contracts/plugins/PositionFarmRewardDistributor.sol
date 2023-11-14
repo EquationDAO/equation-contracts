@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity =0.8.21;
 
 import "../governance/Governable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
@@ -71,9 +71,9 @@ contract PositionFarmRewardDistributor is Governable {
         token = _token;
     }
 
-    /// @notice Sets the address of the reward collector enabled or disabled
-    /// @param _collector The address of the reward collector
-    /// @param _enabled A boolean indicating whether the reward collector is enabled or disabled
+    /// @notice Set whether the address of the reward collector is enabled or disabled
+    /// @param _collector Address to set
+    /// @param _enabled Whether the address is enabled or disabled
     function setCollector(address _collector, bool _enabled) external onlyGov {
         collectors[_collector] = _enabled;
     }
