@@ -5,6 +5,7 @@ import "./Token.sol";
 import "forge-std/Test.sol";
 import "../../contracts/plugins/RewardCollectorV3.sol";
 import "../../contracts/farming/FarmRewardDistributorV2.sol";
+import "../../contracts/test/MockEFC.sol";
 import "../../contracts/test/MockPool.sol";
 import "../../contracts/test/MockPoolFactory.sol";
 import "../../contracts/test/MockFeeDistributor.sol";
@@ -21,6 +22,7 @@ contract FarmRewardDistributorV2Test is Test {
 
     PoolIndexer public poolIndexer;
 
+    MockEFC public EFC;
     RewardCollectorV3 public collector;
     PositionFarmRewardDistributor public distributorV1;
     FarmRewardDistributorV2 public distributorV2;
@@ -30,12 +32,13 @@ contract FarmRewardDistributorV2Test is Test {
     event RewardTypeDescriptionSet(uint16 indexed rewardType, string description);
     event LockupFreeRateSet(uint16 indexed period, uint32 lockupFreeRate);
     event RewardCollected(
-        IPool indexed pool,
+        IPool pool,
         address indexed account,
         uint16 indexed rewardType,
+        uint16 indexed referralToken,
         uint32 nonce,
         address receiver,
-        uint216 amount
+        uint200 amount
     );
     event RewardLockedAndBurned(
         address indexed account,
@@ -78,8 +81,15 @@ contract FarmRewardDistributorV2Test is Test {
 
         feeDistributor = new MockFeeDistributor();
         feeDistributor.setToken(token);
+        EFC = new MockEFC();
+        EFC.setOwner(1, ACCOUNT1);
+        EFC.setOwner(1000, ACCOUNT1);
+        EFC.setOwner(10000, ACCOUNT1);
+        EFC.setOwner(19999, ACCOUNT1);
+
         distributorV2 = new FarmRewardDistributorV2(
             signer,
+            IEFC(address(EFC)),
             distributorV1,
             IFeeDistributor(address(feeDistributor)),
             poolIndexer
@@ -225,11 +235,11 @@ contract FarmRewardDistributorV2Test is Test {
     }
 
     function test_collectBatch_RevertIf_reward_type_is_invalid() public {
-        vm.expectRevert(abi.encodeWithSelector(FarmRewardDistributorV2.InvalidRewardType.selector, 4));
+        vm.expectRevert(abi.encodeWithSelector(FarmRewardDistributorV2.InvalidRewardType.selector, type(uint16).max));
         PackedValue[] memory packedValues = new PackedValue[](1);
         PackedValue packedPoolRewardValue = PackedValue.wrap(0);
         packedPoolRewardValue = packedPoolRewardValue.packUint24(1, 0);
-        packedPoolRewardValue = packedPoolRewardValue.packUint16(4, 24);
+        packedPoolRewardValue = packedPoolRewardValue.packUint16(type(uint16).max, 24);
         packedValues[0] = packedPoolRewardValue;
         PackedValue nonceAndLockupPeriod = PackedValue.wrap(0);
         nonceAndLockupPeriod = nonceAndLockupPeriod.packUint32(2, 0);
@@ -249,7 +259,8 @@ contract FarmRewardDistributorV2Test is Test {
         PackedValue packedPoolRewardValue = PackedValue.wrap(0);
         packedPoolRewardValue = packedPoolRewardValue.packUint24(1, 0);
         packedPoolRewardValue = packedPoolRewardValue.packUint16(1, 24);
-        packedPoolRewardValue = packedPoolRewardValue.packUint216(999, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint16(0, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint200(999, 56);
         packedValues[0] = packedPoolRewardValue;
         PackedValue nonceAndLockupPeriod = PackedValue.wrap(0);
         nonceAndLockupPeriod = nonceAndLockupPeriod.packUint32(2, 0);
@@ -263,12 +274,34 @@ contract FarmRewardDistributorV2Test is Test {
         );
     }
 
+    function test_collectBatch_RevertIf_not_referral_token_owner() public {
+        vm.expectRevert(abi.encodeWithSelector(IFeeDistributor.InvalidNFTOwner.selector, ACCOUNT2, 1));
+        PackedValue[] memory packedValues = new PackedValue[](1);
+        PackedValue packedPoolRewardValue = PackedValue.wrap(0);
+        packedPoolRewardValue = packedPoolRewardValue.packUint24(1, 0);
+        packedPoolRewardValue = packedPoolRewardValue.packUint16(1, 24);
+        packedPoolRewardValue = packedPoolRewardValue.packUint16(1, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint216(999, 56);
+        packedValues[0] = packedPoolRewardValue;
+        PackedValue nonceAndLockupPeriod = PackedValue.wrap(0);
+        nonceAndLockupPeriod = nonceAndLockupPeriod.packUint32(1, 0);
+        nonceAndLockupPeriod = nonceAndLockupPeriod.packUint16(30, 32);
+        distributorV2.collectBatch(
+            ACCOUNT2,
+            nonceAndLockupPeriod,
+            packedValues,
+            signV2(SIGNER_PRIVATE_KEY, ACCOUNT2, nonceAndLockupPeriod, packedValues),
+            ACCOUNT1
+        );
+    }
+
     function test_collectBatch_read_value_once_from_distributor_v1_if_reward_type_is_1() public {
         PackedValue[] memory packedValues = new PackedValue[](1);
         PackedValue packedPoolRewardValue = PackedValue.wrap(0);
         packedPoolRewardValue = packedPoolRewardValue.packUint24(1, 0);
         packedPoolRewardValue = packedPoolRewardValue.packUint16(1, 24);
-        packedPoolRewardValue = packedPoolRewardValue.packUint216(1003, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint16(0, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint200(1003, 56);
         packedValues[0] = packedPoolRewardValue;
         PackedValue nonceAndLockupPeriod = PackedValue.wrap(0);
         nonceAndLockupPeriod = nonceAndLockupPeriod.packUint32(2, 0);
@@ -282,11 +315,12 @@ contract FarmRewardDistributorV2Test is Test {
         );
 
         vm.expectEmit(true, true, true, true);
-        emit RewardCollected(IPool(address(pool1)), ACCOUNT1, 1, 3, ACCOUNT1, 7);
+        emit RewardCollected(IPool(address(pool1)), ACCOUNT1, 1, 0, 3, ACCOUNT1, 7);
         packedPoolRewardValue = PackedValue.wrap(0);
         packedPoolRewardValue = packedPoolRewardValue.packUint24(1, 0);
         packedPoolRewardValue = packedPoolRewardValue.packUint16(1, 24);
-        packedPoolRewardValue = packedPoolRewardValue.packUint216(1010, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint16(0, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint200(1010, 56);
         packedValues[0] = packedPoolRewardValue;
         nonceAndLockupPeriod = PackedValue.wrap(0);
         nonceAndLockupPeriod = nonceAndLockupPeriod.packUint32(3, 0);
@@ -302,12 +336,13 @@ contract FarmRewardDistributorV2Test is Test {
 
     function test_collectBatch_read_value_from_distributor_v1_if_reward_type_is_1() public {
         vm.expectEmit(true, true, true, true);
-        emit RewardCollected(IPool(address(pool1)), ACCOUNT1, 1, 2, ACCOUNT1, 3);
+        emit RewardCollected(IPool(address(pool1)), ACCOUNT1, 1, 0, 2, ACCOUNT1, 3);
         PackedValue[] memory packedValues = new PackedValue[](1);
         PackedValue packedPoolRewardValue = PackedValue.wrap(0);
         packedPoolRewardValue = packedPoolRewardValue.packUint24(1, 0);
         packedPoolRewardValue = packedPoolRewardValue.packUint16(1, 24);
-        packedPoolRewardValue = packedPoolRewardValue.packUint216(1003, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint16(0, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint200(1003, 56);
         packedValues[0] = packedPoolRewardValue;
         PackedValue nonceAndLockupPeriod = PackedValue.wrap(0);
         nonceAndLockupPeriod = nonceAndLockupPeriod.packUint32(2, 0);
@@ -323,12 +358,13 @@ contract FarmRewardDistributorV2Test is Test {
 
     function test_collectBatch_not_read_value_from_distributor_v1_if_reward_type_is_2() public {
         vm.expectEmit(true, true, true, true);
-        emit RewardCollected(IPool(address(pool1)), ACCOUNT1, 2, 2, ACCOUNT1, 1003);
+        emit RewardCollected(IPool(address(pool1)), ACCOUNT1, 2, 0, 2, ACCOUNT1, 1003);
         PackedValue[] memory packedValues = new PackedValue[](1);
         PackedValue packedPoolRewardValue = PackedValue.wrap(0);
         packedPoolRewardValue = packedPoolRewardValue.packUint24(1, 0);
         packedPoolRewardValue = packedPoolRewardValue.packUint16(2, 24);
-        packedPoolRewardValue = packedPoolRewardValue.packUint216(1003, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint16(0, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint200(1003, 56);
         packedValues[0] = packedPoolRewardValue;
         PackedValue nonceAndLockupPeriod = PackedValue.wrap(0);
         nonceAndLockupPeriod = nonceAndLockupPeriod.packUint32(2, 0);
@@ -344,56 +380,80 @@ contract FarmRewardDistributorV2Test is Test {
 
     function test_collectBatch_multiple_pools() public {
         vm.expectEmit(true, true, true, true);
-        emit RewardCollected(IPool(address(pool1)), ACCOUNT1, 1, 2, ACCOUNT1, 3);
-        PackedValue[] memory packedValues = new PackedValue[](6);
+        emit RewardCollected(IPool(address(pool1)), ACCOUNT1, 1, 0, 2, ACCOUNT1, 3);
+        PackedValue[] memory packedValues = new PackedValue[](8);
         PackedValue packedPoolRewardValue = PackedValue.wrap(0);
         packedPoolRewardValue = packedPoolRewardValue.packUint24(1, 0);
         packedPoolRewardValue = packedPoolRewardValue.packUint16(1, 24);
-        packedPoolRewardValue = packedPoolRewardValue.packUint216(1003, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint16(0, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint200(1003, 56);
         packedValues[0] = packedPoolRewardValue;
 
         vm.expectEmit(true, true, true, true);
-        emit RewardCollected(IPool(address(pool2)), ACCOUNT1, 1, 2, ACCOUNT1, 5);
+        emit RewardCollected(IPool(address(pool2)), ACCOUNT1, 1, 0, 2, ACCOUNT1, 5);
         packedPoolRewardValue = PackedValue.wrap(0);
         packedPoolRewardValue = packedPoolRewardValue.packUint24(2, 0);
         packedPoolRewardValue = packedPoolRewardValue.packUint16(1, 24);
-        packedPoolRewardValue = packedPoolRewardValue.packUint216(2005, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint16(0, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint200(2005, 56);
         packedValues[1] = packedPoolRewardValue;
 
         vm.expectEmit(true, true, true, true);
-        emit RewardCollected(IPool(address(pool1)), ACCOUNT1, 2, 2, ACCOUNT1, 1003);
+        emit RewardCollected(IPool(address(pool1)), ACCOUNT1, 2, 0, 2, ACCOUNT1, 1003);
         packedPoolRewardValue = PackedValue.wrap(0);
         packedPoolRewardValue = packedPoolRewardValue.packUint24(1, 0);
         packedPoolRewardValue = packedPoolRewardValue.packUint16(2, 24);
-        packedPoolRewardValue = packedPoolRewardValue.packUint216(1003, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint16(0, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint200(1003, 56);
         packedValues[2] = packedPoolRewardValue;
 
         vm.expectEmit(true, true, true, true);
-        emit RewardCollected(IPool(address(pool2)), ACCOUNT1, 2, 2, ACCOUNT1, 2005);
+        emit RewardCollected(IPool(address(pool2)), ACCOUNT1, 2, 0, 2, ACCOUNT1, 2005);
         packedPoolRewardValue = PackedValue.wrap(0);
         packedPoolRewardValue = packedPoolRewardValue.packUint24(2, 0);
         packedPoolRewardValue = packedPoolRewardValue.packUint16(2, 24);
-        packedPoolRewardValue = packedPoolRewardValue.packUint216(2005, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint16(0, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint200(2005, 56);
         packedValues[3] = packedPoolRewardValue;
 
         vm.expectEmit(true, true, true, true);
-        emit RewardCollected(IPool(address(pool1)), ACCOUNT1, 3, 2, ACCOUNT1, 1003);
+        emit RewardCollected(IPool(address(pool1)), ACCOUNT1, 3, 0, 2, ACCOUNT1, 1003);
         packedPoolRewardValue = PackedValue.wrap(0);
         packedPoolRewardValue = packedPoolRewardValue.packUint24(1, 0);
         packedPoolRewardValue = packedPoolRewardValue.packUint16(3, 24);
-        packedPoolRewardValue = packedPoolRewardValue.packUint216(1003, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint16(0, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint200(1003, 56);
         packedValues[4] = packedPoolRewardValue;
 
         vm.expectEmit(true, true, true, true);
-        emit RewardCollected(IPool(address(pool2)), ACCOUNT1, 3, 2, ACCOUNT1, 2005);
+        emit RewardCollected(IPool(address(pool2)), ACCOUNT1, 3, 0, 2, ACCOUNT1, 2005);
         packedPoolRewardValue = PackedValue.wrap(0);
         packedPoolRewardValue = packedPoolRewardValue.packUint24(2, 0);
         packedPoolRewardValue = packedPoolRewardValue.packUint16(3, 24);
-        packedPoolRewardValue = packedPoolRewardValue.packUint216(2005, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint16(0, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint200(2005, 56);
         packedValues[5] = packedPoolRewardValue;
 
         vm.expectEmit(true, true, true, true);
-        emit RewardLockedAndBurned(ACCOUNT1, 30, ACCOUNT1, 3012, 3012);
+        emit RewardCollected(IPool(address(pool1)), ACCOUNT1, 3, 1, 2, ACCOUNT1, 1003);
+        packedPoolRewardValue = PackedValue.wrap(0);
+        packedPoolRewardValue = packedPoolRewardValue.packUint24(1, 0);
+        packedPoolRewardValue = packedPoolRewardValue.packUint16(3, 24);
+        packedPoolRewardValue = packedPoolRewardValue.packUint16(1, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint200(1003, 56);
+        packedValues[6] = packedPoolRewardValue;
+
+        vm.expectEmit(true, true, true, true);
+        emit RewardCollected(IPool(address(pool2)), ACCOUNT1, 3, 19999, 2, ACCOUNT1, 2005);
+        packedPoolRewardValue = PackedValue.wrap(0);
+        packedPoolRewardValue = packedPoolRewardValue.packUint24(2, 0);
+        packedPoolRewardValue = packedPoolRewardValue.packUint16(3, 24);
+        packedPoolRewardValue = packedPoolRewardValue.packUint16(19999, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint200(2005, 56);
+        packedValues[7] = packedPoolRewardValue;
+
+        vm.expectEmit(true, true, true, true);
+        emit RewardLockedAndBurned(ACCOUNT1, 30, ACCOUNT1, 4516, 4516);
         PackedValue nonceAndLockupPeriod = PackedValue.wrap(0);
         nonceAndLockupPeriod = nonceAndLockupPeriod.packUint32(2, 0);
         nonceAndLockupPeriod = nonceAndLockupPeriod.packUint16(30, 32);
@@ -404,16 +464,32 @@ contract FarmRewardDistributorV2Test is Test {
             signV2(SIGNER_PRIVATE_KEY, ACCOUNT1, nonceAndLockupPeriod, packedValues),
             ACCOUNT1
         );
+
+        assertEq(1003, distributorV2.collectedRewards(ACCOUNT1, IPool(address(pool1)), 1));
+        assertEq(2005, distributorV2.collectedRewards(ACCOUNT1, IPool(address(pool2)), 1));
+
+        assertEq(1003, distributorV2.collectedRewards(ACCOUNT1, IPool(address(pool1)), 2));
+        assertEq(2005, distributorV2.collectedRewards(ACCOUNT1, IPool(address(pool2)), 2));
+
+        assertEq(1003, distributorV2.collectedRewards(ACCOUNT1, IPool(address(pool1)), 3));
+        assertEq(2005, distributorV2.collectedRewards(ACCOUNT1, IPool(address(pool2)), 3));
+
+        assertEq(1003, distributorV2.collectedReferralRewards(1, IPool(address(pool1)), 3));
+        assertEq(0, distributorV2.collectedReferralRewards(1, IPool(address(pool2)), 3));
+
+        assertEq(0, distributorV2.collectedReferralRewards(19999, IPool(address(pool1)), 3));
+        assertEq(2005, distributorV2.collectedReferralRewards(19999, IPool(address(pool2)), 3));
     }
 
     function test_collectBatch_receiver_is_zero_address() public {
         vm.expectEmit(true, true, true, true);
-        emit RewardCollected(IPool(address(pool1)), ACCOUNT2, 1, 1, address(this), 1003);
+        emit RewardCollected(IPool(address(pool1)), ACCOUNT2, 1, 0, 1, address(this), 1003);
         PackedValue[] memory packedValues = new PackedValue[](1);
         PackedValue packedPoolRewardValue = PackedValue.wrap(0);
         packedPoolRewardValue = packedPoolRewardValue.packUint24(1, 0);
         packedPoolRewardValue = packedPoolRewardValue.packUint16(1, 24);
-        packedPoolRewardValue = packedPoolRewardValue.packUint216(1003, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint16(0, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint200(1003, 56);
         packedValues[0] = packedPoolRewardValue;
 
         vm.expectEmit(true, true, true, true);
@@ -432,12 +508,13 @@ contract FarmRewardDistributorV2Test is Test {
 
     function test_collectBatch_period_is_0() public {
         vm.expectEmit(true, true, true, true);
-        emit RewardCollected(IPool(address(pool1)), ACCOUNT2, 1, 1, address(this), 1003);
+        emit RewardCollected(IPool(address(pool1)), ACCOUNT2, 1, 0, 1, address(this), 1003);
         PackedValue[] memory packedValues = new PackedValue[](1);
         PackedValue packedPoolRewardValue = PackedValue.wrap(0);
         packedPoolRewardValue = packedPoolRewardValue.packUint24(1, 0);
         packedPoolRewardValue = packedPoolRewardValue.packUint16(1, 24);
-        packedPoolRewardValue = packedPoolRewardValue.packUint216(1003, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint16(0, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint200(1003, 56);
         packedValues[0] = packedPoolRewardValue;
 
         vm.expectEmit(true, true, true, true);
@@ -459,12 +536,13 @@ contract FarmRewardDistributorV2Test is Test {
 
     function test_collectBatch_period_is_30() public {
         vm.expectEmit(true, true, true, true);
-        emit RewardCollected(IPool(address(pool1)), ACCOUNT2, 1, 1, address(this), 1003);
+        emit RewardCollected(IPool(address(pool1)), ACCOUNT2, 1, 0, 1, address(this), 1003);
         PackedValue[] memory packedValues = new PackedValue[](1);
         PackedValue packedPoolRewardValue = PackedValue.wrap(0);
         packedPoolRewardValue = packedPoolRewardValue.packUint24(1, 0);
         packedPoolRewardValue = packedPoolRewardValue.packUint16(1, 24);
-        packedPoolRewardValue = packedPoolRewardValue.packUint216(1003, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint16(0, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint200(1003, 56);
         packedValues[0] = packedPoolRewardValue;
 
         vm.expectEmit(true, true, true, true);
@@ -486,12 +564,13 @@ contract FarmRewardDistributorV2Test is Test {
 
     function test_collectBatch_period_is_60() public {
         vm.expectEmit(true, true, true, true);
-        emit RewardCollected(IPool(address(pool1)), ACCOUNT2, 1, 1, address(this), 1003);
+        emit RewardCollected(IPool(address(pool1)), ACCOUNT2, 1, 0, 1, address(this), 1003);
         PackedValue[] memory packedValues = new PackedValue[](1);
         PackedValue packedPoolRewardValue = PackedValue.wrap(0);
         packedPoolRewardValue = packedPoolRewardValue.packUint24(1, 0);
         packedPoolRewardValue = packedPoolRewardValue.packUint16(1, 24);
-        packedPoolRewardValue = packedPoolRewardValue.packUint216(1003, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint16(0, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint200(1003, 56);
         packedValues[0] = packedPoolRewardValue;
 
         vm.expectEmit(true, true, true, true);
@@ -513,12 +592,13 @@ contract FarmRewardDistributorV2Test is Test {
 
     function test_collectBatch_period_is_90() public {
         vm.expectEmit(true, true, true, true);
-        emit RewardCollected(IPool(address(pool1)), ACCOUNT2, 1, 1, address(this), 1003);
+        emit RewardCollected(IPool(address(pool1)), ACCOUNT2, 1, 0, 1, address(this), 1003);
         PackedValue[] memory packedValues = new PackedValue[](1);
         PackedValue packedPoolRewardValue = PackedValue.wrap(0);
         packedPoolRewardValue = packedPoolRewardValue.packUint24(1, 0);
         packedPoolRewardValue = packedPoolRewardValue.packUint16(1, 24);
-        packedPoolRewardValue = packedPoolRewardValue.packUint216(1003, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint16(0, 40);
+        packedPoolRewardValue = packedPoolRewardValue.packUint200(1003, 56);
         packedValues[0] = packedPoolRewardValue;
 
         vm.expectEmit(true, true, true, true);

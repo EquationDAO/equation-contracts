@@ -78,4 +78,17 @@ contract PackedValueTest is Test {
         assertEq(packed.unpackUint216(40), value3);
         assertEq(PackedValue.unwrap(packed), uint256(value) | (uint256(value2) << 24) | (uint256(value3) << 40));
     }
+
+    function test_pack_4_value(uint24 value, uint16 value2, uint16 value3, uint200 value4) public {
+        PackedValue packed = PackedValue.wrap(0);
+        packed = packed.packUint24(value, 0);
+        packed = packed.packUint16(value2, 24);
+        packed = packed.packUint16(value3, 40);
+        packed = packed.packUint200(value4, 56);
+
+        assertEq(packed.unpackUint24(0), value);
+        assertEq(packed.unpackUint16(24), value2);
+        assertEq(packed.unpackUint16(40), value3);
+        assertEq(packed.unpackUint200(56), value4);
+    }
 }

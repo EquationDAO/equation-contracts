@@ -32,11 +32,15 @@ contract FarmRewardDistributorV2 is Governable, ReentrancyGuard {
     uint16 public constant REWARD_TYPE_POSITION = 1;
     uint16 public constant REWARD_TYPE_LIQUIDITY = 2;
     uint16 public constant REWARD_TYPE_RISK_BUFFER_FUND = 3;
+    uint16 public constant REWARD_TYPE_REFERRAL_LIQUIDITY = 4;
+    uint16 public constant REWARD_TYPE_REFERRAL_POSITION = 5;
 
     /// @notice The address of the signer
     address public immutable signer;
     /// @notice The address of the token to be distributed
     IERC20 public immutable token;
+    /// @notice The address of the EFC token
+    IEFC public immutable EFC;
     /// @notice The address of the distributor v1
     PositionFarmRewardDistributor public immutable distributorV1;
     /// @notice The address of the fee distributor
@@ -56,7 +60,9 @@ contract FarmRewardDistributorV2 is Governable, ReentrancyGuard {
     /// @notice The nonces for each account
     mapping(address => uint32) public nonces;
     /// @notice Mapping of accounts to their collected rewards for corresponding pools and reward types
-    mapping(address => mapping(IPool => mapping(uint16 => uint216))) public collectedRewards;
+    mapping(address => mapping(IPool => mapping(uint16 => uint200))) public collectedRewards;
+    /// @notice Mapping of referral tokens to their collected rewards for corresponding pools and reward types
+    mapping(uint16 => mapping(IPool => mapping(uint16 => uint200))) public collectedReferralRewards;
 
     /// @notice Event emitted when the reward type description is set
     event RewardTypeDescriptionSet(uint16 indexed rewardType, string description);
@@ -76,12 +82,13 @@ contract FarmRewardDistributorV2 is Governable, ReentrancyGuard {
     /// @param receiver The address that received the reward
     /// @param amount The amount of the reward collected
     event RewardCollected(
-        IPool indexed pool,
+        IPool pool,
         address indexed account,
         uint16 indexed rewardType,
+        uint16 indexed referralToken,
         uint32 nonce,
         address receiver,
-        uint216 amount
+        uint200 amount
     );
     /// @notice Event emitted when the reward is locked and burned
     /// @param account The account that collect the reward for
@@ -109,11 +116,13 @@ contract FarmRewardDistributorV2 is Governable, ReentrancyGuard {
 
     constructor(
         address _signer,
+        IEFC _EFC,
         PositionFarmRewardDistributor _distributorV1,
         IFeeDistributor _feeDistributor,
         PoolIndexer _poolIndexer
     ) {
         signer = _signer;
+        EFC = _EFC;
         distributorV1 = _distributorV1;
         token = _distributorV1.token();
         feeDistributor = _feeDistributor;
@@ -124,6 +133,8 @@ contract FarmRewardDistributorV2 is Governable, ReentrancyGuard {
         _setRewardType(REWARD_TYPE_POSITION, "Position");
         _setRewardType(REWARD_TYPE_LIQUIDITY, "Liquidity");
         _setRewardType(REWARD_TYPE_RISK_BUFFER_FUND, "RiskBufferFund");
+        _setRewardType(REWARD_TYPE_REFERRAL_LIQUIDITY, "ReferralLiquidity");
+        _setRewardType(REWARD_TYPE_REFERRAL_POSITION, "ReferralPosition");
 
         _setLockupFreeRate(LockupFreeRateParameter({period: 0, lockupFreeRate: 25_000_000})); // 25%
         _setLockupFreeRate(LockupFreeRateParameter({period: 30, lockupFreeRate: 50_000_000})); // 50%
@@ -162,7 +173,8 @@ contract FarmRewardDistributorV2 is Governable, ReentrancyGuard {
     /// @param _nonceAndLockupPeriod The packed values of the nonce and lockup period: bit 0-31 represent the nonce,
     /// bit 32-47 represent the lockup period
     /// @param _packedPoolRewardValues The packed values of the pool index, reward type, and amount: bit 0-23 represent
-    /// the pool index, bit 24-39 represent the reward type, and bit 40-255 represent the amount
+    /// the pool index, bit 24-39 represent the reward type, bit 40-55 represent the referral token, and bit 56-255
+    /// represent the amount. If the referral token is non-zero, the account MUST be the owner of the referral token
     /// @param _signature The signature of the parameters to verify
     /// @param _receiver The address that received the reward
     function collectBatch(
@@ -201,12 +213,20 @@ contract FarmRewardDistributorV2 is Governable, ReentrancyGuard {
             uint16 rewardType = packedPoolRewardValue.unpackUint16(24);
             if (bytes(rewardTypesDescriptions[rewardType]).length == 0) revert InvalidRewardType(rewardType);
 
-            uint216 amount = packedPoolRewardValue.unpackUint216(40);
-            uint216 collectableReward = amount - _collectedRewardFor(_account, pool, rewardType);
-            emit RewardCollected(pool, _account, rewardType, nonce, _receiver, collectableReward);
+            uint16 referralToken = packedPoolRewardValue.unpackUint16(40);
+            uint200 amount = packedPoolRewardValue.unpackUint200(56);
+            uint200 collectableReward = amount - _collectedRewardFor(_account, pool, rewardType, referralToken);
+            if (referralToken > 0) {
+                if (EFC.ownerOf(referralToken) != _account)
+                    revert IFeeDistributor.InvalidNFTOwner(_account, referralToken);
 
-            collectedRewards[_account][pool][rewardType] = amount;
+                collectedReferralRewards[referralToken][pool][rewardType] = amount;
+            } else {
+                collectedRewards[_account][pool][rewardType] = amount;
+            }
+
             totalCollectableReward += collectableReward;
+            emit RewardCollected(pool, _account, rewardType, referralToken, nonce, _receiver, collectableReward);
 
             // prettier-ignore
             unchecked { ++i; }
@@ -225,11 +245,16 @@ contract FarmRewardDistributorV2 is Governable, ReentrancyGuard {
     function _collectedRewardFor(
         address _account,
         IPool _pool,
-        uint16 _rewardType
-    ) internal view virtual returns (uint216 collectedReward) {
-        collectedReward = collectedRewards[_account][_pool][_rewardType];
-        if (collectedReward == 0 && _rewardType == REWARD_TYPE_POSITION)
-            collectedReward = distributorV1.collectedRewards(address(_pool), _account).toUint216();
+        uint16 _rewardType,
+        uint16 _referralToken
+    ) internal view virtual returns (uint200 collectedReward) {
+        if (_referralToken > 0) {
+            collectedReward = collectedReferralRewards[_referralToken][_pool][_rewardType];
+        } else {
+            collectedReward = collectedRewards[_account][_pool][_rewardType];
+            if (collectedReward == 0 && _rewardType == REWARD_TYPE_POSITION)
+                collectedReward = distributorV1.collectedRewards(address(_pool), _account).toUint200();
+        }
     }
 
     function _setRewardType(uint16 _rewardType, string memory _description) internal virtual {
