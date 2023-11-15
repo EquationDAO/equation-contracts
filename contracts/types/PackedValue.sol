@@ -10,6 +10,8 @@ using {
     unpackUint24,
     packUint32,
     unpackUint32,
+    packUint200,
+    unpackUint200,
     packUint216,
     unpackUint216,
     packUint232,
@@ -38,6 +40,14 @@ function packUint32(PackedValue self, uint32 value, uint8 position) pure returns
 
 function unpackUint32(PackedValue self, uint8 position) pure returns (uint32) {
     return uint32((PackedValue.unwrap(self) >> position) & 0xffffffff);
+}
+
+function packUint200(PackedValue self, uint200 value, uint8 position) pure returns (PackedValue) {
+    return PackedValue.wrap(PackedValue.unwrap(self) | (uint256(value) << position));
+}
+
+function unpackUint200(PackedValue self, uint8 position) pure returns (uint200) {
+    return uint200((PackedValue.unwrap(self) >> position) & 0xffffffffffffffffffffffffffffffffffffffffffffffffff);
 }
 
 function packUint216(PackedValue self, uint216 value, uint8 position) pure returns (PackedValue) {
