@@ -1,0 +1,10 @@
+import "dotenv/config";
+
+const document = require(`../../deployments/${process.env.CHAIN_ID}.json`);
+
+module.exports = [
+    `${document.deployments.Router}`,
+    `${document.deployments.EQU}`,
+    `${document.deployments.EFC}`,
+    `${document.deployments.FarmRewardDistributorV2}`,
+];
