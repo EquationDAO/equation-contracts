@@ -67,7 +67,7 @@ export const networks = {
         usd: "0x58e7F6b126eCC1A694B19062317b60Cf474E3D17",
         usdChainLinkPriceFeed: "0x0a023a3423D9b27A0BE48c768CCF2dD7877fEf5E",
         weth: "0xe39Ab88f8A4777030A534146A9Ca3B52bd5D43A3",
-        distributorSigner: undefined,
+        distributorSigner: "0x1696b05A21e0AF8379B5CEc3033bF764798E4168",
         minPositionRouterExecutionFee: ethers.utils.parseUnits("0.00021", "ether"),
         minOrderBookExecutionFee: ethers.utils.parseUnits("0.0003", "ether"),
         farmMintTime: Math.floor(new Date().getTime() / 1000) + 1 * 60 * 60,
