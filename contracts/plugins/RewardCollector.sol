@@ -19,7 +19,11 @@ contract RewardCollector is Multicall {
         (router, EQU, EFC) = (_router, _EQU, _EFC);
     }
 
-    function sweepToken(IERC20 _token, uint256 _amountMinimum, address _receiver) external returns (uint256 amount) {
+    function sweepToken(
+        IERC20 _token,
+        uint256 _amountMinimum,
+        address _receiver
+    ) external virtual returns (uint256 amount) {
         amount = _token.balanceOf(address(this));
         if (amount < _amountMinimum) revert InsufficientBalance(amount, _amountMinimum);
 
@@ -29,7 +33,7 @@ contract RewardCollector is Multicall {
     function collectReferralFeeBatch(
         IPool[] calldata _pools,
         uint256[] calldata _referralTokens
-    ) external returns (uint256 amount) {
+    ) external virtual returns (uint256 amount) {
         _validateOwner(_referralTokens);
 
         IPool pool;
@@ -42,36 +46,38 @@ contract RewardCollector is Multicall {
         }
     }
 
-    function collectFarmLiquidityRewardBatch(IPool[] calldata _pools) external returns (uint256 rewardDebt) {
+    function collectFarmLiquidityRewardBatch(IPool[] calldata _pools) external virtual returns (uint256 rewardDebt) {
         rewardDebt = router.pluginCollectFarmLiquidityRewardBatch(_pools, msg.sender, address(this));
     }
 
-    function collectFarmRiskBufferFundRewardBatch(IPool[] calldata _pools) external returns (uint256 rewardDebt) {
+    function collectFarmRiskBufferFundRewardBatch(
+        IPool[] calldata _pools
+    ) external virtual returns (uint256 rewardDebt) {
         rewardDebt = router.pluginCollectFarmRiskBufferFundRewardBatch(_pools, msg.sender, address(this));
     }
 
     function collectFarmReferralRewardBatch(
         IPool[] calldata _pools,
         uint256[] calldata _referralTokens
-    ) external returns (uint256 rewardDebt) {
+    ) external virtual returns (uint256 rewardDebt) {
         _validateOwner(_referralTokens);
         return router.pluginCollectFarmReferralRewardBatch(_pools, _referralTokens, address(this));
     }
 
-    function collectStakingRewardBatch(uint256[] calldata _ids) external returns (uint256 rewardDebt) {
+    function collectStakingRewardBatch(uint256[] calldata _ids) external virtual returns (uint256 rewardDebt) {
         rewardDebt = router.pluginCollectStakingRewardBatch(msg.sender, address(this), _ids);
     }
 
-    function collectV3PosStakingRewardBatch(uint256[] calldata _ids) external returns (uint256 rewardDebt) {
+    function collectV3PosStakingRewardBatch(uint256[] calldata _ids) external virtual returns (uint256 rewardDebt) {
         rewardDebt = router.pluginCollectV3PosStakingRewardBatch(msg.sender, address(this), _ids);
     }
 
-    function collectArchitectRewardBatch(uint256[] calldata _tokenIDs) external returns (uint256 rewardDebt) {
+    function collectArchitectRewardBatch(uint256[] calldata _tokenIDs) external virtual returns (uint256 rewardDebt) {
         _validateOwner(_tokenIDs);
         rewardDebt = router.pluginCollectArchitectRewardBatch(address(this), _tokenIDs);
     }
 
-    function _validateOwner(uint256[] calldata _referralTokens) private view {
+    function _validateOwner(uint256[] calldata _referralTokens) internal view virtual {
         (address caller, uint256 tokensLen) = (msg.sender, _referralTokens.length);
         for (uint256 i; i < tokensLen; ++i) {
             if (EFC.ownerOf(_referralTokens[i]) != caller)
