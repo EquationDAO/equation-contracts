@@ -286,8 +286,9 @@ async function main() {
         4. Deploy Reward Collector V2 - deployRewardCollectorV2.ts
         5. Deploy Pool Indexer - deployPoolIndexer.ts
         6. Assign Pool Index - registerPools.ts (incremental update)
-        7. Deploy Farm Reward Distributor V2 - deployFarmRewardDistributorV2.ts
-        8. Deploy Reward Collector V3 - deployRewardCollectorV3.ts
+        7. Dereigster Position Farm Reward Distributor - deregisterPositionFarmRewardDistributor.ts 
+        8. Deploy Farm Reward Distributor V2 - deployFarmRewardDistributorV2.ts
+        9. Deploy Reward Collector V3 - deployRewardCollectorV3.ts
     `);
 }
 
