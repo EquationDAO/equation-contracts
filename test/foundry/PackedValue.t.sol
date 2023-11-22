@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.21;
 
 import "forge-std/Test.sol";
@@ -53,6 +53,16 @@ contract PackedValueTest is Test {
         assertEq(packed.unpackUint24(0), value);
         assertEq(packed.unpackUint232(24), value2);
         assertEq(PackedValue.unwrap(packed), uint256(value) | (uint256(value2) << 24));
+    }
+
+    function test_pack_2_value(address value, bool value2) public {
+        PackedValue packed = PackedValue.wrap(0);
+        packed = packed.packAddress(value, 0);
+        packed = packed.packBool(value2, 160);
+
+        assertEq(packed.unpackAddress(0), value);
+        assertEq(packed.unpackBool(160), value2);
+        assertEq(PackedValue.unwrap(packed), uint256(uint160(value)) | (uint256(value2 ? 1 : 0) << 160));
     }
 
     function test_pack_3_value(uint24 value, uint32 value2, uint16 value3) public {
