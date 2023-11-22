@@ -22,6 +22,8 @@ using {
     unpackUint216,
     packUint232,
     unpackUint232,
+    packUint248,
+    unpackUint248,
     packAddress,
     unpackAddress,
     packBool,
@@ -99,6 +101,17 @@ function packUint232(PackedValue self, uint232 value, uint8 position) pure retur
 function unpackUint232(PackedValue self, uint8 position) pure returns (uint232) {
     return
         uint232((PackedValue.unwrap(self) >> position) & 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+}
+
+function packUint248(PackedValue self, uint248 value, uint8 position) pure returns (PackedValue) {
+    return PackedValue.wrap(PackedValue.unwrap(self) | (uint256(value) << position));
+}
+
+function unpackUint248(PackedValue self, uint8 position) pure returns (uint248) {
+    return
+        uint248(
+            (PackedValue.unwrap(self) >> position) & 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+        );
 }
 
 function packBool(PackedValue self, bool value, uint8 position) pure returns (PackedValue) {

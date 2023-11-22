@@ -188,8 +188,7 @@ contract MixedExecutorV2 is Multicall, Governable {
         require(packedPoolsCount <= 10);
         for (uint8 i; i < packedPoolsCount; ) {
             unchecked {
-                IPool pool = poolIndexer.indexPools(_packedValue.unpackUint24(i * 24));
-                pool.sampleAndAdjustFundingRate();
+                poolIndexer.indexPools(_packedValue.unpackUint24(i * 24)).sampleAndAdjustFundingRate();
                 ++i;
             }
         }
@@ -204,27 +203,29 @@ contract MixedExecutorV2 is Multicall, Governable {
         require(packedPoolsCount <= 10);
         for (uint8 i; i < packedPoolsCount; ) {
             unchecked {
-                IPool pool = poolIndexer.indexPools(_packedValue.unpackUint24(i * 24));
-                pool.collectProtocolFee();
+                poolIndexer.indexPools(_packedValue.unpackUint24(i * 24)).collectProtocolFee();
                 ++i;
             }
         }
     }
 
     /// @notice Execute an existing increase order
-    /// @param _orderIndex The index of order to execute
-    /// @param _requireSuccess True if the execution error is ignored, false otherwise.
-    function executeIncreaseOrder(uint256 _orderIndex, bool _requireSuccess) external virtual onlyExecutor {
+    /// @param _packedValue The packed values of the order index and require success flag: bit 0-247 represent
+    /// the order index, and bit 248 represent the require success flag
+    function executeIncreaseOrder(PackedValue _packedValue) external virtual onlyExecutor {
         address payable receiver = _getFeeReceiver();
-        try orderBook.executeIncreaseOrder(_orderIndex, receiver) {} catch (bytes memory reason) {
-            if (_requireSuccess) revert ExecutionFailed(reason);
+        uint248 orderIndex = _packedValue.unpackUint248(0);
+        bool requireSuccess = _packedValue.unpackBool(248);
+
+        try orderBook.executeIncreaseOrder(orderIndex, receiver) {} catch (bytes memory reason) {
+            if (requireSuccess) revert ExecutionFailed(reason);
 
             if (cancelOrderIfFailedStatus) {
-                try orderBook.cancelIncreaseOrder(_orderIndex, receiver) {
-                    emit IncreaseOrderCancelSucceeded(_orderIndex, _decodeShortenedReason(reason));
+                try orderBook.cancelIncreaseOrder(orderIndex, receiver) {
+                    emit IncreaseOrderCancelSucceeded(orderIndex, _decodeShortenedReason(reason));
                 } catch (bytes memory reason2) {
                     emit IncreaseOrderCancelFailed(
-                        _orderIndex,
+                        orderIndex,
                         _decodeShortenedReason(reason),
                         _decodeShortenedReason(reason2)
                     );
@@ -234,19 +235,22 @@ contract MixedExecutorV2 is Multicall, Governable {
     }
 
     /// @notice Execute an existing decrease order
-    /// @param _orderIndex The index of order to execute
-    /// @param _requireSuccess True if the execution error is ignored, false otherwise.
-    function executeDecreaseOrder(uint256 _orderIndex, bool _requireSuccess) external virtual onlyExecutor {
+    /// @param _packedValue The packed values of the order index and require success flag: bit 0-247 represent
+    /// the order index, and bit 248 represent the require success flag
+    function executeDecreaseOrder(PackedValue _packedValue) external virtual onlyExecutor {
         address payable receiver = _getFeeReceiver();
-        try orderBook.executeDecreaseOrder(_orderIndex, receiver) {} catch (bytes memory reason) {
-            if (_requireSuccess) revert ExecutionFailed(reason);
+        uint248 orderIndex = _packedValue.unpackUint248(0);
+        bool requireSuccess = _packedValue.unpackBool(248);
+
+        try orderBook.executeDecreaseOrder(orderIndex, receiver) {} catch (bytes memory reason) {
+            if (requireSuccess) revert ExecutionFailed(reason);
 
             if (cancelOrderIfFailedStatus) {
-                try orderBook.cancelDecreaseOrder(_orderIndex, receiver) {
-                    emit DecreaseOrderCancelSucceeded(_orderIndex, _decodeShortenedReason(reason));
+                try orderBook.cancelDecreaseOrder(orderIndex, receiver) {
+                    emit DecreaseOrderCancelSucceeded(orderIndex, _decodeShortenedReason(reason));
                 } catch (bytes memory reason2) {
                     emit DecreaseOrderCancelFailed(
-                        _orderIndex,
+                        orderIndex,
                         _decodeShortenedReason(reason),
                         _decodeShortenedReason(reason2)
                     );
@@ -288,6 +292,11 @@ contract MixedExecutorV2 is Multicall, Governable {
         }
     }
 
+    /// @notice Decode the shortened reason of the execution error
+    /// @dev The default implementation is to return the first 4 bytes of the reason, which is typically the
+    /// selector for the error type
+    /// @param _reason The reason of the execution error
+    /// @return The shortened reason of the execution error
     function _decodeShortenedReason(bytes memory _reason) internal pure virtual returns (bytes4) {
         return bytes4(_reason);
     }
