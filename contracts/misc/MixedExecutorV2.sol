@@ -10,6 +10,8 @@ import "../plugins/interfaces/ILiquidator.sol";
 import "../plugins/interfaces/IPositionRouter.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
 
+/// @notice MixedExecutorV2 is a contract that executes multiple calls in a single transaction
+/// @custom:since v0.0.4
 contract MixedExecutorV2 is Multicall, Governable {
     /// @notice The address of pool indexer
     PoolIndexer public immutable poolIndexer;
