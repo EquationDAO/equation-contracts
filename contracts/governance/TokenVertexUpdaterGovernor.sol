@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.21;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
@@ -32,7 +32,6 @@ contract TokenVertexUpdaterGovernor is AccessControl {
         PackedValue _packedBalanceRate,
         PackedValue _packedPremiumRate
     ) public onlyRole(TOKEN_VERTEX_UPDATER_ROLE) {
-        IPoolFactory _poolFactory = poolFactory;
         IPoolFactory.TokenConfig memory tokenConfig;
         IPoolFactory.TokenFeeRateConfig memory tokenFeeRateConfig;
         IPoolFactory.TokenPriceConfig memory tokenPriceConfig;
@@ -47,7 +46,7 @@ contract TokenVertexUpdaterGovernor is AccessControl {
             tokenConfig.liquidationExecutionFee,
             tokenConfig.interestRate,
             tokenConfig.maxFundingRate
-        ) = _poolFactory.tokenConfigs(_token);
+        ) = poolFactory.tokenConfigs(_token);
 
         (
             tokenFeeRateConfig.tradingFeeRate,
@@ -56,7 +55,7 @@ contract TokenVertexUpdaterGovernor is AccessControl {
             tokenFeeRateConfig.referralReturnFeeRate,
             tokenFeeRateConfig.referralParentReturnFeeRate,
             tokenFeeRateConfig.referralDiscountRate
-        ) = _poolFactory.tokenFeeRateConfigs(_token);
+        ) = poolFactory.tokenFeeRateConfigs(_token);
 
         IConfigurable.VertexConfig[] memory vertices = new IConfigurable.VertexConfig[](Constants.VERTEX_NUM);
         unchecked {
