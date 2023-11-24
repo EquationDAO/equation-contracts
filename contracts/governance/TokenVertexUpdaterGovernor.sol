@@ -21,7 +21,7 @@ contract TokenVertexUpdaterGovernor is AccessControl {
         poolFactory = _poolFactory;
     }
 
-    function execute(address _target, uint256 _value, bytes calldata _data) public virtual onlyRole(ADMIN_ROLE) {
+    function execute(address _target, uint256 _value, bytes calldata _data) public onlyRole(ADMIN_ROLE) {
         (bool success, ) = _target.call{value: _value}(_data);
         require(success, "transaction reverted");
     }
