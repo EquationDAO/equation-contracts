@@ -59,13 +59,13 @@ contract TokenVertexUpdaterGovernor is AccessControl {
 
         IConfigurable.VertexConfig[] memory vertices = new IConfigurable.VertexConfig[](Constants.VERTEX_NUM);
         unchecked {
-            for (uint8 i = 0; i < Constants.VERTEX_NUM; ++i) {
+            for (uint8 i; i < Constants.VERTEX_NUM; ++i) {
                 vertices[i].balanceRate = _packedBalanceRate.unpackUint32(i * 32);
                 vertices[i].premiumRate = _packedPremiumRate.unpackUint32(i * 32);
             }
         }
 
-        (, tokenPriceConfig.liquidationVertexIndex) = _poolFactory.tokenPriceConfigs(_token);
+        (, tokenPriceConfig.liquidationVertexIndex) = poolFactory.tokenPriceConfigs(_token);
         tokenPriceConfig.maxPriceImpactLiquidity = _maxPriceImpactLiquidity;
         tokenPriceConfig.vertices = vertices;
         poolFactory.updateTokenConfig(_token, tokenConfig, tokenFeeRateConfig, tokenPriceConfig);
