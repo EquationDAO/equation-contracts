@@ -29,7 +29,7 @@ contract MixedExecutorV2 is Multicall, Governable {
     /// @notice Default receiving address of fee
     address payable public feeReceiver;
     /// @notice Indicates whether to cancel the order when an execution error occurs
-    bool public cancelOrderIfFailedStatus;
+    bool public cancelOrderIfFailedStatus = true;
 
     /// @notice Emitted when an executor is updated
     /// @param executor The address of executor to update
