@@ -105,6 +105,7 @@ contract MixedExecutorV2 is Multicall, Governable {
     /// @param _active Status of executor permission to set
     function setExecutor(address _executor, bool _active) external virtual onlyGov {
         executors[_executor] = _active;
+        emit ExecutorUpdated(_executor, _active);
     }
 
     /// @notice Set fee receiver

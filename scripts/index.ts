@@ -289,6 +289,8 @@ async function main() {
         7. Dereigster Position Farm Reward Distributor - deregisterPositionFarmRewardDistributor.ts 
         8. Deploy Farm Reward Distributor V2 - deployFarmRewardDistributorV2.ts
         9. Deploy Reward Collector V3 - deployRewardCollectorV3.ts
+        10. Deploy Order Book Assistant - deployOrderBookAssistant.ts
+        11. Deploy Mixed Executor V2 - deployMixedExecutorV2.ts
     `);
 }
 
