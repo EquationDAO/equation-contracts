@@ -10,7 +10,7 @@ async function main() {
     const document = require(`../deployments/${chainId}.json`);
 
     const OrderBookAssistant = await ethers.getContractFactory("OrderBookAssistant");
-    const orderBookAssistant = await OrderBookAssistant.deploy(document.deployments.PoolFactory);
+    const orderBookAssistant = await OrderBookAssistant.deploy(document.deployments.OrderBook);
     await orderBookAssistant.deployed();
     console.log(`OrderBookAssistant deployed to: ${orderBookAssistant.address}`);
 
