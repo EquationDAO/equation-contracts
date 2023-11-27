@@ -1,0 +1,73 @@
+{
+    "block": 142245092,
+    "usd": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+    "poolBytecodeHash": "0x3dc328efd93dc7fc2d1101c5ed52cb56eb3f8c84b2fae8c594bfb3306e029a77",
+    "deployments": {
+        "PoolUtil": "0xE19f3392386455cfDd1b5064BF2BD2A8390c6C6D",
+        "FundingRateUtil": "0xEd2Ab1631A85616ADe01eF6CC4Fe8bAF914c4c9d",
+        "PriceUtil": "0xb8283B6369674dc1A71D30F75F6a674AeEb58c7D",
+        "PositionUtil": "0x1D7edC65f884F931834270aB04F63B03d44c5a55",
+        "LiquidityPositionUtil": "0x1C3dD60E52821a10293279BDC70F8dA9423c5f80",
+        "EQU": "0x87AAfFdF26c6885f6010219208D5B161ec7609c0",
+        "veEQU": "0xD9D25C67D0CAf9B8D8Df60C5038a18EC951f92C9",
+        "EFC": "0xe6bf4e8A735d4F83a662d5aD430159Aa97eAE37E",
+        "Router": "0x911a71DDa951958913219f7cBD7e4a297ca52B3B",
+        "RewardCollector": "0x8AAAd189ed796A2c586b340Fa8d3Ef4182C801C5",
+        "OrderBook": "0x0A41c964781312413Ac51d1A11efff1D0cfF2832",
+        "PositionRouter": "0xc3B609357539A35673cc50e5Ca4fA57da1BFeC7b",
+        "PriceFeed": "0x5F63167E3a1f03bb2485Ea2D1Df4ea889CcC2A2E",
+        "RewardFarm": "0xb46a80b157b7eA025530062B761D01AA92f0e354",
+        "FeeDistributor": "0x3C77EEB8eC4716a6389a522eD590FbbD261ABE8e",
+        "PoolFactory": "0xA91680161fBCeA942e164B42445aD6130D01541F",
+        "MixedExecutor": "0x53c1Fa41E67eB4841006E0A3649a890825Ca6E0E",
+        "ExecutorAssistant": "0xf42C8E21900781200467d9b54C43fE5650F76335",
+        "Liquidator": "0x2D6B52a7dbFD653B23E27F713552790855f4D8C4",
+        "registerPools": [
+            {
+                "name": "ETH",
+                "token": "0x23EEF5f7A8b37b2310e9aC9611E35fa999143810",
+                "pool": "0xE8489d514AEF77c5730dDE4eAC46b8F2d9fFD21C"
+            },
+            {
+                "name": "BTC",
+                "token": "0x1885aAD80817a0baF196dEb62b08695E64936332",
+                "pool": "0xEE6EFeEa95e7Ed59E8096Eb6CAe4EDf5A1c0dce7"
+            },
+            {
+                "name": "SOL",
+                "token": "0x1281b9dAFA2b11C43e1E41bb4aDCdd3bdBc2b2a6",
+                "pool": "0xA8fc2c361090EbD7f8071754048A8b4B5B4a1803"
+            },
+            {
+                "name": "ARB",
+                "token": "0x96A0D2D2D4378bCb35013f964d95224fE4FEd8FE",
+                "pool": "0xc293Ce8Db41E5Eaf2a1f4aE53C615625CDb31b1D"
+            },
+            {
+                "name": "OP",
+                "token": "0xA67cB8b1880E2573907f5f52121e8C49B141bD66",
+                "pool": "0x5500BC0559a036C0Cb0799dcb15abB94131240ef"
+            },
+            {
+                "name": "MATIC",
+                "token": "0xA7c1181043e489E720Fb72e33168298675EDCdF8",
+                "pool": "0x84fEfb23b238ADd2B71eaa0268D41131cCd351e0"
+            },
+            {
+                "name": "AVAX",
+                "token": "0xB42E185016C53B38C2c61409F1D6DA3CcFB02C9f",
+                "pool": "0x6a29a5067415C73794e2726F8E26093Af981Db16"
+            },
+            {
+                "name": "LINK",
+                "token": "0xEE4b6FC76B9F44420D646BFCf8a1F5c4c399B54F",
+                "pool": "0x8EE3A44B034BE6629F66d08f52D3D6cD5E29af95"
+            }
+        ],
+        "PositionFarmRewardDistributor": "0xCcCe32fd25fc3Ed918dE8752A3B519b6B0B33F89",
+        "RewardCollectorV2": "0xb119978391e4791282219deE31d65Ebc6126d437",
+        "PoolIndexer": "0x31E6dfC235204A8EFe74Af90F58E69DbCb1340F6",
+        "FarmRewardDistributorV2": "0x93d4f6ADA5686eaf51bA78ECDAc34A9292B8D7d2",
+        "RewardCollectorV3": "0x2920bD2FC3ca629F98DD8B24C89C6E01b3dDd710"
+    }
+}

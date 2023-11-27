@@ -30,6 +30,14 @@ npm run prepare
 npm run build
 ```
 
+## Deployment Addresses
+
+The **Equation Contracts** project is deployed to the following networks:
+
+| Network          | Chain ID | Contracts                        |
+| ---------------- | -------- | -------------------------------- |
+| Arbitrum Mainnet | 42161    | [View](./deployments/42161.json) |
+
 ## License
 
 The **Equation Contracts** project uses a variety of open-source licenses for its codebase. The licensing details for
