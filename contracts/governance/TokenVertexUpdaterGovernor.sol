@@ -10,13 +10,13 @@ import "../libraries/Constants.sol";
 contract TokenVertexUpdaterGovernor is AccessControl {
     /// @notice Config data is out-of-date
     /// @param timestamp Update timestamp
-    error StaleConfig(uint32 timestamp);
+    error StaleConfig(uint64 timestamp);
 
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant TOKEN_VERTEX_UPDATER_ROLE = keccak256("TOKEN_VERTEX_UPDATER_ROLE");
 
     IPoolFactory public immutable poolFactory;
-    uint32 public maxUpdateTimeDeviation = 60;
+    uint64 public maxUpdateTimeDeviation = 60;
 
     constructor(address _admin, address _tokenVertexUpdater, IPoolFactory _poolFactory) {
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
@@ -30,7 +30,7 @@ contract TokenVertexUpdaterGovernor is AccessControl {
         Address.functionCallWithValue(_target, _data, _value);
     }
 
-    function setMaxUpdateTimeDeviation(uint32 _maxUpdateTimeDeviation) public virtual onlyRole(ADMIN_ROLE) {
+    function setMaxUpdateTimeDeviation(uint64 _maxUpdateTimeDeviation) public virtual onlyRole(ADMIN_ROLE) {
         maxUpdateTimeDeviation = _maxUpdateTimeDeviation;
     }
 
@@ -40,9 +40,9 @@ contract TokenVertexUpdaterGovernor is AccessControl {
         PackedValue _packedPremiumRates
     ) public virtual onlyRole(TOKEN_VERTEX_UPDATER_ROLE) {
         IERC20 token = IERC20(_packedTokenTimestamp.unpackAddress(0));
-        uint32 timestamp = _packedTokenTimestamp.unpackUint32(160);
-        uint32 blockTimestamp = uint32(block.timestamp);
-        uint32 timeDelta = timestamp > blockTimestamp ? timestamp - blockTimestamp : blockTimestamp - timestamp;
+        uint64 timestamp = _packedTokenTimestamp.unpackUint64(160);
+        uint64 blockTimestamp = uint64(block.timestamp);
+        uint64 timeDelta = timestamp > blockTimestamp ? timestamp - blockTimestamp : blockTimestamp - timestamp;
         if (timeDelta > maxUpdateTimeDeviation) revert StaleConfig(timestamp);
         IPoolFactory.TokenConfig memory tokenConfig;
         IPoolFactory.TokenFeeRateConfig memory tokenFeeRateConfig;
