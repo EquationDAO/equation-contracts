@@ -6,8 +6,10 @@ import "../core/interfaces/IPoolFactory.sol";
 import "../types/PackedValue.sol";
 import "../core/interfaces/IConfigurable.sol";
 import "../libraries/Constants.sol";
+import "../libraries/SafeCast.sol";
 
 contract TokenVertexUpdaterGovernor is AccessControl {
+    using SafeCast for uint256;
     /// @notice Config data is out-of-date
     /// @param timestamp Update timestamp
     error StaleConfig(uint64 timestamp);
@@ -39,51 +41,50 @@ contract TokenVertexUpdaterGovernor is AccessControl {
         PackedValue _packedBalanceRates,
         PackedValue _packedPremiumRates
     ) public virtual onlyRole(TOKEN_VERTEX_UPDATER_ROLE) {
-        IERC20 token = IERC20(_packedTokenTimestamp.unpackAddress(0));
-        uint64 timestamp = _packedTokenTimestamp.unpackUint64(160);
-        uint64 blockTimestamp = uint64(block.timestamp);
-        uint64 timeDelta = timestamp > blockTimestamp ? timestamp - blockTimestamp : blockTimestamp - timestamp;
-        if (timeDelta > maxUpdateTimeDeviation) revert StaleConfig(timestamp);
-        IPoolFactory.TokenConfig memory tokenConfig;
-        IPoolFactory.TokenFeeRateConfig memory tokenFeeRateConfig;
-        IPoolFactory.TokenPriceConfig memory tokenPriceConfig;
-
-        (
-            tokenConfig.minMarginPerLiquidityPosition,
-            tokenConfig.maxRiskRatePerLiquidityPosition,
-            tokenConfig.maxLeveragePerLiquidityPosition,
-            tokenConfig.minMarginPerPosition,
-            tokenConfig.maxLeveragePerPosition,
-            tokenConfig.liquidationFeeRatePerPosition,
-            tokenConfig.liquidationExecutionFee,
-            tokenConfig.interestRate,
-            tokenConfig.maxFundingRate
-        ) = poolFactory.tokenConfigs(token);
-
-        (
-            tokenFeeRateConfig.tradingFeeRate,
-            tokenFeeRateConfig.liquidityFeeRate,
-            tokenFeeRateConfig.protocolFeeRate,
-            tokenFeeRateConfig.referralReturnFeeRate,
-            tokenFeeRateConfig.referralParentReturnFeeRate,
-            tokenFeeRateConfig.referralDiscountRate
-        ) = poolFactory.tokenFeeRateConfigs(token);
-
-        IConfigurable.VertexConfig[] memory vertices = new IConfigurable.VertexConfig[](Constants.VERTEX_NUM);
         unchecked {
+            IERC20 token = IERC20(_packedTokenTimestamp.unpackAddress(0));
+            uint64 timestamp = _packedTokenTimestamp.unpackUint64(160);
+            uint64 blockTimestamp = block.timestamp.toUint64();
+            uint64 timeDelta = timestamp > blockTimestamp ? timestamp - blockTimestamp : blockTimestamp - timestamp;
+            if (timeDelta > maxUpdateTimeDeviation) revert StaleConfig(timestamp);
+
+            IPoolFactory.TokenConfig memory tokenConfig;
+            IPoolFactory.TokenFeeRateConfig memory tokenFeeRateConfig;
+
+            (
+                tokenConfig.minMarginPerLiquidityPosition,
+                tokenConfig.maxRiskRatePerLiquidityPosition,
+                tokenConfig.maxLeveragePerLiquidityPosition,
+                tokenConfig.minMarginPerPosition,
+                tokenConfig.maxLeveragePerPosition,
+                tokenConfig.liquidationFeeRatePerPosition,
+                tokenConfig.liquidationExecutionFee,
+                tokenConfig.interestRate,
+                tokenConfig.maxFundingRate
+            ) = poolFactory.tokenConfigs(token);
+
+            (
+                tokenFeeRateConfig.tradingFeeRate,
+                tokenFeeRateConfig.liquidityFeeRate,
+                tokenFeeRateConfig.protocolFeeRate,
+                tokenFeeRateConfig.referralReturnFeeRate,
+                tokenFeeRateConfig.referralParentReturnFeeRate,
+                tokenFeeRateConfig.referralDiscountRate
+            ) = poolFactory.tokenFeeRateConfigs(token);
+
+            IConfigurable.VertexConfig[] memory vertices = new IConfigurable.VertexConfig[](Constants.VERTEX_NUM);
             for (uint8 i; i < Constants.VERTEX_NUM; ++i) {
                 vertices[i].balanceRate = _packedBalanceRates.unpackUint32(i * 32);
                 vertices[i].premiumRate = _packedPremiumRates.unpackUint32(i * 32);
             }
-        }
 
-        (tokenPriceConfig.maxPriceImpactLiquidity, tokenPriceConfig.liquidationVertexIndex) = poolFactory
-            .tokenPriceConfigs(token);
-        IPool pool = poolFactory.pools(token);
-        if (address(pool) != address(0)) {
+            IPoolFactory.TokenPriceConfig memory tokenPriceConfig;
+            (, tokenPriceConfig.liquidationVertexIndex) = poolFactory.tokenPriceConfigs(token);
+            IPool pool = poolFactory.pools(token);
             (, , , , tokenPriceConfig.maxPriceImpactLiquidity, ) = pool.globalLiquidityPosition();
+            tokenPriceConfig.vertices = vertices;
+
+            poolFactory.updateTokenConfig(token, tokenConfig, tokenFeeRateConfig, tokenPriceConfig);
         }
-        tokenPriceConfig.vertices = vertices;
-        poolFactory.updateTokenConfig(token, tokenConfig, tokenFeeRateConfig, tokenPriceConfig);
     }
 }
