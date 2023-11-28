@@ -62,9 +62,10 @@ contract MixedExecutorV2 is Multicall, Governable {
 
     /// @notice Emitted when the liquidity position liquidate failed
     /// @dev The event is emitted when the liquidate is failed after the execution error
+    /// @param pool The address of pool
     /// @param positionID The id of position to liquidate
     /// @param shortenedReason The shortened reason of the execution error
-    event LiquidateLiquidityPositionFailed(uint96 indexed positionID, bytes4 shortenedReason);
+    event LiquidateLiquidityPositionFailed(IPool indexed pool, uint96 indexed positionID, bytes4 shortenedReason);
     /// @notice Emitted when the position liquidate failed
     /// @dev The event is emitted when the liquidate is failed after the execution error
     /// @param pool The address of pool
@@ -274,7 +275,7 @@ contract MixedExecutorV2 is Multicall, Governable {
         try liquidator.liquidateLiquidityPosition(pool, positionID, _getFeeReceiver()) {} catch (bytes memory reason) {
             if (requireSuccess) revert ExecutionFailed(reason);
 
-            emit LiquidateLiquidityPositionFailed(positionID, _decodeShortenedReason(reason));
+            emit LiquidateLiquidityPositionFailed(pool, positionID, _decodeShortenedReason(reason));
         }
     }
 
