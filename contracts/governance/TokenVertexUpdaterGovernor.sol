@@ -55,7 +55,7 @@ contract TokenVertexUpdaterGovernor is AccessControl, Multicall {
         PackedValue _packedTokenTimestamp,
         PackedValue _packedData,
         function(IERC20, PackedValue) returns (IConfigurable.VertexConfig[] memory) _verticesFn
-    ) internal {
+    ) internal virtual {
         unchecked {
             IERC20 token = IERC20(_packedTokenTimestamp.unpackAddress(0));
             uint64 timestamp = _packedTokenTimestamp.unpackUint64(160);
@@ -102,24 +102,28 @@ contract TokenVertexUpdaterGovernor is AccessControl, Multicall {
     function _verticesUpdateBalanceRates(
         IERC20 _token,
         PackedValue _packedBalanceRates
-    ) internal view returns (IConfigurable.VertexConfig[] memory) {
-        IConfigurable.VertexConfig[] memory vertices = new IConfigurable.VertexConfig[](Constants.VERTEX_NUM);
-        for (uint8 i; i < Constants.VERTEX_NUM; ++i) {
-            vertices[i].balanceRate = _packedBalanceRates.unpackUint32(i * 32);
-            (, vertices[i].premiumRate) = poolFactory.tokenPriceVertexConfigs(_token, i);
+    ) internal view virtual returns (IConfigurable.VertexConfig[] memory) {
+        unchecked {
+            IConfigurable.VertexConfig[] memory vertices = new IConfigurable.VertexConfig[](Constants.VERTEX_NUM);
+            for (uint8 i; i < Constants.VERTEX_NUM; ++i) {
+                vertices[i].balanceRate = _packedBalanceRates.unpackUint32(i * 32);
+                (, vertices[i].premiumRate) = poolFactory.tokenPriceVertexConfigs(_token, i);
+            }
+            return vertices;
         }
-        return vertices;
     }
 
     function _verticesUpdatePremiumRates(
         IERC20 _token,
         PackedValue _packedPremiumRates
-    ) internal view returns (IConfigurable.VertexConfig[] memory) {
-        IConfigurable.VertexConfig[] memory vertices = new IConfigurable.VertexConfig[](Constants.VERTEX_NUM);
-        for (uint8 i; i < Constants.VERTEX_NUM; ++i) {
-            (vertices[i].balanceRate, ) = poolFactory.tokenPriceVertexConfigs(_token, i);
-            vertices[i].premiumRate = _packedPremiumRates.unpackUint32(i * 32);
+    ) internal view virtual returns (IConfigurable.VertexConfig[] memory) {
+        unchecked {
+            IConfigurable.VertexConfig[] memory vertices = new IConfigurable.VertexConfig[](Constants.VERTEX_NUM);
+            for (uint8 i; i < Constants.VERTEX_NUM; ++i) {
+                (vertices[i].balanceRate, ) = poolFactory.tokenPriceVertexConfigs(_token, i);
+                vertices[i].premiumRate = _packedPremiumRates.unpackUint32(i * 32);
+            }
+            return vertices;
         }
-        return vertices;
     }
 }
