@@ -111,15 +111,17 @@ describe("TokenVertexUpdaterGovernor", () => {
         return {s0, s1, s2, tokenVertexUpdaterGovernor, poolFactory, pool, ETH, USDC};
     }
 
-    it("updateTokenVertexConfig test", async () => {
+    it("updateTokenVertexConfigBalanceRates test", async () => {
         const {s0, s1, s2, tokenVertexUpdaterGovernor, poolFactory, pool, ETH, USDC} = await deployFixture();
-        const balanceRateList = [0n, 100000n, 2000000n, 3000000n, 4000000n, 5000000n, 6000000n]; // 0->1%->2%...6%
-        const premiumRateList = [0n, 60000n, 200000n, 250000n, 300000n, 700000n, 11000000n]; // [0%. 0.06%, 0.2%, 0.25%, 0.3%, 0.7%, 11%]
+        let balanceRateList = [0n, 100000n, 2000000n, 3000000n, 4000000n, 5000000n, 6000000n]; // 0->1%->2%...6%
+        let previousPremiumRateList = [];
+        for (let i = 0; i < balanceRateList.length; i++) {
+            const {balanceRate, premiumRate} = await poolFactory.tokenPriceVertexConfigs(ETH.address, i);
+            previousPremiumRateList.push(BigInt(premiumRate));
+        }
         let packedBalanceRate = 0n;
-        let packedPremiumRate = 0n;
         for (let i = 0; i < balanceRateList.length; i++) {
             packedBalanceRate += balanceRateList[i] << (32n * BigInt(i));
-            packedPremiumRate += premiumRateList[i] << (32n * BigInt(i));
         }
         const regexp: RegExp = /is missing role 0x0833596c19f8afe7d32bf2c778d80a2e2b0dcaa54c9ed6c8df6d646a481f4f89$/;
         const now = await time.latest();
@@ -127,12 +129,12 @@ describe("TokenVertexUpdaterGovernor", () => {
         await expect(
             tokenVertexUpdaterGovernor
                 .connect(s0)
-                .updateTokenVertexConfig(packedTokenTimestamp, packedBalanceRate, packedPremiumRate)
+                .updateTokenVertexConfigBalanceRates(packedTokenTimestamp, packedBalanceRate)
         ).to.be.revertedWith(regexp);
         await expect(
             tokenVertexUpdaterGovernor
                 .connect(s2)
-                .updateTokenVertexConfig(packedTokenTimestamp, packedBalanceRate, packedPremiumRate)
+                .updateTokenVertexConfigBalanceRates(packedTokenTimestamp, packedBalanceRate)
         ).to.be.revertedWith(regexp);
 
         const beforeTokenConfigs = await poolFactory.tokenConfigs(ETH.address);
@@ -148,15 +150,73 @@ describe("TokenVertexUpdaterGovernor", () => {
         await expect(
             tokenVertexUpdaterGovernor
                 .connect(s1)
-                .updateTokenVertexConfig(stalePackedTokenTimestamp, packedBalanceRate, packedPremiumRate)
+                .updateTokenVertexConfigBalanceRates(stalePackedTokenTimestamp, packedBalanceRate)
         ).to.be.revertedWithCustomError(tokenVertexUpdaterGovernor, "StaleConfig");
 
         await tokenVertexUpdaterGovernor
             .connect(s1)
-            .updateTokenVertexConfig(packedTokenTimestamp, packedBalanceRate, packedPremiumRate);
+            .updateTokenVertexConfigBalanceRates(packedTokenTimestamp, packedBalanceRate);
         for (let i = 0; i < balanceRateList.length; i++) {
             const {balanceRate, premiumRate} = await poolFactory.tokenPriceVertexConfigs(ETH.address, i);
             expect(balanceRate).eq(balanceRateList[i]);
+            expect(premiumRate).eq(previousPremiumRateList[i]);
+        }
+        const {maxPriceImpactLiquidity} = await poolFactory.tokenPriceConfigs(ETH.address);
+        expect(maxPriceImpactLiquidity).eq(beforeTokenConfigs.minMarginPerPosition.mul(200n));
+        const afterTokenConfigs = await poolFactory.tokenConfigs(ETH.address);
+        const afterTokenFeeRateConfigs = await poolFactory.tokenFeeRateConfigs(ETH.address);
+        expect(JSON.stringify(beforeTokenConfigs)).equals(JSON.stringify(afterTokenConfigs));
+        expect(JSON.stringify(beforeTokenFeeRateConfigs)).equals(JSON.stringify(afterTokenFeeRateConfigs));
+    });
+
+    it("updateTokenVertexConfigPremiumRate test", async () => {
+        const {s0, s1, s2, tokenVertexUpdaterGovernor, poolFactory, pool, ETH, USDC} = await deployFixture();
+        let previousBalanceRateList = []; // 0->1%->2%...6%
+        let premiumRateList = [0n, 60000n, 200000n, 250000n, 300000n, 700000n, 11000000n]; // [0%. 0.06%, 0.2%, 0.25%, 0.3%, 0.7%, 11%]
+        for (let i = 0; i < premiumRateList.length; i++) {
+            const {balanceRate, premiumRate} = await poolFactory.tokenPriceVertexConfigs(ETH.address, i);
+            previousBalanceRateList.push(BigInt(balanceRate));
+        }
+        let packedPremiumRate = 0n;
+        for (let i = 0; i < premiumRateList.length; i++) {
+            packedPremiumRate += premiumRateList[i] << (32n * BigInt(i));
+        }
+        const regexp: RegExp = /is missing role 0x0833596c19f8afe7d32bf2c778d80a2e2b0dcaa54c9ed6c8df6d646a481f4f89$/;
+        const now = await time.latest();
+        const packedTokenTimestamp = BigNumber.from(ETH.address).toBigInt() + BigInt(now) * 2n ** 160n;
+        await expect(
+            tokenVertexUpdaterGovernor
+                .connect(s0)
+                .updateTokenVertexConfigPremiumRates(packedTokenTimestamp, packedPremiumRate)
+        ).to.be.revertedWith(regexp);
+        await expect(
+            tokenVertexUpdaterGovernor
+                .connect(s2)
+                .updateTokenVertexConfigPremiumRates(packedTokenTimestamp, packedPremiumRate)
+        ).to.be.revertedWith(regexp);
+
+        const beforeTokenConfigs = await poolFactory.tokenConfigs(ETH.address);
+        const beforeTokenFeeRateConfigs = await poolFactory.tokenFeeRateConfigs(ETH.address);
+        await USDC.transfer(pool.address, beforeTokenConfigs.minMarginPerPosition);
+        await pool.openLiquidityPosition(
+            s0.address,
+            beforeTokenConfigs.minMarginPerPosition,
+            beforeTokenConfigs.minMarginPerPosition.mul(200n)
+        );
+
+        const stalePackedTokenTimestamp = BigNumber.from(ETH.address).toBigInt() + BigInt(now - 61) * 2n ** 160n;
+        await expect(
+            tokenVertexUpdaterGovernor
+                .connect(s1)
+                .updateTokenVertexConfigPremiumRates(stalePackedTokenTimestamp, packedPremiumRate)
+        ).to.be.revertedWithCustomError(tokenVertexUpdaterGovernor, "StaleConfig");
+
+        await tokenVertexUpdaterGovernor
+            .connect(s1)
+            .updateTokenVertexConfigPremiumRates(packedTokenTimestamp, packedPremiumRate);
+        for (let i = 0; i < premiumRateList.length; i++) {
+            const {balanceRate, premiumRate} = await poolFactory.tokenPriceVertexConfigs(ETH.address, i);
+            expect(balanceRate).eq(previousBalanceRateList[i]);
             expect(premiumRate).eq(premiumRateList[i]);
         }
         const {maxPriceImpactLiquidity} = await poolFactory.tokenPriceConfigs(ETH.address);
