@@ -30,6 +30,27 @@ npm run prepare
 npm run build
 ```
 
+## Deploy Contracts
+
+To deploy the contracts to a network and verify it, follow these steps:
+
+1. Create a `.env` file in the root directory of the project with the following contents:
+
+```shell
+# .env
+PRIVATE_KEY=your-private-key
+ARBISCAN_API_KEY=your-arbiscan-api-key
+```
+
+2. Run the deployment script:
+
+```shell
+sh ./scripts/deploy.sh -n <network-name> -c <chain-id> -d true -v true
+# Example: sh ./scripts/deploy.sh -n arbitrum-goerli -c 421613 -d true -v true
+```
+
+3. View the deployed contracts in the `./deployments` directory.
+
 ## Deployment Addresses
 
 The **Equation Contracts** project is deployed to the following networks:
