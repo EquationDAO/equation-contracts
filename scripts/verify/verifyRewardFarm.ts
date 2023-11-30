@@ -1,4 +1,5 @@
 import "dotenv/config";
+import {networks} from "../networks";
 
 const document = require(`../../deployments/${process.env.CHAIN_ID}.json`);
 
@@ -7,6 +8,6 @@ module.exports = [
     `${document.deployments.Router}`,
     `${document.deployments.EFC}`,
     `${document.deployments.EQU}`,
-    Math.floor(new Date("2023-10-28T00:00:00.000Z").getTime() / 1000),
+    networks[process.env.CHAIN_NAME as keyof typeof networks].farmMintTime,
     110_000_000n,
 ];

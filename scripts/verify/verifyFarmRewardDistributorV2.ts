@@ -1,9 +1,10 @@
 import "dotenv/config";
+import {networks} from "../networks";
 
 const document = require(`../../deployments/${process.env.CHAIN_ID}.json`);
 
 module.exports = [
-    `0x2288A79e5EFA061719EDaF8C69968c6e166ce322`,
+    networks[process.env.CHAIN_NAME as keyof typeof networks].distributorSigner,
     `${document.deployments.EFC}`,
     `${document.deployments.PositionFarmRewardDistributor}`,
     `${document.deployments.FeeDistributor}`,
