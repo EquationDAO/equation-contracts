@@ -283,7 +283,7 @@ contract MixedExecutorV2 is Multicall, Governable {
 
     /// @notice Liquidate a liquidity position
     /// @param _packedValue The packed values of the pool index, position id, and require success flag:
-    /// bit 0-23 represent the pool index, bit 24-119 represent the account, and bit 120 represent the
+    /// bit 0-23 represent the pool index, bit 24-119 represent the position ID, and bit 120 represent the
     /// require success flag
     function liquidateLiquidityPosition(PackedValue _packedValue) external virtual onlyExecutor {
         IPool pool = poolIndexer.indexPools(_packedValue.unpackUint24(0));
