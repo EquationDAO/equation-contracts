@@ -69,6 +69,7 @@
         "PoolIndexer": "0x31E6dfC235204A8EFe74Af90F58E69DbCb1340F6",
         "FarmRewardDistributorV2": "0x93d4f6ADA5686eaf51bA78ECDAc34A9292B8D7d2",
         "RewardCollectorV3": "0x2920bD2FC3ca629F98DD8B24C89C6E01b3dDd710",
-        "OrderBookAssistant": "0x43cB3494633ea5fb4D0fa9De808A7002A7c03000"
+        "OrderBookAssistant": "0x43cB3494633ea5fb4D0fa9De808A7002A7c03000",
+        "TokenVertexUpdaterGovernor": "0x01531c46EA142Aa5F5c20Ce383196cCc28a51Bb1"
     }
 }
