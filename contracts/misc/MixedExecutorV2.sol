@@ -36,6 +36,11 @@ contract MixedExecutorV2 is Multicall, Governable {
     /// @param active Updated status
     event ExecutorUpdated(address indexed executor, bool indexed active);
 
+    /// @notice Emitted when the increase order execute failed
+    /// @dev The event is only emitted when the execution error is caused
+    /// by the `IOrderBook.InvalidMarketPriceToTrigger`
+    /// @param orderIndex The index of order to execute
+    event IncreaseOrderExecuteFailed(uint256 indexed orderIndex);
     /// @notice Emitted when the increase order cancel succeeded
     /// @dev The event is emitted when the cancel order is successful after the execution error
     /// @param orderIndex The index of order to cancel
@@ -48,6 +53,11 @@ contract MixedExecutorV2 is Multicall, Governable {
     /// @param shortenedReason2 The shortened reason of the cancel error
     event IncreaseOrderCancelFailed(uint256 indexed orderIndex, bytes4 shortenedReason1, bytes4 shortenedReason2);
 
+    /// @notice Emitted when the decrease order execute failed
+    /// @dev The event is only emitted when the execution error is caused
+    /// by the `IOrderBook.InvalidMarketPriceToTrigger`
+    /// @param orderIndex The index of order to execute
+    event DecreaseOrderExecuteFailed(uint256 indexed orderIndex);
     /// @notice Emitted when the decrease order cancel succeeded
     /// @dev The event is emitted when the cancel order is successful after the execution error
     /// @param orderIndex The index of order to cancel
@@ -224,15 +234,19 @@ contract MixedExecutorV2 is Multicall, Governable {
         try orderBook.executeIncreaseOrder(orderIndex, receiver) {} catch (bytes memory reason) {
             if (requireSuccess) revert ExecutionFailed(reason);
 
+            // If the order cannot be triggered due to changes in the market price,
+            // it is unnecessary to cancel the order
+            bytes4 errorTypeSelector = _decodeShortenedReason(reason);
+            if (errorTypeSelector == IOrderBook.InvalidMarketPriceToTrigger.selector) {
+                emit IncreaseOrderExecuteFailed(orderIndex);
+                return;
+            }
+
             if (cancelOrderIfFailedStatus) {
                 try orderBook.cancelIncreaseOrder(orderIndex, receiver) {
-                    emit IncreaseOrderCancelSucceeded(orderIndex, _decodeShortenedReason(reason));
+                    emit IncreaseOrderCancelSucceeded(orderIndex, errorTypeSelector);
                 } catch (bytes memory reason2) {
-                    emit IncreaseOrderCancelFailed(
-                        orderIndex,
-                        _decodeShortenedReason(reason),
-                        _decodeShortenedReason(reason2)
-                    );
+                    emit IncreaseOrderCancelFailed(orderIndex, errorTypeSelector, _decodeShortenedReason(reason2));
                 }
             }
         }
@@ -249,15 +263,19 @@ contract MixedExecutorV2 is Multicall, Governable {
         try orderBook.executeDecreaseOrder(orderIndex, receiver) {} catch (bytes memory reason) {
             if (requireSuccess) revert ExecutionFailed(reason);
 
+            // If the order cannot be triggered due to changes in the market price,
+            // it is unnecessary to cancel the order
+            bytes4 errorTypeSelector = _decodeShortenedReason(reason);
+            if (errorTypeSelector == IOrderBook.InvalidMarketPriceToTrigger.selector) {
+                emit DecreaseOrderExecuteFailed(orderIndex);
+                return;
+            }
+
             if (cancelOrderIfFailedStatus) {
                 try orderBook.cancelDecreaseOrder(orderIndex, receiver) {
-                    emit DecreaseOrderCancelSucceeded(orderIndex, _decodeShortenedReason(reason));
+                    emit DecreaseOrderCancelSucceeded(orderIndex, errorTypeSelector);
                 } catch (bytes memory reason2) {
-                    emit DecreaseOrderCancelFailed(
-                        orderIndex,
-                        _decodeShortenedReason(reason),
-                        _decodeShortenedReason(reason2)
-                    );
+                    emit DecreaseOrderCancelFailed(orderIndex, errorTypeSelector, _decodeShortenedReason(reason2));
                 }
             }
         }
@@ -265,7 +283,7 @@ contract MixedExecutorV2 is Multicall, Governable {
 
     /// @notice Liquidate a liquidity position
     /// @param _packedValue The packed values of the pool index, position id, and require success flag:
-    /// bit 0-23 represent the pool index, bit 24-119 represent the account, and bit 120 represent the
+    /// bit 0-23 represent the pool index, bit 24-119 represent the position ID, and bit 120 represent the
     /// require success flag
     function liquidateLiquidityPosition(PackedValue _packedValue) external virtual onlyExecutor {
         IPool pool = poolIndexer.indexPools(_packedValue.unpackUint24(0));
