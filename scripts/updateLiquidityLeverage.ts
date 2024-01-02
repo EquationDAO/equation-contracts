@@ -1,6 +1,7 @@
 import {ethers, hardhatArguments} from "hardhat";
 import {networks} from "./networks";
 import {computePoolAddress, setBytecodeHash} from "../test/shared/address";
+import {token} from "../typechain-types/@openzeppelin/contracts";
 
 async function main() {
     const network = networks[hardhatArguments.network as keyof typeof networks];
@@ -22,11 +23,12 @@ async function main() {
         const poolAddr = computePoolAddress(poolFactory.address, item.address, network.usd);
         console.log(`updating ${item.name} (${item.address}) at ${poolAddr}`);
         let tokenCfg = await poolFactory.tokenConfigs(item.address, {blockTag: blockNumber});
-        let tokenFeeCfg = await poolFactory.tokenFeeRateConfigs(item.address, {blockTag: blockNumber});
-        let tokenFeeCfgAfter = {
-            ...tokenFeeCfg,
-            referralDiscountRate: 0,
+        let tokenCfgAfter = {
+            ...tokenCfg,
+            maxLeveragePerLiquidityPosition: 100,
         };
+        console.log(tokenCfgAfter);
+        let tokenFeeCfg = await poolFactory.tokenFeeRateConfigs(item.address, {blockTag: blockNumber});
         let vertices = [
             {balanceRate: 0n, premiumRate: 0n},
             await poolFactory.tokenPriceVertexConfigs(item.address, 1, {blockTag: blockNumber}),
@@ -39,8 +41,8 @@ async function main() {
         let tokenPriceCfg = await poolFactory.tokenPriceConfigs(item.address, {blockTag: blockNumber});
         let calldata = poolFactory.interface.encodeFunctionData("updateTokenConfig", [
             item.address,
-            tokenCfg,
-            tokenFeeCfgAfter,
+            tokenCfgAfter,
+            tokenFeeCfg,
             {
                 maxPriceImpactLiquidity: tokenPriceCfg.maxPriceImpactLiquidity,
                 liquidationVertexIndex: tokenPriceCfg.liquidationVertexIndex,
